@@ -1,4 +1,4 @@
-#include <ros/ros.h>
+﻿#include <ros/ros.h>
 #include <queue>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
@@ -6,6 +6,7 @@
 #include <std_msgs/Int16.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Empty.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <autoware_msgs/VehicleCmd.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -117,7 +118,7 @@ class kvaser_can_sender
 {
 private:
 	//velcity params
-	const short VELOCITY_ZERO_VALUE_ = 140;
+	const short VELOCITY_ZERO_VALUE_ = 132;
 
 	//stroke params
 	const short PEDAL_VOLTAGE_CENTER_ = 1024;//計測値は1025;
@@ -162,7 +163,7 @@ private:
 
 	//mode params
 	const unsigned char MODE_STROKE   = 0x0A;
-	const unsigned char MODE_VERLOCITY = 0x0B;
+	const unsigned char MODE_VELOCITY = 0x0B;
 
 	//shift_param
 	const static unsigned char SHIFT_P = 0;
@@ -184,6 +185,10 @@ private:
 	const int ERROR_STROKE_BRAKE_STROKE_INCONSISTENCY = 5;
 	int config_result;
 
+	//use velocity topic
+	const static int USE_VELOCITY_CAN = 0;
+	const static int USE_VELOCITY_TWIST = 1;
+
 	//safety
 	const LIMIT_ANGLE_FROM_VELOCITY_STRUCT limit10 = {10,680,-680}, limit15 = {15,360,-360}, limit20 = {20,180,-180}, limit30={30,90,-90}, limit40={40,45,-45};
 	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc;
@@ -194,6 +199,7 @@ private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
 	ros::Subscriber sub_microbus_can_501_, sub_microbus_can_502_, sub_microbus_can_503_;
+	ros::Subscriber sub_current_velocity_, sub_use_velocity_topic_;
 	ros::Subscriber sub_emergency_reset_, sub_stroke_mode_, sub_velocity_mode_, sub_drive_control_;
 	ros::Subscriber sub_input_steer_flag_, sub_input_drive_flag_, sub_input_steer_value_, sub_input_drive_value_;
 	ros::Subscriber sub_waypoint_param_, sub_position_checker_, sub_config_microbus_can_;
@@ -201,7 +207,7 @@ private:
 	ros::Subscriber sub_emergency_stop_;
 	ros::Subscriber sub_light_high_, sub_light_low_, sub_light_small_;
 	ros::Subscriber sub_blinker_right_, sub_blinker_left_, sub_blinker_stop_;
-	ros::Subscriber sub_automatic_door_, sub_drive_gasu_breake_, sub_steer_gasu_breake_;
+	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_;
 
 	KVASER_CAN kc;
@@ -212,11 +218,12 @@ private:
 	autoware_can_msgs::MicroBusCan501 can_receive_501_;
 	autoware_can_msgs::MicroBusCan502 can_receive_502_;
 	autoware_can_msgs::MicroBusCan503 can_receive_503_;
+	geometry_msgs::TwistStamped current_velocity_;
 	autoware_msgs::VehicleCmd twist_;
 	short input_steer_, input_drive_;
 	short pedal_;
 	bool shift_auto_;
-	unsigned char shift_position_, drive_gasu_breake_, steer_gasu_breake_, automatic_door_;
+	unsigned char shift_position_, drive_clutch_, steer_clutch_, automatic_door_;
 	unsigned char emergency_stop_;
 	bool light_high_, light_low_, light_small_;
 	bool blinker_right_, blinker_left_, blinker_stop_;
@@ -224,6 +231,7 @@ private:
 	int obstracle_waypoint_;
 	autoware_msgs::WaypointParam waypoint_param_;
 	PID_params pid_params;
+	char use_velocity_topic_;
 
 	ros::Time automatic_door_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
@@ -300,7 +308,35 @@ private:
 	void callbackMicrobusCan503(const autoware_can_msgs::MicroBusCan503::ConstPtr &msg)
 	{
 		std::cout << "sub can_503" << std::endl;
+		if(msg->clutch==true && can_receive_503_.clutch==false)
+		{
+			//drive_control_mode_ = MODE_VELOCITY;
+			shift_auto_ = true;
+			input_drive_mode_ = false;
+			std::string safety_error_message = "";
+			publisStatus(safety_error_message);
+		}
+		if(msg->clutch==false && can_receive_503_.clutch==true)
+		{
+			//drive_control_mode_ = MODE_STROKE;
+			shift_auto_ = false;
+			input_drive_mode_ = true;
+			std::string safety_error_message = "";
+			publisStatus(safety_error_message);
+		}
 		can_receive_503_ = *msg;
+	}
+
+	void callbackCurrentVelocity(const geometry_msgs::TwistStamped::ConstPtr &msg)
+	{
+		std::cout << "current velocity : " << msg->twist.linear.x << std::endl;
+		current_velocity_ = *msg;
+	}
+
+	void callbackUseVelocityTopic(const std_msgs::Int8::ConstPtr &msg)
+	{
+		use_velocity_topic_ = msg->data;
+		publisStatus("");
 	}
 
 	void callbackStrokeMode(const std_msgs::Empty::ConstPtr &msg)
@@ -312,7 +348,7 @@ private:
 	void callbackVelocityMode(const std_msgs::Empty::ConstPtr &msg)
 	{
 		std::cout << "sub VelocityMode" << std::endl;
-		drive_control_mode_ = MODE_VERLOCITY;
+		drive_control_mode_ = MODE_VELOCITY;
 	}
 
 	void callbackDriveControl(const std_msgs::Int8::ConstPtr &msg)
@@ -320,7 +356,7 @@ private:
 		if(msg->data == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
 		{
 			std::cout << "sub VelocityMode" << std::endl;
-			drive_control_mode_ = MODE_VERLOCITY;
+			drive_control_mode_ = MODE_VELOCITY;
 		}
 		else if(msg->data == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_STROKE)
 		{
@@ -360,6 +396,14 @@ private:
 	void callbackConfigMicroBusCan(const autoware_config_msgs::ConfigMicroBusCan::ConstPtr &msg)
 	{
 		setting_ = *msg;
+		/*setting_.velocity_limit = 50;
+		setting_.velocity_stop_th = 4.0;
+		setting_.pedal_stroke_center = 0;
+		setting_.pedal_stroke_max = 850;
+		setting_.pedal_stroke_min = -500;
+		setting_.brake_stroke_stopping_med = -370;
+		setting_.accel_stroke_offset = 10;
+		setting_.brake_stroke_offset = -10;*/
 
 		/*setting_.pedal_stroke_max - setting_.pedal_stroke_min
 		if(setting_.pedal_stroke_max - setting_.pedal_stroke_min > 1300 ||
@@ -402,12 +446,16 @@ private:
 		//クラッチが入っている(autoモードである)場合だけエラー判定を出す
 		if(flag == true && can_receive_502_.clutch == true)
 		{
-			drive_gasu_breake_ = true;
-			steer_gasu_breake_ = true;
+			drive_clutch_ = false;
+			steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
 			std::stringstream safety_error_message;
 			safety_error_message << "target angle over , " << deg;
 			//std::cout << safety_error_message.str() << std::endl;
 			publisStatus(safety_error_message.str());
+			can_send();
 		}
 
 		twist_ = *msg;
@@ -455,8 +503,11 @@ private:
 		{
 			if(msg->stop_flag != 0 && can_receive_502_.clutch == true)
 			{
-				flag_drive_mode_ = false;
-				flag_steer_mode_ = false;
+				drive_clutch_ = false;
+				steer_clutch_ = false;
+				//flag_drive_mode_ = false;
+				//flag_steer_mode_ = false;
+				shift_auto_ = false;
 				std::cout << "Denger! Autoware stop flag : " << msg->stop_flag << std::endl;
 				std::stringstream safety_error_message;
 				safety_error_message << "positon error : " << msg->stop_flag;
@@ -473,6 +524,7 @@ private:
 		msg.use_position_checker = setting_.use_position_checker;
 		msg.use_input_steer = input_steer_mode_;
 		msg.use_input_drive = input_drive_mode_;
+		msg.use_velocity_topic = use_velocity_topic_;
 		if(safety_error_message != "") msg.safety_error_message = safety_error_message;
 		else msg.safety_error_message = "";
 		std::cout << msg.safety_error_message << std::endl;
@@ -528,14 +580,14 @@ private:
 		std::cout << "light_small : " << str << std::endl;
 	}
 
-	void callbackDriveGasuBreake(const std_msgs::Bool::ConstPtr &msg)
+	void callbackDriveClutch(const std_msgs::Bool::ConstPtr &msg)
 	{
-		drive_gasu_breake_ = msg->data;
+		drive_clutch_ = msg->data;
 	}
 
-	void callbackSteerGasuBreake(const std_msgs::Bool::ConstPtr &msg)
+	void callbackSteerClutch(const std_msgs::Bool::ConstPtr &msg)
 	{
-		steer_gasu_breake_ = msg->data;
+		steer_clutch_ = msg->data;
 	}
 
 	void blinkerRight()
@@ -617,6 +669,10 @@ private:
 	{
 		//ブレーキからアクセルに変わった場合、Iの積算値をリセット
 		short stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
+		std::cout << "voltage stroke : " << stroke << std::endl;
+		std::cout << "voltage center : " << PEDAL_VOLTAGE_CENTER_ << std::endl;
+		std::cout << "voltage        : " << can_receive_503_.pedal_voltage << std::endl;
+		std::cout << "brake offset   : " << setting_.brake_stroke_offset << std::endl;
 		if(stroke < setting_.brake_stroke_offset)
 		{
 			pid_params.set_accel_e_prev(0);
@@ -624,7 +680,10 @@ private:
 		}
 
 		//P
-		double e = twist_.ctrl_cmd.linear_velocity - can_receive_502_.velocity_average;
+		double e = cmd_velocity - current_velocity;
+		std::cout << "accel e : " << e << std::endl;
+		std::cout << "cmd vel : " << cmd_velocity << std::endl;
+		std::cout << "cur vel : " << current_velocity << std::endl;;
 
 		//I
 		double e_i;
@@ -647,6 +706,10 @@ private:
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
+		/*if(current_velocity <= 1.0 && ret >= 50)
+		{
+			ret = 50;
+		}*/
 		pid_params.set_accel_e_prev(e);
 		return ret;
 	}
@@ -698,10 +761,13 @@ private:
 	}
 
 	short _stopping_control(double current_velocity)
-	{
-		if (current_velocity < 0.25)
+	{std::cout << "stop cur : " << current_velocity << std::endl;
+		if (current_velocity < (VELOCITY_ZERO_VALUE_+20)/100.0)
 		{
 			int gain = (int)(((double)setting_.pedal_stroke_min)*can_receive_502_.cycle_time);
+			std::cout << "stop  gain : " << gain << std::endl;
+			std::cout << "cycle time : " << can_receive_502_.cycle_time << std::endl;
+			std::cout << "stroke min : " << setting_.pedal_stroke_min << std::endl;
 			double ret = pid_params.get_stop_stroke_prev() + gain;
 			if((int)ret > setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
 			return ret;
@@ -712,7 +778,7 @@ private:
 		}
 	}
 
-	void bufset_drive(unsigned char *buf)
+	void bufset_drive(unsigned char *buf, double current_velocity)
 	{
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
 		{
@@ -728,22 +794,40 @@ private:
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_val = 0;
 			if(can_receive_503_.clutch == false)
+			{
 				drive_val = can_receive_502_.velocity_actual;
+				shift_auto_ = false;
+			}
 
 			unsigned char *drive_point = (unsigned char*)&drive_val;
 			buf[4] = drive_point[1];  buf[5] = drive_point[0];
 		}
 		else
 		{
-			double current_velocity = can_receive_502_.velocity_average / 100.0;
+			/*double current_velocity;// = can_receive_502_.velocity_average / 100.0;
+			switch(use_velocity_topic_)
+			{
+			case USE_VELOCITY_CAN:
+				current_velocity = can_receive_502_.velocity_average / 100.0;
+				break;
+			case USE_VELOCITY_TWIST:
+				current_velocity = current_velocity_.pose.position.x * 3.6;
+				break;
+			default:
+				current_velocity = current_velocity_.pose.position.x * 3.6;
+				break;
+			}*/
+
 			double cmd_velocity;
 			if(input_drive_mode_ == false)
 				cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
 			else
 				cmd_velocity = input_drive_ / 100.0;
+			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 
 			//AUTOモードじゃない場合、stroke値0をcanに送る
-			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
+			        can_receive_503_.clutch == false)
 			{
 				pid_params.clear_diff();
 				short drive_val = 0;
@@ -758,10 +842,10 @@ private:
 			        && current_velocity < setting_.velocity_limit)
 			{
 				std::cout << "stroke drive" << std::endl;
-				//short accel_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
-				short drive_stroke = 0;
-				pid_params.set_stroke_prev(drive_stroke);
-				unsigned char *drive_point = (unsigned char*)&drive_stroke;
+				short accel_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
+				//short accel_stroke = 100;
+				pid_params.set_stroke_prev(accel_stroke);
+				unsigned char *drive_point = (unsigned char*)&accel_stroke;
 				buf[4] = drive_point[1];  buf[5] = drive_point[0];
 			}
 			//減速判定
@@ -776,7 +860,7 @@ private:
 			}
 			//停止判定
 			else if(cmd_velocity == 0.0 && current_velocity > VELOCITY_ZERO_VALUE_/100.0)
-			{
+			{std::cout << "stop in" << std::endl;
 				if(current_velocity < setting_.velocity_stop_th)
 				{
 					short brake_stroke = _stopping_control(current_velocity);
@@ -802,14 +886,14 @@ private:
 		}
 	}
 
-	void bufset_car_control(unsigned char *buf)
+	void bufset_car_control(unsigned char *buf, double current_velocity)
 	{
 		buf[6] = buf[7] = 0;
 
 		if(emergency_stop_ == 0x2) {buf[6] |= 0x80;  emergency_stop_ = 0;}
 		else if(emergency_stop_ == 0x1) {buf[6] |= 0x40;  emergency_stop_ = 0;}
-		if(drive_gasu_breake_ == true) {buf[6] |= 0x20;}// drive_gasu_breake_ = false;}
-		if(steer_gasu_breake_ == true) {buf[6] |= 0x10;}// steer_gasu_breake_ = false;}
+		if(drive_clutch_ == false) {buf[6] |= 0x20;}// drive_clutch_ = true;}
+		if(steer_clutch_ == false) {buf[6] |= 0x10;}// steer_clutch_ = true;}
 		if(automatic_door_ != 0x0)
 		{
 			if(automatic_door_ == 0x2) {buf[6] |= 0x08;}
@@ -843,10 +927,10 @@ private:
 			switch (shift_position_)
 			{
 			case SHIFT_P:
-				buf[7] |= 0x00;
+				if(current_velocity > 0) buf[7] |= 0x00;
 				break;
 			case SHIFT_R:
-				buf[7] |= 0x01;
+				if(current_velocity > 0) buf[7] |= 0x01;
 				break;
 			case SHIFT_N:
 				buf[7] |= 0x02;
@@ -864,7 +948,7 @@ private:
 		}
 	}
 public:
-	kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh, int kvaser_channel)
+	kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh, int kvaser_channel, int use_velocity_topic)
 	    : nh_(nh)
 	    , private_nh_(p_nh)
 	    , flag_drive_mode_(false)
@@ -885,9 +969,10 @@ public:
 	    , blinker_left_(false)
 	    , blinker_stop_(false)
 	    , automatic_door_(0)
-	    , drive_gasu_breake_(false)
-	    , steer_gasu_breake_(false)
+	    , drive_clutch_(true)
+	    , steer_clutch_(true)
 	    , config_result(CONFIG_OK)
+	    , use_velocity_topic_(USE_VELOCITY_TWIST)
 	{
 		setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -903,7 +988,9 @@ public:
 		setting_.pedal_stroke_center = 0;
 		setting_.pedal_stroke_max = 850;
 		setting_.pedal_stroke_min = -500;
-		setting_.brake_stroke_stopping_med = 400;
+		setting_.brake_stroke_stopping_med = -400;
+		setting_.accel_stroke_offset = 10;
+		setting_.accel_stroke_offset = -10;
 
 		can_receive_501_.emergency = true;
 		can_receive_501_.blinker_right = can_receive_501_.blinker_left = false;
@@ -920,6 +1007,8 @@ public:
 		sub_microbus_can_501_ = nh_.subscribe("/microbus/can_receive501", 10, &kvaser_can_sender::callbackMicrobusCan501, this);
 		sub_microbus_can_502_ = nh_.subscribe("/microbus/can_receive502", 10, &kvaser_can_sender::callbackMicrobusCan502, this);
 		sub_microbus_can_503_ = nh_.subscribe("/microbus/can_receive503", 10, &kvaser_can_sender::callbackMicrobusCan503, this);
+		sub_current_velocity_ = nh_.subscribe("/current_velocity", 10, &kvaser_can_sender::callbackCurrentVelocity, this);
+		sub_use_velocity_topic_ = nh_.subscribe("/microbus/use_velocity_topic", 10, &kvaser_can_sender::callbackUseVelocityTopic, this);
 		sub_emergency_reset_ = nh_.subscribe("/microbus/emergency_reset", 10, &kvaser_can_sender::callbackEmergencyReset, this);
 		sub_input_steer_flag_ = nh_.subscribe("/microbus/input_steer_flag", 10, &kvaser_can_sender::callbackInputSteerFlag, this);
 		sub_input_steer_value_ = nh_.subscribe("/microbus/input_steer_value", 10, &kvaser_can_sender::callbackInputSteerValue, this);
@@ -941,8 +1030,8 @@ public:
 		sub_blinker_left_ = nh_.subscribe("/microbus/blinker_left", 10, &kvaser_can_sender::callbackBlinkerLeft, this);
 		sub_blinker_stop_ = nh_.subscribe("/microbus/blinker_stop", 10, &kvaser_can_sender::callbackBlinkerStop, this);
 		sub_automatic_door_ = nh_.subscribe("/microbus/automatic_door", 10, &kvaser_can_sender::callbackAutomaticDoor, this);
-		sub_drive_gasu_breake_ = nh_.subscribe("/microbus/drive_gasu_breake", 10, &kvaser_can_sender::callbackDriveGasuBreake, this);
-		sub_steer_gasu_breake_ = nh_.subscribe("/microbus/steer_gasu_breake", 10, &kvaser_can_sender::callbackSteerGasuBreake, this);
+		sub_drive_clutch_ = nh_.subscribe("/microbus/drive_clutch", 10, &kvaser_can_sender::callbackDriveClutch, this);
+		sub_steer_clutch_ = nh_.subscribe("/microbus/steer_clutch", 10, &kvaser_can_sender::callbackSteerClutch, this);
 		sub_econtrol_ = nh_.subscribe("/econtrol", 10, &kvaser_can_sender::callbackEControl, this);
 		sub_obtracle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 10, &kvaser_can_sender::callbackObstracleWaypoint, this);
 
@@ -962,12 +1051,25 @@ public:
 	{
 		//if(can_receive_501_.emergency == false)
 		{
+			double current_velocity = 0;// = can_receive_502_.velocity_average / 100.0;
+			switch(use_velocity_topic_)
+			{
+			case USE_VELOCITY_CAN:
+				current_velocity = can_receive_502_.velocity_average / 100.0;
+				break;
+			case USE_VELOCITY_TWIST:
+				current_velocity = current_velocity_.twist.linear.x * 3.6;
+				break;
+			default:
+				current_velocity = current_velocity_.twist.linear.x * 3.6;
+				break;
+			}
+
 			unsigned char buf[SEND_DATA_SIZE] = {0,0,0,0,0,0,0,0};
 			bufset_mode(buf);
 			bufset_steer(buf);
-			bufset_drive(buf);
-
-			bufset_car_control(buf);
+			bufset_drive(buf, current_velocity);
+			bufset_car_control(buf, current_velocity);
 			kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
 		}
 	}
@@ -980,9 +1082,10 @@ int main(int argc, char** argv)
 	ros::NodeHandle private_nh("~");
 
 	int kvaser_channel;
-	bool use_position_checker;
+	int use_velocity_topic;
 	private_nh.param<int>("kvaser_channel", kvaser_channel, 0);
-	kvaser_can_sender kcs(nh, private_nh, kvaser_channel);
+	private_nh.param<int>("use_velocity_topic", use_velocity_topic, 1);
+	kvaser_can_sender kcs(nh, private_nh, kvaser_channel, use_velocity_topic);
 	if(kcs.isOpen() == false)
 	{
 		std::cerr << "error : open" << std::endl;

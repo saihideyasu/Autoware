@@ -2,13 +2,14 @@
 #include <autoware_msgs/Lane.h>
 #include <autoware_config_msgs/ConfigTemporaryStoper.h>
 #include <autoware_can_msgs/CANInfo.h>
+#include <visualization_msgs/MarkerArray.h>
 
 class TemporaryStoper
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_waypoint_, sub_can_;
-	ros::Publisher pub_waypoint_;
+	ros::Publisher pub_waypoint_, pub_temporary_line_;
 
 	autoware_config_msgs::ConfigTemporaryStoper config_;
 	autoware_can_msgs::CANInfo can_;
@@ -58,6 +59,28 @@ private:
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
 			{
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;
+
+				visualization_msgs::Marker marker;
+				marker.header.frame_id = "/map";
+				marker.ns = "Temporary Line";
+				marker.id = 0;
+				marker.type = 1;
+				marker.action = 0;
+				marker.pose = way.waypoints[i].pose.pose;
+				marker.pose.position.z += 1;
+				marker.scale.x = 0.1;
+				marker.scale.y = 15;
+				marker.scale.z = 2;
+				marker.color.r = 0;
+				marker.color.g = 0;
+				marker.color.b = 1;
+				marker.color.a = 0.3;
+				marker.frame_locked = true;
+				marker.mesh_use_embedded_materials = false;
+				visualization_msgs::MarkerArray array;
+				array.markers.push_back(marker);
+				pub_temporary_line_.publish(array);
+
 				return i;
 			}
 		}
@@ -130,6 +153,7 @@ public:
 		can_.speed = 0;
 
 		pub_waypoint_ = nh_.advertise<autoware_msgs::Lane>("/temporary_stop_waypoints", 1);
+		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStoper::callbackWaypoint, this);
 		sub_can_ = nh_.subscribe("/can_info", 1, &TemporaryStoper::callbackCan, this);
 	}

@@ -5,5 +5,5 @@
 
 	<node pkg="vehicle_socket" type="kvaser_microbus_can_sender" name="kvaser_microbus_can_sender" output="log">
 		<param name="kvaser_channel" value="$(arg kvaser_channel)"/>
-	</node>
-</launch>
+    </node>
+</launch><arg name="kvaser_channel" default="0"/>

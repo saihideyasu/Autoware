@@ -6189,6 +6189,15 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : k_accel_p_until
+      desc : k_accel_p_until
+      label: k_accel_p_until
+      min  : 0.0
+      max  : 150.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
     - name : k_accel_i_until
       desc : k_accel_i_until
       label: k_accel_i_until

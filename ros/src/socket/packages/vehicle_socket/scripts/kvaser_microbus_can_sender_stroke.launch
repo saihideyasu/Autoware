@@ -5,5 +5,6 @@
 
 	<node pkg="vehicle_socket" type="kvaser_microbus_can_sender_stroke" name="kvaser_microbus_can_sender_stroke" output="log">
 		<param name="kvaser_channel" value="$(arg kvaser_channel)"/>
+		<param name="use_velocity_topic" value="$(arg use_velocity_topic)"/>
 	</node>
 </launch>

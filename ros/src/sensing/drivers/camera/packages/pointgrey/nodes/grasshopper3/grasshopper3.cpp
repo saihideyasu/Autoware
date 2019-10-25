@@ -530,7 +530,7 @@ int main(int argc, char **argv)
 
 			if(flip == true)
 			{
-				cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, encoding_pattern);
+				cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
 				cv::flip(cv_ptr->image, cv_ptr->image, -1);
 				pub[i].publish(cv_ptr->toImageMsg());
 			}

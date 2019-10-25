@@ -361,8 +361,11 @@ private:
 
 			if(flag == true && can_receive_502_.clutch == true)
 			{
-				drive_gasu_breake_ = true;
-				steer_gasu_breake_ = true;
+				//drive_gasu_breake_ = true;
+				//steer_gasu_breake_ = true;
+				flag_drive_mode_ = false;
+				flag_steer_mode_ = false;
+				shift_auto_ = false;
 				std::stringstream safety_error_message;
 				safety_error_message << "target angle over , " << deg;
 				//std::cout << safety_error_message.str() << std::endl;

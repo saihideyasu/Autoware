@@ -458,9 +458,12 @@ class Microbus_Can_Sender_GUI:
 			else:
 				self.tx_drive_mode.SetValue('NONE')
 
-			self.tx_velocity.SetValue(str(self.receive.velocity))
+			if self.receive.Dmode == MicroBusCan501.DRIVE_MODE_VELOCITY:
+				self.tx_velocity.SetValue(str(self.receive.velocity))
+			else:
+				self.tx_pedal.SetValue(str(self.receive.velocity))
 			self.tx_velocity_actual.SetValue(str(self.receive.v_actual))
-			self.tx_pedal.SetValue(str(self.receive.pedal))
+			#self.tx_pedal.SetValue(str(self.receive.pedal))
 			self.tx_angle.SetValue(str(self.receive.angle))
 			self.tx_angle_actual.SetValue(str(self.receive.a_actual))
 			self.frame.Refresh()

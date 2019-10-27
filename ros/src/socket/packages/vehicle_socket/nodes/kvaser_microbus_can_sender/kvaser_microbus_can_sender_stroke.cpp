@@ -43,7 +43,7 @@ public:
 	double get_brake_e_prev() {return brake_e_prev_;}
 	double get_acclel_diff_sum() {return accel_diff_sum_;}
 	double get_brake_diff_sum() {return brake_diff_sum_;}
-	short get_stop_stroke_prev() {return stop_stroke_prev_;}
+	double get_stop_stroke_prev() {return stop_stroke_prev_;}
 	short get_stroke_prev() {return stroke_prev_;}
 
 	void set_accel_e_prev(double val) {accel_e_prev_ = val;}
@@ -121,7 +121,7 @@ private:
 	const short VELOCITY_ZERO_VALUE_ = 132;
 
 	//stroke params
-	const short PEDAL_VOLTAGE_CENTER_ = 1024;//計測値は1025;
+	const short PEDAL_VOLTAGE_CENTER_ = 1024;//1052;//計測値は1025;
 	const short PEDAL_DISPLACEMENT_CENTER_ = 1024;//計測値は1029;
 	const short PEDAL_VOLTAGE_MAX_ = 161;
 	const short PEDAL_DISPLACEMENT_MAX_ = 1161;
@@ -401,9 +401,9 @@ private:
 		setting_.pedal_stroke_center = 0;
 		setting_.pedal_stroke_max = 850;
 		setting_.pedal_stroke_min = -500;
-		setting_.brake_stroke_stopping_med = -370;
+		setting_.brake_stroke_stopping_med = -370;*/
 		setting_.accel_stroke_offset = 10;
-		setting_.brake_stroke_offset = -10;*/
+		setting_.brake_stroke_offset = -10;
 
 		/*setting_.pedal_stroke_max - setting_.pedal_stroke_min
 		if(setting_.pedal_stroke_max - setting_.pedal_stroke_min > 1300 ||
@@ -673,6 +673,8 @@ private:
 		std::cout << "voltage center : " << PEDAL_VOLTAGE_CENTER_ << std::endl;
 		std::cout << "voltage        : " << can_receive_503_.pedal_voltage << std::endl;
 		std::cout << "brake offset   : " << setting_.brake_stroke_offset << std::endl;
+
+		//std::cout << "if accel : " << stroke << " < " << setting_.brake_stroke_offset << std::endl;
 		if(stroke < setting_.brake_stroke_offset)
 		{
 			pid_params.set_accel_e_prev(0);
@@ -681,9 +683,10 @@ private:
 
 		//P
 		double e = cmd_velocity - current_velocity;
-		std::cout << "accel e : " << e << std::endl;
-		std::cout << "cmd vel : " << cmd_velocity << std::endl;
-		std::cout << "cur vel : " << current_velocity << std::endl;;
+		//std::cout << "if accel : " << current_velocity << "," << cmd_velocity << "," << e << std::endl;
+		//std::cout << "accel e : " << e << std::endl;
+		//std::cout << "cmd vel : " << cmd_velocity << std::endl;
+		//std::cout << "cur vel : " << current_velocity << std::endl;;
 
 		//I
 		double e_i;
@@ -719,7 +722,8 @@ private:
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
 		short stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
-		std::cout << "stroke " << stroke << std::endl;
+		//std::cout << "stroke " << stroke << std::endl;
+		std::cout << "if : " << stroke << " > " << setting_.accel_stroke_offset << std::endl;;
 		if (stroke > setting_.accel_stroke_offset)
 		{
 			std::cout << "ACCEL_PEDAL_STROKE_OFFSET_" << std::endl;
@@ -729,6 +733,7 @@ private:
 
 		//P
 		double e = -1 * (cmd_velocity - current_velocity);
+		std::cout << "if : " << cmd_velocity << "," << current_velocity << "," << e << std::endl;
 		// since this is braking, multiply -1.
 		if (e > 0 && e <= 1) { // added @ 2016/Aug/29
 			e = 0;
@@ -770,6 +775,7 @@ private:
 			std::cout << "stroke min : " << setting_.pedal_stroke_min << std::endl;
 			double ret = pid_params.get_stop_stroke_prev() + gain;
 			if((int)ret > setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
+			if((int)ret < setting_.brake_stroke_stopping_med) ret = setting_.brake_stroke_stopping_med;
 			return ret;
 		}
 		else
@@ -818,12 +824,13 @@ private:
 				break;
 			}*/
 
-			double cmd_velocity;
+			/*double cmd_velocity;
 			if(input_drive_mode_ == false)
 				cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
 			else
-				cmd_velocity = input_drive_ / 100.0;
-			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
+				cmd_velocity = input_drive_ / 100.0;*/
+			double cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
+			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 
 			//AUTOモードじゃない場合、stroke値0をcanに送る
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
@@ -836,53 +843,76 @@ private:
 				return;
 			}
 
+			short new_stroke = 0;
+			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
+			//std::cout << "if : " << cmd_velocity << " > " << current_velocity << std::endl;
+			//std::cout << "if : " << cmd_velocity << " > " "0.0" << std::endl;
+			//std::cout << "if : " << current_velocity << " > " << setting_.velocity_limit << std::endl;
 			//加速判定
 			if (fabs(cmd_velocity) > current_velocity
 			        && fabs(cmd_velocity) > 0.0
 			        && current_velocity < setting_.velocity_limit)
 			{
 				std::cout << "stroke drive" << std::endl;
-				short accel_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
 				//short accel_stroke = 100;
-				pid_params.set_stroke_prev(accel_stroke);
-				unsigned char *drive_point = (unsigned char*)&accel_stroke;
-				buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				//short accel_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
+				//pid_params.set_stroke_prev(accel_stroke);
+				//unsigned char *drive_point = (unsigned char*)&accel_stroke;
+				//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
 			}
 			//減速判定
 			else if(fabs(cmd_velocity) < current_velocity
 			         && fabs(cmd_velocity) > 0.0)
 			{
 				std::cout << "stroke brake" << std::endl;
-				short brake_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
-				pid_params.set_stroke_prev(brake_stroke);
-				unsigned char *drive_point = (unsigned char*)&brake_stroke;
-				buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				//short brake_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
+				//pid_params.set_stroke_prev(brake_stroke);
+				//unsigned char *drive_point = (unsigned char*)&brake_stroke;
+				//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
 			}
 			//停止判定
-			else if(cmd_velocity == 0.0 && current_velocity > VELOCITY_ZERO_VALUE_/100.0)
-			{std::cout << "stop in" << std::endl;
+			else if(cmd_velocity == 0.0 && current_velocity > 0.0)//VELOCITY_ZERO_VALUE_/100.0)
+			{std::cout << "stroke stop" << std::endl;
 				if(current_velocity < setting_.velocity_stop_th)
 				{
-					short brake_stroke = _stopping_control(current_velocity);
-					pid_params.set_stroke_prev(brake_stroke);
-					unsigned char *drive_point = (unsigned char*)&brake_stroke;
-					buf[4] = drive_point[1];  buf[5] = drive_point[0];
+					//short brake_stroke = _stopping_control(current_velocity);
+					//pid_params.set_stroke_prev(brake_stroke);
+					//pid_params.set_stop_stroke_prev(brake_stroke);
+					//unsigned char *drive_point = (unsigned char*)&brake_stroke;
+					//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+					new_stroke = _stopping_control(current_velocity);
+					pid_params.set_stop_stroke_prev(new_stroke);
 				}
 				else
 				{
-					short brake_stroke = _brake_stroke_pid_control(current_velocity, 0);
-					pid_params.set_stroke_prev(brake_stroke);
-					pid_params.set_stop_stroke_prev(brake_stroke);
-					unsigned char *drive_point = (unsigned char*)&brake_stroke;
-					buf[4] = drive_point[1];  buf[5] = drive_point[0];
+					//short brake_stroke = _brake_stroke_pid_control(current_velocity, 0);
+					//pid_params.set_stroke_prev(brake_stroke);
+					//unsigned char *drive_point = (unsigned char*)&brake_stroke;
+					//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+					new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
 				}
 			}
 			else
 			{
-				short drive_stroke = pid_params.get_stroke_prev();
-				unsigned char *drive_point = (unsigned char*)&drive_stroke;
-				buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				std::cout << "stroke default" << std::endl;
+				//short drive_stroke = pid_params.get_stroke_prev();
+				//unsigned char *drive_point = (unsigned char*)&drive_stroke;
+				//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				new_stroke = pid_params.get_stroke_prev();
 			}
+
+			if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
+			{
+				short tmp = pid_params.get_stroke_prev() + 5;
+				if(tmp < new_stroke) new_stroke = tmp;
+			}
+			pid_params.set_stroke_prev(new_stroke);
+
+			if(input_drive_mode_ == true) new_stroke = input_drive_;
+			unsigned char *drive_point = (unsigned char*)&new_stroke;
+			buf[4] = drive_point[1];  buf[5] = drive_point[0];
 		}
 	}
 

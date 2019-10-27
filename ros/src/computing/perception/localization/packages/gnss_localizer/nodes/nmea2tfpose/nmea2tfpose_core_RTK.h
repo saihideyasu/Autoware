@@ -113,6 +113,7 @@ private:
   double hdt_add_;
   double position_add_x_, position_add_y_;
   int curve_flag;
+  double x_accel_, y_accel_, z_accel_;
 
   // callbacks
   void callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg);
@@ -131,7 +132,7 @@ private:
   void convert(std::vector<std::string> nmea, ros::Time current_stamp);
 };
 
-std::vector<std::string> split(const std::string &string);
+std::vector<std::string> split(const std::string &string, const char sep);
 
 }  // gnss_localizer
 #endif  // NMEA2TFPOSE_CORE_H

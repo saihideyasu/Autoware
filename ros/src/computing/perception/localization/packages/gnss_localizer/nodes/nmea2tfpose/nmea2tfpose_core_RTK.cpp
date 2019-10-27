@@ -69,6 +69,9 @@ Nmea2TFPoseNode::Nmea2TFPoseNode()
   , surface_speed_(0)
   , hdt_add_(0)
   , curve_flag(0)
+  , x_accel_(0.0)
+  , y_accel_(0.0)
+  , z_accel_(0.0)
 {
   initForROS();
   geo_.set_plane(plane_number_);
@@ -298,24 +301,27 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
     }*/
     else if(nmea.at(0) == "#BESTPOSA")
     {
-        //std::cout << "aaa : " << nmea.at(16) << std::endl;
-        double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
-        double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
-        double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
-        geo_.set_llh_nmea_degrees(lat, lon, h);
-        //if(writeCou == 2)
-        //{
-        //    writeCou = 0;
-        //    writebuf << "geo,bestpos," << std::setprecision(16) << geo_.x() << "," << geo_.y() << "," << geo_.z() << std::endl;
-        //    std::cout << writebuf.str();
-        //}
-        double fai = gphdt_value;
-        const double earth_R = 6.3781E6;
-        const double ant_distance = 1.28;
-        double lat2 = (ant_distance*cos(fai))/earth_R+lat;
-        double lon2 = (ant_distance*sin(fai))/earth_R+lon;
-        geo2_.set_llh_nmea_degrees(lat2, lon2, h);
-        ROS_INFO("BESTGNSSPOS is subscribed.");
+		if(nmea.size() == 30)
+		{
+			//std::cout << "aaa : " << nmea.at(16) << std::endl;
+			double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+			double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+			double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
+			geo_.set_llh_nmea_degrees(lat, lon, h);
+			//if(writeCou == 2)
+			//{
+			//    writeCou = 0;
+			//    writebuf << "geo,bestpos," << std::setprecision(16) << geo_.x() << "," << geo_.y() << "," << geo_.z() << std::endl;
+			//    std::cout << writebuf.str();
+			//}
+			double fai = gphdt_value;
+			const double earth_R = 6.3781E6;
+			const double ant_distance = 1.28;
+			double lat2 = (ant_distance*cos(fai))/earth_R+lat;
+			double lon2 = (ant_distance*sin(fai))/earth_R+lon;
+			geo2_.set_llh_nmea_degrees(lat2, lon2, h);
+			ROS_INFO("BESTGNSSPOS is subscribed.");
+		}
     }
     else if(nmea.at(0) == "#INSPVAXA")
     {
@@ -325,20 +331,32 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
         //double h = stod(nmea.at(13));
         //geo_.set_llh_nmea_degrees(lat, lon, h);
 
-        double north_vel = stod(nmea.at(15));
-        double east_vel = stod(nmea.at(16));
-        double up_vel = stod(nmea.at(17));
-        surface_speed_ = sqrt(north_vel*north_vel + east_vel*east_vel + up_vel*up_vel);
+		if(nmea.size() == 32)
+		{
+			/*double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+			double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+			double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
+			geo_.set_llh_nmea_degrees(lat, lon, h);*/
 
-        //double val=stod(nmea.at(20));
-        //std::cout << "angle : " << std::setprecision(16) << val << std::endl;
-        //while(val <0 || val >=360){
-        //  if(val<0) val+=360;
-        //  else if(val>=360) val-=360;
-        //}//std::cout << "aaa : "<< val << std::endl;
-        //gphdt_value = val*M_PI/180.0;
+			double north_vel = stod(nmea.at(15));
+			double east_vel = stod(nmea.at(16));
+			double up_vel = stod(nmea.at(17));
+			surface_speed_ = sqrt(north_vel*north_vel + east_vel*east_vel + up_vel*up_vel);
 
-        ROS_INFO("INSPVAXA is subscribed.");
+			double hdt=stod(nmea.at(20));
+			std::cout << "insattx : " << std::setprecision(16) << hdt << std::endl;
+			while(hdt <0 || hdt >=360){
+				if(hdt<0) hdt+=360;
+			  else if(hdt>=360) hdt-=360;
+			}std::cout << "insattxa : "<< hdt << std::endl;
+			gphdt_value = hdt*M_PI/180.0;
+
+			lat_std = stod(nmea.at(21)); std::cout << "insstdevsa : " << std::setprecision(16) << lat_std << std::endl;
+			lon_std = stod(nmea.at(22));
+			alt_std = stod(nmea.at(23));
+
+			ROS_INFO("INSPVAXA is subscribed.");
+		}
     }
     /*else if(nmea.at(0) == "%INSPVASA")
     {
@@ -355,13 +373,25 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
         }//std::cout << "aaa : "<< val << std::endl;
         gphdt_value = val*M_PI/180.0;
     }*/
-    else if(nmea.at(0) == "%INSSTDEVSA")
+	else if(nmea.at(0) == "%INSSTDEVSA")
     {
-        lat_std = stod(nmea.at(3)); std::cout << "insstdevsa : " << std::setprecision(16) << lat_std << std::endl;
-        lon_std = stod(nmea.at(4));
-        alt_std = stod(nmea.at(5));
+		std::vector<std::string> str = split(nmea.at(2), ';');
+		lat_std = stod(str.at(1)); std::cout << "insstdevsa : " << std::setprecision(16) << lat_std << std::endl;
+		lon_std = stod(nmea.at(3));
+		alt_std = stod(nmea.at(4));
         ROS_INFO("GPGST is subscribed.");
     }
+	else if(nmea.at(0) == "#RAWIMUXA")
+	{
+		if(nmea.size() == 19)
+		{
+			x_accel_ = stod(nmea.at(16)) * 2E-29;
+			y_accel_ = stod(nmea.at(15)) * 2E-29;
+			z_accel_ = stod(nmea.at(14)) * 2E-29;
+			ROS_INFO("RAWIMU is subscribed.");
+			std::cout << "x:" << x_accel_ << " y:" << y_accel_ << " z:" << z_accel_ << std::endl;
+		}
+	}
   }catch (const std::exception &e)
   {
     ROS_WARN_STREAM("Message is invalid : " << e.what());
@@ -376,7 +406,7 @@ void Nmea2TFPoseNode::callbackWaypointParam(const autoware_msgs::WaypointParam::
 void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg)
 {
   current_time_ = msg->header.stamp;
-  convert(split(msg->sentence), msg->header.stamp);
+  convert(split(msg->sentence, ','), msg->header.stamp);
 
   double timeout = 10.0;
   if (fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
@@ -415,13 +445,13 @@ void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstP
   }
 }
 
-std::vector<std::string> split(const std::string &string)
+std::vector<std::string> split(const std::string &string, const char sep)
 {
   std::vector<std::string> str_vec_ptr;
   std::string token;
   std::stringstream ss(string);
 
-  while (getline(ss, token, ','))
+  while (getline(ss, token, sep))
     str_vec_ptr.push_back(token);
 
   return str_vec_ptr;

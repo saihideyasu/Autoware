@@ -6,10 +6,14 @@ float64 accel_max_i
 float64 brake_max_i
 float64 k_accel_p_until
 float64 k_accel_i_until
+float64 k_accel_ii_until
 float64 k_accel_d_until
+float64 k_accel_dd_until
 float64 k_brake_p_until
 float64 k_brake_i_until
+float64 k_brake_ii_until
 float64 k_brake_d_until
+float64 k_brake_dd_until
 int16 pedal_stroke_center
 int16 pedal_stroke_max
 int16 pedal_stroke_min

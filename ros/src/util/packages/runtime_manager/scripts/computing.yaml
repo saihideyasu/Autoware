@@ -6207,9 +6207,27 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : k_accel_ii_until
+      desc : k_accel_ii_until
+      label: k_accel_ii_until
+      min  : 0.0
+      max  : 150.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
     - name : k_accel_d_until
       desc : k_accel_d_until
       label: k_accel_d_until
+      min  : 0.0
+      max  : 150.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : k_accel_dd_until
+      desc : k_accel_dd_until
+      label: k_accel_dd_until
       min  : 0.0
       max  : 150.0
       v    : 0
@@ -6225,6 +6243,7 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+
     - name : k_brake_i_until
       desc : k_brake_i_until
       label: k_brake_i_until
@@ -6234,9 +6253,27 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : k_brake_ii_until
+      desc : k_brake_ii_until
+      label: k_brake_ii_until
+      min  : 0.0
+      max  : 150.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
     - name : k_brake_d_until
       desc : k_brake_d_until
       label: k_brake_d_until
+      min  : 0.0
+      max  : 150.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : k_brake_dd_until
+      desc : k_brake_dd_until
+      label: k_brake_dd_until
       min  : 0.0
       max  : 150.0
       v    : 0
@@ -6276,6 +6313,24 @@ params :
       min  : -600
       max  : -300
       v    : -400
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : accel_stroke_offset
+      desc : accel_stroke_offset
+      label: accel_stroke_offset
+      min  : 0
+      max  : 100
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : brake_stroke_offset
+      desc : brake_stroke_offset
+      label: brake_stroke_offset
+      min  : -100
+      max  : 0
+      v    : 0
       cmd_param:
         dash     : ''
         delim    : ':='

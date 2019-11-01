@@ -11,6 +11,12 @@ class ROI
 {
 public:
     int left, top, width, height;
+	bool operator ==(ROI roi)
+	{
+		if(left==roi.left && top==roi.top && width==roi.width && height==roi.height)
+			return true;
+		return false;
+	}
 };
 
 class PrivateNodeParams
@@ -33,6 +39,7 @@ private:
     PrivateNodeParams private_params_;
     int capture_counter_; //画像キャプチャー回数
     std::string frame_id_;
+	ROI roi_back_;
 
     ros::Subscriber sub_roi_change_; //カメラROIチェンジ指令
     ros::Subscriber sub_roi_Signals_; //信号機情報に合わせてROIを変更
@@ -303,18 +310,22 @@ private:
 
     bool roi_change(const ROI &roi)
     {
-        camera_->StopCapture();
-        FlyCapture2::Format7Info format7info;
-        switch(get_format7Info(format7info, private_params_.format7mode_))
-        {
-        case -1:
-        case 0:
-            { return false; }
-        }
+		if(roi_back_ == roi)
+		{
+			camera_->StopCapture();
+			FlyCapture2::Format7Info format7info;
+			switch(get_format7Info(format7info, private_params_.format7mode_))
+			{
+			case -1:
+			case 0:
+			    { return false; }
+			}
 
-        set_format7_configuration(format7info, private_params_.pixel_format_, roi);
+			roi_back_ = roi;
+			set_format7_configuration(format7info, private_params_.pixel_format_, roi);
 
-        camera_->StartCapture();
+			camera_->StartCapture();
+		}
         return true;
     }
 
@@ -411,6 +422,7 @@ public:
                    private_params_.roi_.width, private_params_.roi_.height};
         if(!set_format7_configuration(format7info, private_params_.pixel_format_,roi)) //private_params_.roi_))
         {throw std::string("node stop");}
+		roi_back_ = roi;
 
         //camera settingを表示
         if(!print_camera_info()) {throw std::string("node stop");}

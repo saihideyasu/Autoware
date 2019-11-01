@@ -2,4 +2,6 @@
   <node pkg="waypoint_planner" type="temporary_stoper" name="temporary_stoper" output="log">
   </node>
 
+  <node pkg="waypoint_planner" type="stopper_distance" name="stopper_distance" output="log">
+  </node>
 </launch>

@@ -5,7 +5,6 @@
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Int32.h>
-#include <std_msgs/Float64.h>
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <autoware_msgs/VehicleCmd.h>
@@ -35,10 +34,10 @@ public:
 	const static int STROKE_STATE_MODE_KEEP_ = 3;
 
 	PID_params() {}
-	int init(short stroke)
+	int init(short stop_stroke)
 	{
 		accel_e_prev_ = brake_e_prev_ = accel_diff_sum_ = brake_diff_sum_ = 0;
-		stroke_prev_ = stop_stroke_prev_ = stroke;
+		stroke_prev_ = stop_stroke_prev_ = stop_stroke;
 		stroke_state_mode_ = PID_params::STROKE_STATE_MODE_ACCEL_;
 	}
 
@@ -218,7 +217,7 @@ private:
 	ros::Subscriber sub_light_high_, sub_light_low_, sub_light_small_;
 	ros::Subscriber sub_blinker_right_, sub_blinker_left_, sub_blinker_stop_;
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
-	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
+	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_;
 
 	KVASER_CAN kc;
 	bool flag_drive_mode_, flag_steer_mode_;
@@ -239,7 +238,6 @@ private:
 	bool blinker_right_, blinker_left_, blinker_stop_;
 	EControl econtrol;
 	int obstracle_waypoint_;
-	double stopper_distance_;
 	autoware_msgs::WaypointParam waypoint_param_;
 	PID_params pid_params;
 	char use_velocity_topic_;
@@ -248,12 +246,6 @@ private:
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
-
-	void callbackStopperDistance(const std_msgs::Float64::ConstPtr &msg)
-	{
-		stopper_distance_ = msg->data;
-		std::cout << "stopper distance : " << stopper_distance_ << std::endl;
-	}
 
 	void callbackEmergencyStop(const std_msgs::UInt8::ConstPtr &msg)
 	{
@@ -734,7 +726,7 @@ private:
 		return ret;
 	}
 
-	short _brake_stroke_pid_control(double current_velocity, double cmd_velocity, double distance)
+	short _brake_stroke_pid_control(double current_velocity, double cmd_velocity)
 	{
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
@@ -772,15 +764,6 @@ private:
 		        setting_.k_brake_i_until * e_i +
 		        setting_.k_brake_d_until * e_d;
 
-		if(distance >= 0 && distance <= 20)
-		{
-			double d = 500 - target_brake_stroke;
-			double baselink_to_bamper = 6.25 - 1.5;
-			double a = distance-baselink_to_bamper;
-			if(a < 0) a = 0;
-			target_brake_stroke  += d * (1 - (a)/(20.0-baselink_to_bamper));
-		}
-
 		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_until << std::endl;
 		if (ret < setting_.pedal_stroke_min)
 			ret = setting_.pedal_stroke_min;
@@ -813,144 +796,134 @@ private:
 	void bufset_drive(unsigned char *buf, double current_velocity)
 	{
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
-		{
-			short drive_val;
-			if(input_drive_mode_ == false)
-			{
-				std::cout <<"jjj : " << twist_.ctrl_cmd.linear_velocity;
-				double linearx = twist_.ctrl_cmd.linear_velocity;
-				double twist_drv = linearx *3.6 * 100;
-				drive_val = twist_drv;
-			}
-			else drive_val = input_drive_;
-			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
-				drive_val = 0;
-			if(can_receive_503_.clutch == false)
-			{
-				drive_val = can_receive_502_.velocity_actual;
-				shift_auto_ = false;
-			}
+		        {
+			        short drive_val;
+					if(input_drive_mode_ == false)
+					{
+						std::cout <<"jjj : " << twist_.ctrl_cmd.linear_velocity;
+						double linearx = twist_.ctrl_cmd.linear_velocity;
+						double twist_drv = linearx *3.6 * 100;
+						drive_val = twist_drv;
+					}
+					else drive_val = input_drive_;
+					if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+						drive_val = 0;
+					if(can_receive_503_.clutch == false)
+					{
+						drive_val = can_receive_502_.velocity_actual;
+						shift_auto_ = false;
+					}
 
-			unsigned char *drive_point = (unsigned char*)&drive_val;
-			buf[4] = drive_point[1];  buf[5] = drive_point[0];
-		}
-		else
-		{
-			/*double current_velocity;// = can_receive_502_.velocity_average / 100.0;
-			switch(use_velocity_topic_)
-			{
-			case USE_VELOCITY_CAN:
-				current_velocity = can_receive_502_.velocity_average / 100.0;
-				break;
-			case USE_VELOCITY_TWIST:
-				current_velocity = current_velocity_.pose.position.x * 3.6;
-				break;
-			default:
-				current_velocity = current_velocity_.pose.position.x * 3.6;
-				break;
-			}*/
+					unsigned char *drive_point = (unsigned char*)&drive_val;
+					buf[4] = drive_point[1];  buf[5] = drive_point[0];
+		        }
+		        else
+		        {
+			        /*double current_velocity;// = can_receive_502_.velocity_average / 100.0;
+					switch(use_velocity_topic_)
+					{
+					case USE_VELOCITY_CAN:
+						current_velocity = can_receive_502_.velocity_average / 100.0;
+						break;
+					case USE_VELOCITY_TWIST:
+						current_velocity = current_velocity_.pose.position.x * 3.6;
+						break;
+					default:
+						current_velocity = current_velocity_.pose.position.x * 3.6;
+						break;
+					}*/
 
-			/*double cmd_velocity;
-			if(input_drive_mode_ == false)
-				cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
-			else
-				cmd_velocity = input_drive_ / 100.0;*/
-			double cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
-			if(input_drive_mode_ == true && can_receive_501_.drive_auto)
-				cmd_velocity = input_drive_ / 100.0;
-			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
+			        /*double cmd_velocity;
+					if(input_drive_mode_ == false)
+						cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
+					else
+						cmd_velocity = input_drive_ / 100.0;*/
+			        double cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
+					//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 
-			//AUTOモードじゃない場合、stroke値0をcanに送る
-			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
-			        can_receive_503_.clutch == false)
-			{
-				pid_params.clear_diff();
-				short drive_val = 0;
-				unsigned char *drive_point = (unsigned char*)&drive_val;
-				buf[4] = drive_point[1];  buf[5] = drive_point[0];
-				return;
-			}
+					//AUTOモードじゃない場合、stroke値0をcanに送る
+					if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
+					        can_receive_503_.clutch == false)
+					{
+						pid_params.clear_diff();
+						short drive_val = 0;
+						unsigned char *drive_point = (unsigned char*)&drive_val;
+						buf[4] = drive_point[1];  buf[5] = drive_point[0];
+						return;
+					}
 
-			short new_stroke = 0;
-			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
-			//std::cout << "if : " << cmd_velocity << " > " << current_velocity << std::endl;
-			//std::cout << "if : " << cmd_velocity << " > " "0.0" << std::endl;
-			//std::cout << "if : " << current_velocity << " > " << setting_.velocity_limit << std::endl;
-			//加速判定
-			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
-			        && fabs(cmd_velocity) > 0.0
-			        && current_velocity < setting_.velocity_limit)
-			{
-				std::cout << "stroke drive" << std::endl;
+					if(input_drive_mode_ == true) cmd_velocity = input_drive_ / 100.0;
+					short new_stroke = 0;
+					std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
+					//std::cout << "if : " << cmd_velocity << " > " << current_velocity << std::endl;
+					//std::cout << "if : " << cmd_velocity << " > " "0.0" << std::endl;
+					//std::cout << "if : " << current_velocity << " > " << setting_.velocity_limit << std::endl;
+					//加速判定
+					if (fabs(cmd_velocity) > current_velocity
+					        && fabs(cmd_velocity) > 0.0
+					        && current_velocity < setting_.velocity_limit)
+					{
+						std::cout << "stroke drive" << std::endl;
+						//short accel_stroke = 100;
+						//short accel_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
+						//pid_params.set_stroke_prev(accel_stroke);
+						//unsigned char *drive_point = (unsigned char*)&accel_stroke;
+						//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+						new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
+					}
+					//減速判定
+					else if(fabs(cmd_velocity) < current_velocity
+					         && fabs(cmd_velocity) > 0.0)
+					{
+						std::cout << "stroke brake" << std::endl;
+						//short brake_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
+						//pid_params.set_stroke_prev(brake_stroke);
+						//unsigned char *drive_point = (unsigned char*)&brake_stroke;
+						//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+						new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
+					}
+					//停止判定
+					else if(cmd_velocity == 0.0 && current_velocity > 0.0)//VELOCITY_ZERO_VALUE_/100.0)
+					{std::cout << "stroke stop" << std::endl;
+						if(current_velocity < setting_.velocity_stop_th)
+						{
+							//short brake_stroke = _stopping_control(current_velocity);
+							//pid_params.set_stroke_prev(brake_stroke);
+							//pid_params.set_stop_stroke_prev(brake_stroke);
+							//unsigned char *drive_point = (unsigned char*)&brake_stroke;
+							//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+							new_stroke = _stopping_control(current_velocity);
+							pid_params.set_stop_stroke_prev(new_stroke);
+						}
+						else
+						{
+							//short brake_stroke = _brake_stroke_pid_control(current_velocity, 0);
+							//pid_params.set_stroke_prev(brake_stroke);
+							//unsigned char *drive_point = (unsigned char*)&brake_stroke;
+							//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+							new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
+						}
+					}
+					else
+					{
+						std::cout << "stroke default" << std::endl;
+						//short drive_stroke = pid_params.get_stroke_prev();
+						//unsigned char *drive_point = (unsigned char*)&drive_stroke;
+						//buf[4] = drive_point[1];  buf[5] = drive_point[0];
+						new_stroke = pid_params.get_stroke_prev();
+					}
 
-				//new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
-				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
-			}
-			//減速判定
-			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
-			         && fabs(cmd_velocity) > 0.0)
-			{
-				std::cout << "stroke brake" << std::endl;
+					if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
+					{
+						short tmp = pid_params.get_stroke_prev() + 5;
+						if(tmp < new_stroke) new_stroke = tmp;
+					}
+					pid_params.set_stroke_prev(new_stroke);
 
-				//new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
-				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
-			}
-			//停止判定
-			else if(cmd_velocity == 0.0 && current_velocity > 0.0)//VELOCITY_ZERO_VALUE_/100.0)
-			{std::cout << "stroke stop" << std::endl;
-				if(current_velocity < setting_.velocity_stop_th)
-				{
-					//new_stroke = _stopping_control(current_velocity);
-					//pid_params.set_stop_stroke_prev(new_stroke);
-					pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_STOP_);
-				}
-				else
-				{
-					//new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
-					pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
-				}
-			}
-			else if(current_velocity > setting_.velocity_limit)
-			{
-				std::cout << "stroke default" << std::endl;
-
-				//new_stroke = pid_params.get_stroke_prev();
-				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_KEEP_);
-			}
-			else {
-				//モード変更なし
-			}
-
-			switch(pid_params.get_stroke_state_mode_())
-			{
-			case PID_params::STROKE_STATE_MODE_ACCEL_:
-				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
-				break;
-			case PID_params::STROKE_STATE_MODE_BRAKE_:
-				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, stopper_distance_);
-				break;
-			case PID_params::STROKE_STATE_MODE_STOP_:
-				new_stroke = _stopping_control(current_velocity);
-				pid_params.set_stop_stroke_prev(new_stroke);
-				break;
-			case PID_params::STROKE_STATE_MODE_KEEP_:
-				new_stroke = pid_params.get_stroke_prev();
-				break;
-			}
-
-			//ブレーキを離す場合、徐々に離す
-			if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
-			{
-				short tmp = pid_params.get_stroke_prev() + 5;
-				if(tmp < new_stroke) new_stroke = tmp;
-			}
-
-			pid_params.set_stroke_prev(new_stroke);
-
-			//if(input_drive_mode_ == true) new_stroke = input_drive_;
-			unsigned char *drive_point = (unsigned char*)&new_stroke;
-			buf[4] = drive_point[1];  buf[5] = drive_point[0];
-		}
+					//if(input_drive_mode_ == true) new_stroke = input_drive_;
+					unsigned char *drive_point = (unsigned char*)&new_stroke;
+					buf[4] = drive_point[1];  buf[5] = drive_point[0];
+		        }
 	}
 
 	void bufset_car_control(unsigned char *buf, double current_velocity)
@@ -1039,8 +1012,7 @@ public:
 	    , drive_clutch_(true)
 	    , steer_clutch_(true)
 	    , config_result(CONFIG_OK)
-	    , use_velocity_topic_(USE_VELOCITY_TWIST)
-	    , stopper_distance_(-1)
+	    , use_velocity_topic_(USE_VELOCITY_CAN)
 	{
 		setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -1102,7 +1074,6 @@ public:
 		sub_steer_clutch_ = nh_.subscribe("/microbus/steer_clutch", 10, &kvaser_can_sender::callbackSteerClutch, this);
 		sub_econtrol_ = nh_.subscribe("/econtrol", 10, &kvaser_can_sender::callbackEControl, this);
 		sub_obtracle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 10, &kvaser_can_sender::callbackObstracleWaypoint, this);
-		sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &kvaser_can_sender::callbackStopperDistance, this);
 
 		std::string safety_error_message = "";
 		publisStatus(safety_error_message);
@@ -1111,7 +1082,7 @@ public:
 		automatic_door_time_ = blinker_right_time_ = blinker_left_time_ =
 		        blinker_stop_time_ = ros::Time::now();
 
-		pid_params.init(0);
+		pid_params.init(setting_.brake_stroke_stopping_med);
 	}
 
 	const bool isOpen() {return kc.isOpen();}

@@ -191,10 +191,11 @@ private:
 
 	void callbackEmergencyReset(const std_msgs::Empty::ConstPtr &msg)
 	{
-		std::cout << "sub Emergency" << std::endl;
-		char buf[SEND_DATA_SIZE] = {0,0,0,0,0,0,0,0};
-		buf[0] = 0x55;
-		kc.write(0x100, buf, SEND_DATA_SIZE);
+		std::cout << "aaasub Emergency" << std::endl;
+		char buf[SEND_DATA_SIZE] = {0x55,0,0,0,0,0,0,0};
+		//buf[0] = 0x55;
+		int res = kc.write(0x100, buf, SEND_DATA_SIZE);
+		std::cout << "write flag : " << res << std::endl;
 		ros::Rate rate(1);
 		rate.sleep();
 		buf[0] = 0x00;
@@ -714,7 +715,7 @@ private:
 				steer_val = wheel_ang * wheelrad_to_steering_can_value_right;// * 2;
 				//if(zisoku > handle_control_min_speed) steer_val *= ratio;
 			}
-			steer_val -= 150;
+			steer_val -= 250;
 		}
 		else steer_val = input_steer_;
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
@@ -1067,6 +1068,7 @@ public:
 	{
 		can_receive_501_.emergency = true;
 		can_receive_501_.blinker_right = can_receive_501_.blinker_left = false;
+		std::cout <<"kvaser channel : " << kvaser_channel << std::endl;
 		canStatus res = kc.init(kvaser_channel, canBITRATE_500K);
 		if(res != canStatus::canOK) {std::cout << "open error" << std::endl;}
 
@@ -1127,9 +1129,9 @@ public:
 
 	void can_send()
 	{
-		//if(can_receive_501_.emergency == false)
+		//if(can_receive_501_.emergency == )
 		{
-			unsigned char buf[SEND_DATA_SIZE] = {0,0,0,0,0,0,0,0};
+			unsigned char buf[SEND_DATA_SIZE+1] = {0,0,0,0,0,0,0,0,0};
 			bufset_mode(buf);
 			bufset_steer(buf);
 			bufset_drive(buf);
@@ -1144,7 +1146,8 @@ public:
 				}
 			}*/
 			bufset_car_control(buf);
-			kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
+			int res = kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
+			std::cout << "write flag : " << res << std::endl;
 		}
 	}
 };
@@ -1162,6 +1165,7 @@ int main(int argc, char** argv)
 	if(kcs.isOpen() == false)
 	{
 		std::cerr << "error : open" << std::endl;
+		return -1;
 	}
 
 	//kcs.emergency_reset();

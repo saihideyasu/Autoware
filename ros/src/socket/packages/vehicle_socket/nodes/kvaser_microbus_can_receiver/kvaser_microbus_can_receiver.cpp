@@ -52,6 +52,7 @@ public:
 	{
 		canStatus res = kc.read_wait(100);
 		if(kc.get_id() == 0x501 || kc.get_id() == 0x502 || kc.get_id() == 0x503) kc.printReader();
+		//if(kc.get_id() == 0x100) kc.printReader();
 
 		if(res == canStatus::canOK)
 		{
@@ -224,7 +225,7 @@ public:
 					pub_microbus_can_503_.publish(can);
 					std::cout << "pedal_voltage : " << can.pedal_voltage << std::endl;
 					std::cout << "pedal_displacement : " << can.pedal_displacement << std::endl;
-					std::cout << "engine_rotation : " << can.engine_rotation;
+					std::cout << "engine_rotation : " << can.engine_rotation << std::endl;
 				    read_id_flag_.read501 = read_id_flag_.read502 = false;
 					break;
 			    }

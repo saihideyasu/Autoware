@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <std_msgs/Int32.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_config_msgs/ConfigTemporaryStoper.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -9,7 +10,7 @@ class TemporaryStoper
 private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_waypoint_, sub_can_;
-	ros::Publisher pub_waypoint_, pub_temporary_line_;
+	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_;
 
 	autoware_config_msgs::ConfigTemporaryStoper config_;
 	autoware_can_msgs::MicroBusCan502 can_;
@@ -52,8 +53,15 @@ private:
 
 	int stop_line_search(const autoware_msgs::Lane& way)
 	{
-		if(way.waypoints.size() == 0) return -1;
-		if(way.waypoints[0].waypoint_param.id < 5) return -1;
+		std_msgs::Int32 dis;
+		dis.data = -1;
+
+		if(way.waypoints.size() == 0 || way.waypoints[0].waypoint_param.id < 5)
+		{
+			pub_temporary_distance_.publish(dis);
+			return -1;
+		}
+
 		for(int i=0; i<way.waypoints.size() || i<config_.search_distance; i++)
 		{
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
@@ -81,9 +89,15 @@ private:
 				array.markers.push_back(marker);
 				pub_temporary_line_.publish(array);
 
+				std_msgs::Int32 dis;
+				dis.data = i;
+				pub_temporary_distance_.publish(dis);
+
 				return i;
 			}
 		}
+
+		pub_temporary_distance_.publish(dis);
 		return -1;
 	}
 
@@ -154,6 +168,7 @@ public:
 
 		pub_waypoint_ = nh_.advertise<autoware_msgs::Lane>("/temporary_stop_waypoints", 1);
 		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
+		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStoper::callbackWaypoint, this);
 		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStoper::callbackCan, this);
 	}

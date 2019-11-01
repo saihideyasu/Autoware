@@ -20,3 +20,4 @@ int16 pedal_stroke_min
 int16 brake_stroke_stopping_med
 int16 accel_stroke_offset
 int16 brake_stroke_offset
+float64 acceptable_velocity_variation

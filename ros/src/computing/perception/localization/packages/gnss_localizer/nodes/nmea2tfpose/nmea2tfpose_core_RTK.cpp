@@ -338,6 +338,9 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
 			geo_.set_llh_nmea_degrees(lat, lon, h);*/
 
+			/*double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+			double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+			double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;*/
 			double north_vel = stod(nmea.at(15));
 			double east_vel = stod(nmea.at(16));
 			double up_vel = stod(nmea.at(17));

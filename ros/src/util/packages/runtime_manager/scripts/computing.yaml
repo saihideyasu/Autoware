@@ -6334,3 +6334,12 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : acceptable_velocity_variation
+      desc : acceptable_velocity_variation
+      label: acceptable_velocity_variation
+      min  : 0
+      max  : 10
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='

@@ -556,8 +556,10 @@ void changeWaypoints(const VelocitySetInfo& vs_info, const EControl& detection_r
   else
   {  // ACCELERATE or KEEP
     vs_path->initializeNewWaypoints();
-    vs_path->avoidSuddenAcceleration(vs_info.getDecelerationObstacle(), closest_waypoint);
-    vs_path->avoidSuddenDeceleration(vs_info.getVelocityChangeLimit(), vs_info.getDecelerationObstacle(), closest_waypoint);
+	//vs_path->avoidSuddenAcceleration(vs_info.getDecelerationObstacle(), closest_waypoint);
+	vs_path->avoidSuddenAcceleration(2.0, closest_waypoint);
+	//vs_path->avoidSuddenDeceleration(vs_info.getVelocityChangeLimit(), vs_info.getDecelerationObstacle(), closest_waypoint);
+	vs_path->avoidSuddenDeceleration(1.0, 5.0, closest_waypoint);
     vs_path->setTemporalWaypoints(vs_info.getTemporalWaypointsSize(), closest_waypoint, vs_info.getControlPose());
 	final_waypoints_pub.publish(vs_path->getTemporalWaypoints());
   }

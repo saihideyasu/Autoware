@@ -4,16 +4,15 @@
 #include <std_msgs/Int32.h>
 #include <autoware_msgs/TrafficLight.h>
 #include <tf/transform_broadcaster.h>
-//#include <tf/transform_listener.h>
-
-
 
 class StopperDistance
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_waypoint_, sub_camera_light_color_, sub_temporari_flag_;
+	ros::Subscriber sub_obstacle_waypoint_;
 	ros::Publisher pub_stopline_distance_;
+
 	double const front_bumper_to_baselink = 6.25 - 1.7;
 
 	int light_color_ = 1;
@@ -27,6 +26,13 @@ private:
 	void cameraTemporaryFlag(const std_msgs::Int32& msg)
 	{
 		temporary_flag_ = msg.data;
+	}
+
+	int obstacle_waypoint_ = -1;
+	const int obstacle_offset_ = 2;
+	void cameraObstacleWaypoint(const std_msgs::Int32& msg)
+	{
+		obstacle_waypoint_ = msg.data;
 	}
 
 	void waypointCallback(const autoware_msgs::Lane& msg)
@@ -59,6 +65,14 @@ private:
 				pub_stopline_distance_.publish(pubmsg);
 				return;
 			}
+			else if(obstacle_waypoint_ > 0 && obstacle_waypoint_ == i)
+			{
+				std_msgs::Float64 pubmsg;
+				pubmsg.data = dis - (front_bumper_to_baselink + obstacle_offset_);
+				if(pubmsg.data < 0) pubmsg.data = 0;
+				pub_stopline_distance_.publish(pubmsg);
+				return;
+			}
 		}
 
 		std_msgs::Float64 pubmsg;
@@ -74,6 +88,7 @@ public:
 		sub_waypoint_ = nh_.subscribe("/final_waypoints", 1, &StopperDistance::waypointCallback, this);
 		sub_camera_light_color_ = nh_.subscribe("/camera_light_color", 1, &StopperDistance::cameraLightColorCallback, this);
 		sub_temporari_flag_ = nh_.subscribe("/temporary_flag", 1, &StopperDistance::cameraTemporaryFlag, this);
+		sub_obstacle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 1, &StopperDistance::cameraObstacleWaypoint, this);
 	}
 };
 

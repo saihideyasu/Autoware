@@ -18,6 +18,7 @@
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/PositionChecker.h>
 #include <autoware_msgs/WaypointParam.h>
+#include <autoware_msgs/DetectedObjectArray.h>
 #include "kvaser_can.h"
 #include <time.h>
 
@@ -219,6 +220,7 @@ private:
 	ros::Subscriber sub_blinker_right_, sub_blinker_left_, sub_blinker_stop_;
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
+	ros::Subscriber sub_lidar_detector_objects_;
 
 	KVASER_CAN kc;
 	bool flag_drive_mode_, flag_steer_mode_;
@@ -248,6 +250,32 @@ private:
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
+
+	void callbackLidarDetectorObjects (const autoware_msgs::DetectedObjectArray::ConstPtr &msg)
+	{
+		std::cout << "lidar detector : " << std::endl;
+		std::cout << "ldo obj size : " << msg->objects.size() << std::endl;
+		for(int obj_i=0; obj_i<msg->objects.size(); obj_i++)
+		{
+			int id = msg->objects[obj_i].id;
+			geometry_msgs::Pose pose = msg->objects[obj_i].pose;
+			std::cout << "ldo " << id << " pose x : " << pose.position.x << std::endl;
+			std::cout << "ldo " << id << " pose y : " << pose.position.y << std::endl;
+			std::cout << "ldo " << id << " pose z : " << pose.position.z << std::endl;
+			std::cout << "ldo " << id << " orie x : " << pose.orientation.x << std::endl;
+			std::cout << "ldo " << id << " orie y : " << pose.orientation.y << std::endl;
+			std::cout << "ldo " << id << " orie z : " << pose.orientation.z << std::endl;
+			std::cout << "ldo " << id << " orie w : " << pose.orientation.w << std::endl;
+
+			geometry_msgs::Twist velocity = msg->objects[obj_i].velocity;
+			std::cout << "ldo " << id << " linear x : " << velocity.linear.x << std::endl;
+			std::cout << "ldo " << id << " linear y : " << velocity.linear.y << std::endl;
+			std::cout << "ldo " << id << " linear z : " << velocity.linear.z << std::endl;
+			std::cout << "ldo " << id << " ang x : " << velocity.angular.x << std::endl;
+			std::cout << "ldo " << id << " ang y : " << velocity.angular.y << std::endl;
+			std::cout << "ldo " << id << " ang z : " << velocity.angular.z << std::endl;
+		}
+	}
 
 	void callbackStopperDistance(const std_msgs::Float64::ConstPtr &msg)
 	{
@@ -419,8 +447,9 @@ private:
 		setting_.pedal_stroke_max = 850;
 		setting_.pedal_stroke_min = -500;
 		setting_.brake_stroke_stopping_med = -370;*/
-		setting_.accel_stroke_offset = 10;
-		setting_.brake_stroke_offset = -10;
+		//setting_.accel_stroke_offset = 10;
+		//setting_.brake_stroke_offset = -10;
+		setting_.brake_stroke_stopping_med = 0;
 
 		/*setting_.pedal_stroke_max - setting_.pedal_stroke_min
 		if(setting_.pedal_stroke_max - setting_.pedal_stroke_min > 1300 ||
@@ -668,11 +697,11 @@ private:
 			        / (handle_control_max_speed - handle_control_min_speed) + 1;
 			if(wheel_ang > 0)
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_left;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_left - 250;
 			}
 			else
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_right;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_right - 250;
 			}
 		}
 		else steer_val = input_steer_;
@@ -1046,7 +1075,7 @@ public:
 	    , use_velocity_topic_(USE_VELOCITY_TWIST)
 	    , stopper_distance_(-1)
 	{
-		setting_.use_position_checker = true;
+		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
 		setting_.velocity_stop_th = 4.0;
 		setting_.accel_max_i = 3000.0;
@@ -1062,7 +1091,7 @@ public:
 		setting_.pedal_stroke_min = -500;
 		setting_.brake_stroke_stopping_med = -400;
 		setting_.accel_stroke_offset = 10;
-		setting_.accel_stroke_offset = -10;
+		setting_.accel_stroke_offset = -10;*/
 
 		can_receive_501_.emergency = true;
 		can_receive_501_.blinker_right = can_receive_501_.blinker_left = false;
@@ -1107,6 +1136,7 @@ public:
 		sub_econtrol_ = nh_.subscribe("/econtrol", 10, &kvaser_can_sender::callbackEControl, this);
 		sub_obtracle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 10, &kvaser_can_sender::callbackObstracleWaypoint, this);
 		sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &kvaser_can_sender::callbackStopperDistance, this);
+		sub_lidar_detector_objects_ = nh_.subscribe("/detection/lidar_detector/objects", 10, &kvaser_can_sender::callbackLidarDetectorObjects, this);
 
 		std::string safety_error_message = "";
 		publisStatus(safety_error_message);

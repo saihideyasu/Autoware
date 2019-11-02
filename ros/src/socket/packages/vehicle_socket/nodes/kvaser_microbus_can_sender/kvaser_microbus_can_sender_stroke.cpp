@@ -775,10 +775,7 @@ private:
 		if(distance >= 0 && distance <= 20)
 		{
 			double d = 500 - target_brake_stroke;
-			double baselink_to_bamper = 6.25 - 1.5;
-			double a = distance-baselink_to_bamper;
-			if(a < 0) a = 0;
-			target_brake_stroke  += d * (1 - (a)/(20.0-baselink_to_bamper));
+			target_brake_stroke  += d * (1 - distance/ 20.0 );
 		}
 
 		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_until << std::endl;
@@ -879,7 +876,8 @@ private:
 			//加速判定
 			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && fabs(cmd_velocity) > 0.0
-			        && current_velocity < setting_.velocity_limit)
+			        && current_velocity < setting_.velocity_limit
+			        && (stopper_distance_<0 || stopper_distance_>10.0))
 			{
 				std::cout << "stroke drive" << std::endl;
 
@@ -895,8 +893,14 @@ private:
 				//new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
+			//停止線判定
+			else if (stopper_distance_ > 0 && stopper_distance_ < 10.0)
+			{
+				std::cout << "stroke distance" << std::endl;
+				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
+			}
 			//停止判定
-			else if(cmd_velocity == 0.0 && current_velocity > 0.0)//VELOCITY_ZERO_VALUE_/100.0)
+			/*else if(cmd_velocity == 0.0 && current_velocity > 0.0)//VELOCITY_ZERO_VALUE_/100.0)
 			{std::cout << "stroke stop" << std::endl;
 				if(current_velocity < setting_.velocity_stop_th)
 				{
@@ -909,7 +913,7 @@ private:
 					//new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
 					pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 				}
-			}
+			}*/
 			else if(current_velocity > setting_.velocity_limit)
 			{
 				std::cout << "stroke default" << std::endl;

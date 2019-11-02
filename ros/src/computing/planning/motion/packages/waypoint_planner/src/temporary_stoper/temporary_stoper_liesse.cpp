@@ -2,6 +2,7 @@
 #include <std_msgs/Int32.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_config_msgs/ConfigTemporaryStoper.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -9,11 +10,12 @@ class TemporaryStoper
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
-	ros::Subscriber sub_waypoint_, sub_can_;
-	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_;
+	ros::Subscriber sub_waypoint_, sub_can_, sub_current_velocity_;
+	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_;
 
 	autoware_config_msgs::ConfigTemporaryStoper config_;
 	autoware_can_msgs::MicroBusCan502 can_;
+	geometry_msgs::TwistStamped current_velocity_;
 
 	uint32_t stop_waypoint_id_;
 	ros::Time timer_;
@@ -104,24 +106,37 @@ private:
 	autoware_msgs::Lane apply_stopline_acceleration(const autoware_msgs::Lane& lane, double acceleration,
 	                                                int ahead_cnt, int behind_cnt)
 	{
+		std_msgs::Int32 flag;
+
 		int stop_index = stop_line_search(lane); std::cout << stop_index << std::endl;
 		if(stop_index < 0)
+		{
+			flag.data = 0;//そのまま
+			pub_temporari_flag_.publish(flag);
 			return lane;
+		}
 
 		ros::Time now_time = ros::Time::now();
 		if(timer_ < now_time)
 		{
 			if(stop_waypoint_id_ == lane.waypoints[stop_index].waypoint_param.id)
-				return lane;
+			{
+				flag.data = 2;
+				pub_temporari_flag_.publish(flag);
+				return lane;//低判定終了
+			}
 			else
 			{
 				stop_waypoint_id_ = 0;
-				if(can_.velocity_actual <= config_.stop_speed_threshold)
+				//if(can_.velocity_actual <= config_.stop_speed_threshold)
+				if(current_velocity_.twist.linear.x <= config_.stop_speed_threshold)
 				{
 					stop_waypoint_id_ = lane.waypoints[stop_index].waypoint_param.id;
 					timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
 					std::cout << "time : " << timer_.sec << "," << now_time.sec << std::endl;
 				}
+				flag.data = 1;//停止判定あり
+				pub_temporari_flag_.publish(flag);
 			}
 		}
 
@@ -137,6 +152,11 @@ private:
 	void callbackCan(const autoware_can_msgs::MicroBusCan502& msg)
 	{
 		can_ = msg;
+	}
+
+	void callbackCurrentVelocity(const geometry_msgs::TwistStamped& msg)
+	{
+		current_velocity_ = msg;
 	}
 
 	void callbackConfig(const autoware_config_msgs::ConfigTemporaryStoper& msg)
@@ -159,9 +179,9 @@ public:
 
 		config_.search_distance = 7;
 		config_.acceleration = 1;
-		config_.number_of_zeros_ahead = 5;
+		config_.number_of_zeros_ahead = 0;
 		config_.number_of_zeros_behind = 5;
-		config_.stop_speed_threshold = 150;
+		config_.stop_speed_threshold = 0.02;
 
 		timer_ = ros::Time::now();
 		can_.velocity_actual = 0;
@@ -169,8 +189,10 @@ public:
 		pub_waypoint_ = nh_.advertise<autoware_msgs::Lane>("/temporary_stop_waypoints", 1);
 		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
+		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStoper::callbackWaypoint, this);
 		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStoper::callbackCan, this);
+		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStoper::callbackCurrentVelocity, this);
 	}
 };
 

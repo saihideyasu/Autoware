@@ -24,11 +24,10 @@ enum class EControl
 
 enum class EObstacleType
 {
-  NONE = 0x0,
-  ON_WAYPOINTS = 0x1,
-  ON_CROSSWALK = 0x2,
-  STOPLINE = 0x4,
-  ON_POINT_PILLAR = 0x8,
+  NONE = -1,
+  ON_WAYPOINTS = 1,
+  ON_CROSSWALK = 2,
+  STOPLINE = 3,
 };
 
 struct CrossWalkPoints

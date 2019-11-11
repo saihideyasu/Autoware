@@ -1,4 +1,5 @@
 vehicle_info:
   maximum_steering_angle: 810.0
   minimum_turning_radius: 6.5
+  front_bumper_to_baselink: 4.55
   wheel_base: 3.935

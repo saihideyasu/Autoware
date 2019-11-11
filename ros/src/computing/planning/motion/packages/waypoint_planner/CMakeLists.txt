@@ -86,6 +86,18 @@ add_dependencies(temporary_stoper_liesse
   ${catkin_EXPORTED_TARGETS}
 )
 
+add_executable(steer_correction
+  src/steer_correction/steer_correction.cpp
+)
+
+target_link_libraries(steer_correction
+  ${catkin_LIBRARIES}
+)
+
+add_dependencies(steer_correction
+  ${catkin_EXPORTED_TARGETS}
+)
+
 add_executable(stopper_distance
   src/stopper_distance/stopper_distance.cpp
 )
@@ -98,7 +110,7 @@ add_dependencies(stopper_distance
   ${catkin_EXPORTED_TARGETS}
 )
 
-install(TARGETS astar_avoid velocity_set temporary_stoper temporary_stoper_liesse stopper_distance
+install(TARGETS astar_avoid velocity_set temporary_stoper temporary_stoper_liesse stopper_distance steer_correction
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

@@ -1,22 +1,26 @@
 #include <ros/ros.h>
+#include <std_msgs/Float64.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_config_msgs/ConfigTemporaryStoper.h>
 #include <autoware_can_msgs/CANInfo.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 
 class TemporaryStoper
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
-	ros::Subscriber sub_waypoint_, sub_can_;
+	ros::Subscriber sub_waypoint_, sub_can_, sub_current_velocity_, sub_distance_;
 	ros::Publisher pub_waypoint_, pub_temporary_line_;
 
 	autoware_config_msgs::ConfigTemporaryStoper config_;
 	autoware_can_msgs::CANInfo can_;
+	geometry_msgs::TwistStamped current_velocity_;
 
 	uint32_t stop_waypoint_id_;
 	ros::Time timer_;
 	double stop_time_;
+	double distance_;
 
 	autoware_msgs::Lane apply_acceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
 	                                       size_t fixed_cnt, double fixed_vel)
@@ -102,7 +106,9 @@ private:
 			else
 			{
 				stop_waypoint_id_ = 0;
-				if(can_.speed <= config_.stop_speed_threshold)
+				//if(can_.speed <= config_.stop_speed_threshold)
+				if(current_velocity_.twist.linear.x <= config_.stop_speed_threshold
+				        && distance_ <= 0)
 				{
 					stop_waypoint_id_ = lane.waypoints[stop_index].waypoint_param.id;
 					timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
@@ -125,6 +131,16 @@ private:
 		can_ = msg;
 	}
 
+	void callbackCurrentVelocity(const geometry_msgs::TwistStamped& msg)
+	{
+		current_velocity_ = msg;
+	}
+
+	void callbackDistance(const std_msgs::Float64& msg)
+	{
+		distance_ = msg.data;
+	}
+
 	void callbackConfig(const autoware_config_msgs::ConfigTemporaryStoper& msg)
 	{
 		config_ = msg;
@@ -140,6 +156,7 @@ public:
 	TemporaryStoper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(0)
 	    , stop_time_(5.0)
+	    , distance_(0.0)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
 
@@ -147,7 +164,7 @@ public:
 		config_.acceleration = 1;
 		config_.number_of_zeros_ahead = 5;
 		config_.number_of_zeros_behind = 5;
-		config_.stop_speed_threshold = 0.05;
+		config_.stop_speed_threshold = 0.01;
 
 		timer_ = ros::Time::now();
 		can_.speed = 0;
@@ -156,6 +173,8 @@ public:
 		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStoper::callbackWaypoint, this);
 		sub_can_ = nh_.subscribe("/can_info", 1, &TemporaryStoper::callbackCan, this);
+		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStoper::callbackCurrentVelocity, this);
+		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStoper::callbackDistance, this);
 	}
 };
 

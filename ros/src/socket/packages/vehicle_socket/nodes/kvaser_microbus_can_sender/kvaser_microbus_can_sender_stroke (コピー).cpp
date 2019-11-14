@@ -231,7 +231,6 @@ private:
 	autoware_can_msgs::MicroBusCan502 can_receive_502_;
 	autoware_can_msgs::MicroBusCan503 can_receive_503_;
 	geometry_msgs::TwistStamped current_velocity_;
-	double acceralation_;
 	autoware_msgs::VehicleCmd twist_;
 	short input_steer_, input_drive_;
 	short pedal_;
@@ -376,10 +375,6 @@ private:
 	void callbackCurrentVelocity(const geometry_msgs::TwistStamped::ConstPtr &msg)
 	{
 		std::cout << "current velocity : " << msg->twist.linear.x << std::endl;
-		ros::Duration rostime = msg->header.stamp - current_velocity_.header.stamp;
-		double td = rostime.sec + rostime.nsec * 1E-9;
-		acceralation_ = (msg->twist.linear.x - current_velocity_.twist.linear.x) / td;
-		std::cout << "acceralation," << acceralation_ << std::endl;
 		current_velocity_ = *msg;
 	}
 
@@ -806,32 +801,12 @@ private:
 		        setting_.k_brake_i_until * e_i +
 		        setting_.k_brake_d_until * e_d;
 
-
-		//x = current_velocity*current_velocity / (2.0*acc);
-		double cv_s = current_velocity /3.6;
-		std::cout << "yosou teisi," << cv_s*cv_s/(2.0*acceralation_) << std::endl;
-		if(distance >= 8 && distance <= 20)
+		if(distance >= 0 && distance <= 20)
 		{
 			std::cout << "tbs," << target_brake_stroke;
 			double d = 500 - target_brake_stroke;
 			target_brake_stroke  += d * (1 - distance/ 20.0 );
 			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
-		}
-		else if(distance >= 1 && distance <= 8)
-		{
-			if(current_velocity > 5.0)
-			{
-				std::cout << "tbs," << target_brake_stroke;
-				double d = 500 - target_brake_stroke;
-				target_brake_stroke  += d * (1 - distance/ 20.0 );
-				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
-			}
-		}
-		else if(distance >= 0 && distance <= 1)
-		{
-			//target_brake_stroke = 0.0 + 500.0 * pow(1.0 - distance,0.5);
-			target_brake_stroke = 250.0 + 250.0 * (1.0-distance);
-
 		}
 
 		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_until << std::endl;
@@ -988,9 +963,9 @@ private:
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
 				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, stopper_distance_);
-				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
-					new_stroke > pid_params.get_stroke_prev())
-						new_stroke = pid_params.get_stroke_prev();*/
+				if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
+				    new_stroke > pid_params.get_stroke_prev())
+					    new_stroke = pid_params.get_stroke_prev();
 				break;
 			case PID_params::STROKE_STATE_MODE_STOP_:
 				new_stroke = _stopping_control(current_velocity);
@@ -1104,7 +1079,6 @@ public:
 	    , config_result(CONFIG_OK)
 	    , use_velocity_topic_(USE_VELOCITY_TWIST)
 	    , stopper_distance_(-1)
-	    , acceralation_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -1211,7 +1185,7 @@ public:
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "kvaser_microbus_can_sender_storke");
+	ros::init(argc, argv, "kvaser_microbus_can_sender");
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 

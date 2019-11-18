@@ -409,7 +409,10 @@ void Nmea2TFPoseNode::callbackWaypointParam(const autoware_msgs::WaypointParam::
 void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg)
 {
   current_time_ = msg->header.stamp;
-  convert(split(msg->sentence, ','), msg->header.stamp);
+  std::vector<std::string> sentence_split = split(msg->sentence, ',');
+  if(sentence_split.size() == 0) return;
+
+  convert(sentence_split, msg->header.stamp);
 
   double timeout = 10.0;
   if (fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
@@ -426,8 +429,11 @@ void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstP
         ROS_INFO("QQ is not subscribed. Orientation is created by atan2");
         last_geo_.push_back(geo_,lat_std,lon_std,alt_std,surface_speed_,gphdt_value);
         createOrientation();
-        publishPoseStamped();
-        publishTF();
+		if(sentence_split.at(0) == "#BESTPOSA")
+		{
+			publishPoseStamped();
+			publishTF();
+		}
         //last_geo_ = geo_;
     }
     /*}else

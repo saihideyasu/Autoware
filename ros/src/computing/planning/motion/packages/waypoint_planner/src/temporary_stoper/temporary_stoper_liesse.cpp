@@ -67,6 +67,7 @@ private:
 
 		for(int i=0; i<way.waypoints.size() || i<config_.search_distance; i++)
 		{
+			//std::cout << "i," << (int)way.waypoints[i].waypoint_param.temporary_stop_line << std::endl;
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 2)
 			{
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;

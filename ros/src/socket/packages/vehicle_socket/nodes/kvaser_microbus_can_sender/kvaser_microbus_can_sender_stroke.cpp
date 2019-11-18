@@ -805,11 +805,10 @@ private:
 		double target_brake_stroke = setting_.k_brake_p_until * e +
 		        setting_.k_brake_i_until * e_i +
 		        setting_.k_brake_d_until * e_d;
-
+		double mps = current_velocity / 3.6;
+		double estimated_stopping_distance = - mps*mps/(2.0*acceralation_);
 
 		//x = current_velocity*current_velocity / (2.0*acc);
-		double cv_s = current_velocity /3.6;
-		std::cout << "yosou teisi," << cv_s*cv_s/(2.0*acceralation_) << std::endl;
 		if(distance >= 8 && distance <= 20)
 		{
 			std::cout << "tbs," << target_brake_stroke;
@@ -817,7 +816,7 @@ private:
 			target_brake_stroke  += d * (1 - distance/ 20.0 );
 			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
 		}
-		else if(distance >= 1 && distance <= 8)
+	/*	else if(distance >= 2 && distance <= 8)
 		{
 			if(current_velocity > 5.0)
 			{
@@ -827,12 +826,28 @@ private:
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
 			}
 		}
-		else if(distance >= 0 && distance <= 1)
+		else if(distance >= 0 && distance <= 2)
 		{
-			//target_brake_stroke = 0.0 + 500.0 * pow(1.0 - distance,0.5);
-			target_brake_stroke = 250.0 + 250.0 * (1.0-distance);
+			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
+			target_brake_stroke = 0.0 + 500.0 * (2.0-distance)/2.0;
 
 		}
+		*/
+		else if(distance >= 0 && distance <= 8)
+		{
+			if(stopper_distance_ <= estimated_stopping_distance && current_velocity > 5.0)
+			{
+				std::cout << "tbs," << target_brake_stroke;
+				double d = 500 - target_brake_stroke;
+				target_brake_stroke  += d * (1 - distance/ 20.0 );
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
+			}
+		}
+
+
+
+
+
 
 		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_until << std::endl;
 		if (ret < setting_.pedal_stroke_min)
@@ -912,7 +927,9 @@ private:
 			if(input_drive_mode_ == true && can_receive_501_.drive_auto)
 				cmd_velocity = input_drive_ / 100.0;
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
-
+			double cv_s = current_velocity /3.6;
+			if(acceralation_ <= 0 && stopper_distance_ >= 0)
+				std::cout << "yosou teisi," << - cv_s*cv_s/(2.0*acceralation_) << "," << stopper_distance_ <<  std::endl;
 			//AUTOモードじゃない場合、stroke値0をcanに送る
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
 			        can_receive_503_.clutch == false)
@@ -935,7 +952,7 @@ private:
 			        && current_velocity < setting_.velocity_limit
 			        && (stopper_distance_<0 || stopper_distance_>10.0))
 			{
-				std::cout << "stroke drive" << std::endl;
+				std::cout << "yosou stroke drive" << std::endl;
 
 				//new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
@@ -944,7 +961,7 @@ private:
 			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
 			         && fabs(cmd_velocity) > 0.0)
 			{
-				std::cout << "stroke brake" << std::endl;
+				std::cout << "yosou stroke brake" << std::endl;
 
 				//new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
@@ -952,7 +969,7 @@ private:
 			//停止線判定
 			else if (stopper_distance_ > 0 && stopper_distance_ < 10.0)
 			{
-				std::cout << "stroke distance" << std::endl;
+				std::cout << "yosoku stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止判定

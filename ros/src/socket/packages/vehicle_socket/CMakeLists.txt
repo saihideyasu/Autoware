@@ -10,7 +10,9 @@ find_package(tablet_socket_msgs REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  tf
   std_msgs
+  geometry_msgs
   autoware_msgs
   autoware_can_msgs
   autoware_config_msgs
@@ -22,7 +24,9 @@ set(CMAKE_CXX_FLAGS "-O2 -Wall ${CMAKE_CXX_FLAGS}")
 catkin_package(CATKIN_DEPENDS
   roscpp
   rospy
+  tf
   std_msgs
+  geometry_msgs
   autoware_can_msgs
   autoware_msgs
   tablet_socket_msgs

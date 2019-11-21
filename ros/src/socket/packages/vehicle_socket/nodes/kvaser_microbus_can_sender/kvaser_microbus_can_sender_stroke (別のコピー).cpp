@@ -24,6 +24,7 @@
 #include <autoware_msgs/PositionChecker.h>
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/DetectedObjectArray.h>
+#include <autoware_msgs/AcceralationWrite.h>
 #include "kvaser_can.h"
 #include <time.h>
 
@@ -34,14 +35,8 @@ typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::TwistStam
 class PID_params
 {
 private:
-	double accel_e_prev_velocity_, brake_e_prev_velocity_;
-	double accel_e_prev_acceleration_, brake_e_prev_acceleration_;
-	double accel_e_prev_distance_, brake_e_prev_distance_;
-
-	double accel_diff_sum_velocity_, brake_diff_sum_velocity_;
-	double accel_diff_sum_acceleration_, brake_diff_sum_acceleration_;
-	double accel_diff_sum_distance_, brake_diff_sum_distance_;
-
+	double accel_e_prev_, brake_e_prev_;
+	double accel_diff_sum_, brake_diff_sum_;
 	short stroke_prev_, stop_stroke_prev_;
 	int stroke_state_mode_;
 public:
@@ -53,56 +48,28 @@ public:
 	PID_params() {}
 	int init(short stroke)
 	{
-		accel_e_prev_velocity_ = brake_e_prev_velocity_ = accel_diff_sum_velocity_ = brake_diff_sum_velocity_ = 0;
-		accel_e_prev_acceleration_ = brake_e_prev_acceleration_ = accel_diff_sum_acceleration_ = brake_diff_sum_acceleration_ = 0;
-		accel_e_prev_distance_ = brake_e_prev_distance_ = accel_diff_sum_distance_ = brake_diff_sum_distance_ = 0;
+		accel_e_prev_ = brake_e_prev_ = accel_diff_sum_ = brake_diff_sum_ = 0;
 		stroke_prev_ = stop_stroke_prev_ = stroke;
 		stroke_state_mode_ = PID_params::STROKE_STATE_MODE_ACCEL_;
 	}
 
-	void clear_diff_velocity()
+	void clear_diff()
 	{
-		accel_diff_sum_velocity_ = brake_diff_sum_velocity_ = 0;
+		accel_diff_sum_ = brake_diff_sum_ = 0;
 	}
 
-	void clear_diff_acceleration()
-	{
-		accel_diff_sum_acceleration_ = brake_diff_sum_acceleration_ = 0;
-	}
-
-	void clear_diff_distance()
-	{
-		accel_diff_sum_distance_ = brake_diff_sum_distance_ = 0;
-	}
-
-	double get_accel_e_prev_velocity() {return accel_e_prev_velocity_;}
-	double get_accel_e_prev_acceleration_() {return accel_e_prev_acceleration_;}
-	double get_accel_e_prev_distance() {return accel_e_prev_distance_;}
-	double get_brake_e_prev_velocity() {return brake_e_prev_velocity_;}
-	double get_brake_e_prev_acceleration() {return brake_e_prev_acceleration_;}
-	double get_brake_e_prev_distance() {return brake_e_prev_distance_;}
-	double get_acclel_diff_sum_velocity() {return accel_diff_sum_velocity_;}
-	double get_acclel_diff_sum_acceleration() {return accel_diff_sum_acceleration_;}
-	double get_acclel_diff_sum_distance() {return accel_diff_sum_distance_;}
-	double get_brake_diff_sum_velocity() {return brake_diff_sum_velocity_;}
-	double get_brake_diff_sum_acceleration() {return brake_diff_sum_acceleration_;}
-	double get_brake_diff_sum_distance() {return brake_diff_sum_distance_;}
+	double get_accel_e_prev() {return accel_e_prev_;}
+	double get_brake_e_prev() {return brake_e_prev_;}
+	double get_acclel_diff_sum() {return accel_diff_sum_;}
+	double get_brake_diff_sum() {return brake_diff_sum_;}
 	double get_stop_stroke_prev() {return stop_stroke_prev_;}
 	short get_stroke_prev() {return stroke_prev_;}
 	int get_stroke_state_mode_() {return stroke_state_mode_;}
 
-	void set_accel_e_prev_velocity(double val) {accel_e_prev_velocity_ = val;}
-	void set_accel_e_prev_acceleration(double val) {accel_e_prev_acceleration_ = val;}
-	void set_accel_e_prev_distance(double val) {accel_e_prev_distance_ = val;}
-	void set_brake_e_prev_velocity(double val) {brake_e_prev_velocity_ = val;}
-	void set_brake_e_prev_acceleration(double val) {brake_e_prev_acceleration_ = val;}
-	void set_brake_e_prev_distance(double val) {brake_e_prev_distance_ = val;}
-	void plus_accel_diff_sum_velocity(double val) {accel_diff_sum_velocity_ += val;}
-	void plus_accel_diff_sum_acceleration(double val) {accel_diff_sum_acceleration_ += val;}
-	void plus_accel_diff_sum_distance(double val) {accel_diff_sum_distance_ += val;}
-	void plus_brake_diff_sum_velocity(double val) {brake_diff_sum_velocity_ += val;}
-	void plus_brake_diff_sum_acceleration(double val) {brake_diff_sum_acceleration_ += val;}
-	void plus_brake_diff_sum_distance(double val) {brake_diff_sum_distance_ += val;}
+	void set_accel_e_prev(double val) {accel_e_prev_ = val;}
+	void set_brake_e_prev(double val) {brake_e_prev_ = val;}
+	void plus_accel_diff_sum(double val) {accel_diff_sum_ += val;}
+	void plus_brake_diff_sum(double val) {brake_diff_sum_ += val;}
 	void set_stop_stroke_prev(short val) {stop_stroke_prev_ = val;}
 	void set_stroke_prev(short val) {stroke_prev_ = val;}
 	void set_stroke_state_mode_(int val) {stroke_state_mode_ = val;}
@@ -248,7 +215,7 @@ private:
 	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc;
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
-	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_;
+	ros::Publisher pub_microbus_can_sender_status_, pub_acceralation_write_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -280,7 +247,7 @@ private:
 	autoware_can_msgs::MicroBusCan503 can_receive_503_;
 	geometry_msgs::TwistStamped current_velocity_;
 	geometry_msgs::PoseStamped current_pose_;
-	double acceleration_, acceleration2_, jurk_, jurk2_;
+	double acceralation_, acceralation2_, jurk_, jurk2_;
 	autoware_msgs::VehicleCmd twist_;
 	short input_steer_, input_drive_;
 	short pedal_;
@@ -427,8 +394,8 @@ private:
 		std::cout << "current velocity : " << msg->twist.linear.x << std::endl;
 		ros::Duration rostime = msg->header.stamp - current_velocity_.header.stamp;
 		double td = rostime.sec + rostime.nsec * 1E-9;
-		acceleration_ = (msg->twist.linear.x - current_velocity_.twist.linear.x) / td;
-		std::cout << "acceleration," << acceleration_ << std::endl;
+		acceralation_ = (msg->twist.linear.x - current_velocity_.twist.linear.x) / td;
+		std::cout << "acceralation," << acceralation_ << std::endl;
 		current_velocity_ = *msg;
 	}*/
 
@@ -450,10 +417,10 @@ private:
 		double v_sa = v * v - v0 * v0;
 		double acc = 0;
 		if(x >= 0.01) acc = (v_sa) / (2 * x);
-		double jurk = (acc - acceleration_) / td;
+		double jurk = (acc - acceralation_) / td;
 		double acc2 = (twist_msg->twist.linear.x - current_velocity_.twist.linear.x) / td;
-		double jurk2 = (acc2 - acceleration2_) / td;
-		std::cout << "acceleration," << acc << "," << acc2 << std::endl;
+		double jurk2 = (acc2 - acceralation2_) / td;
+		std::cout << "acceralation," << acc << "," << acc2 << std::endl;
 
 
 
@@ -464,12 +431,12 @@ private:
 		str << x << "," << v0 << "," << v << "," << v_sa;
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
-		pub_acceleration_write_.publish(aw_msg);
+		pub_acceralation_write_.publish(aw_msg);
 
 		current_velocity_ = *twist_msg;
 		current_pose_ = *pose_msg;
-		acceleration_ = acc;
-		acceleration2_ = acc2;
+		acceralation_ = acc;
+		acceralation2_ = acc2;
 		jurk_ = jurk;
 		jurk2_ = jurk2;
 	}
@@ -819,8 +786,7 @@ private:
 		//std::cout << "if accel : " << stroke << " < " << setting_.brake_stroke_offset << std::endl;
 		if(stroke < setting_.brake_stroke_offset)
 		{
-			pid_params.set_accel_e_prev_velocity(0);
-			pid_params.set_accel_e_prev_acceleration(0);
+			pid_params.set_accel_e_prev(0);
 			return 0;
 		}
 
@@ -833,20 +799,18 @@ private:
 
 		//I
 		double e_i;
-		pid_params.plus_accel_diff_sum_velocity(e);
-		if (pid_params.get_acclel_diff_sum_velocity() > setting_.accel_max_i)
+		pid_params.plus_accel_diff_sum(e);
+		if (pid_params.get_acclel_diff_sum() > setting_.accel_max_i)
 			e_i = setting_.accel_max_i;
 		else
-			e_i = pid_params.get_acclel_diff_sum_velocity();
+			e_i = pid_params.get_acclel_diff_sum();
 
 		//D
-		double e_d = e - pid_params.get_accel_e_prev_velocity();
+		double e_d = e - pid_params.get_accel_e_prev();
 
-		double target_accel_stroke = setting_.k_accel_p_velocity * e +
-		       setting_.k_accel_i_velocity * e_i +
-		       setting_.k_accel_d_velocity * e_d;
-
-		pid_params.set_accel_e_prev_velocity(e);
+		double target_accel_stroke = setting_.k_accel_p_until * e +
+		       setting_.k_accel_i_until * e_i +
+		       setting_.k_accel_d_until * e_d;
 
 		short ret = (short)(target_accel_stroke + 0.5);
 		if(ret > setting_.pedal_stroke_max)
@@ -858,11 +822,11 @@ private:
 		{
 			ret = 50;
 		}*/
-
+		pid_params.set_accel_e_prev(e);
 		return ret;
 	}
 
-	short _brake_stroke_pid_control(double current_velocity, double cmd_velocity)
+	short _brake_stroke_pid_control(double current_velocity, double cmd_velocity, double distance)
 	{
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
@@ -872,100 +836,58 @@ private:
 		if (stroke > setting_.accel_stroke_offset)
 		{
 			std::cout << "ACCEL_PEDAL_STROKE_OFFSET_" << std::endl;
-			pid_params.set_brake_e_prev_velocity(0);
-			pid_params.set_brake_e_prev_acceleration(0);
+			pid_params.set_brake_e_prev(0);
 			return 0;
 		}
 
-
-		//velocity PID
 		//P
 		double e = -1 * (cmd_velocity - current_velocity);
 		std::cout << "if : " << cmd_velocity << "," << current_velocity << "," << e << std::endl;
 		// since this is braking, multiply -1.
 		if (e > 0 && e <= 1) { // added @ 2016/Aug/29
 			e = 0;
-			pid_params.clear_diff_velocity();
+			pid_params.clear_diff();
 		}
 		std::cout << "e " << e << std::endl;
 		//I
 		double e_i;
-		pid_params.plus_brake_diff_sum_velocity(e);
-		if (pid_params.get_brake_diff_sum_velocity() > setting_.brake_max_i)
+		pid_params.plus_brake_diff_sum(e);
+		if (pid_params.get_brake_diff_sum() > setting_.brake_max_i)
 			e_i = setting_.brake_max_i;
 		else
-			e_i = pid_params.get_brake_diff_sum_velocity();
+			e_i = pid_params.get_brake_diff_sum();
 
 		//D
-		double e_d = e - pid_params.get_brake_e_prev_velocity();
+		double e_d = e - pid_params.get_brake_e_prev();
 
-		double target_brake_stroke = setting_.k_brake_p_velocity * e +
-		        setting_.k_brake_i_velocity * e_i +
-		        setting_.k_brake_d_velocity * e_d;
-		pid_params.set_brake_e_prev_velocity(e);
+		double target_brake_stroke = setting_.k_brake_p_until * e +
+		        setting_.k_brake_i_until * e_i +
+		        setting_.k_brake_d_until * e_d;
+		double mps = current_velocity / 3.6;
+		double estimated_stopping_distance = - mps*mps/(2.0*acceralation_);
 
-		//distance PID
-		if(stopper_distance_ >= 0 && acceleration_ >= 0.01)
-		{
-			double mps = current_velocity / 3.6;
-			//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration_);
-			double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration_);
-			//x = current_velocity*current_velocity / (2.0*acc);
-			double cmd_distance = stopper_distance_;
-			double current_distance = estimated_stopping_distance;
-
-
-			//P
-			double e_dist = -1 * (cmd_distance - current_distance);
-			std::cout << "if : " << cmd_distance << "," << current_distance << "," << e_dist << std::endl;
-			// since this is braking, multiply -1.
-			if (e_dist > 0 && e_dist <= 1) { // added @ 2016/Aug/29
-				e_dist = 0;
-				pid_params.clear_diff_distance();
-			}
-			std::cout << "e_dist " << e_dist << std::endl;
-			//I
-			double e_dist_i;
-			pid_params.plus_brake_diff_sum_distance(e_dist);
-			if (pid_params.get_brake_diff_sum_distance() > setting_.brake_max_i)
-				e_dist_i = setting_.brake_max_i;
-			else
-				e_dist_i = pid_params.get_brake_diff_sum_distance();
-
-			double val_plus = setting_.k_brake_p_distance * e_dist +
-			        setting_.k_brake_i_distance * e_dist_i;
-			std::cout << "stopper_distance plus : " << val_plus << "," << stopper_distance_ << "," << estimated_stopping_distance<< std::endl;
-			target_brake_stroke += val_plus;
-
-			pid_params.set_brake_e_prev_distance(e_dist);
-		}
-		else
-		{
-			pid_params.clear_diff_distance();
-		}
-
-
-		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
+		//x = current_velocity*current_velocity / (2.0*acc);
+		if(distance >= 8 && distance <= 20)
 		{
 			std::cout << "tbs," << target_brake_stroke;
 			double d = 500 - target_brake_stroke;
-			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
-			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+			target_brake_stroke  += d * (1 - distance/ 20.0 );
+			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
 		}
-		else if(stopper_distance_ >= 2 && stopper_distance_ <= 8)
+		else if(distance >= 2 && distance <= 8)
 		{
 			if(current_velocity > 5.0)
 			{
 				std::cout << "tbs," << target_brake_stroke;
 				double d = 500 - target_brake_stroke;
-				target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
-				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				target_brake_stroke  += d * (1 - distance/ 20.0 );
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
 			}
 		}
-		else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
+		else if(distance >= 0 && distance <= 2)
 		{
 			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
-			target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
+			target_brake_stroke = 0.0 + 500.0 * (2.0-distance)/2.0;
 
 		}
 
@@ -992,12 +914,13 @@ private:
 
 
 
-		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_velocity << std::endl;
+		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_until << std::endl;
 		if (ret < setting_.pedal_stroke_min)
 			ret = setting_.pedal_stroke_min;
 		else if (ret > setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
+		pid_params.set_brake_e_prev(e);
 		return ret;
 	}
 
@@ -1070,14 +993,13 @@ private:
 				cmd_velocity = input_drive_ / 100.0;
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 			double cv_s = current_velocity /3.6;
-			if(acceleration_ <= 0 && stopper_distance_ >= 0)
-				std::cout << "yosou teisi," << - cv_s*cv_s/(2.0*acceleration_) << "," << stopper_distance_ <<  std::endl;
+			if(acceralation_ <= 0 && stopper_distance_ >= 0)
+				std::cout << "yosou teisi," << - cv_s*cv_s/(2.0*acceralation_) << "," << stopper_distance_ <<  std::endl;
 			//AUTOモードじゃない場合、stroke値0をcanに送る
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
 			        can_receive_503_.clutch == false)
 			{
-				pid_params.clear_diff_velocity();
-				pid_params.clear_diff_distance();
+				pid_params.clear_diff();
 				short drive_val = 0;
 				unsigned char *drive_point = (unsigned char*)&drive_val;
 				buf[4] = drive_point[1];  buf[5] = drive_point[0];
@@ -1147,7 +1069,7 @@ private:
 				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
-				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
+				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, stopper_distance_);
 				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
 					new_stroke > pid_params.get_stroke_prev())
 						new_stroke = pid_params.get_stroke_prev();*/
@@ -1264,19 +1186,19 @@ public:
 	    , config_result(CONFIG_OK)
 	    , use_velocity_topic_(USE_VELOCITY_TWIST)
 	    , stopper_distance_(-1)
-	    , acceleration_(0)
+	    , acceralation_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
 		setting_.velocity_stop_th = 4.0;
 		setting_.accel_max_i = 3000.0;
 		setting_.brake_max_i = 500.0;
-		setting_.k_accel_p_velocity_list_ = 120.0;
-		setting_.k_accel_i_velocity_list_ = 0.1;
-		setting_.k_accel_d_velocity_list_ = 0.1;
-		setting_.k_brake_p_velocity_list_ = 40.0;
-		setting_.k_brake_i_velocity_list_ = 10.0;
-		setting_.k_brake_d_velocity_list_ = 10.0;
+		setting_.k_accel_p_until = 120.0;
+		setting_.k_accel_i_until = 0.1;
+		setting_.k_accel_d_until = 0.1;
+		setting_.k_brake_p_until = 40.0;
+		setting_.k_brake_i_until = 10.0;
+		setting_.k_brake_d_until = 10.0;
 		setting_.pedal_stroke_center = 0;
 		setting_.pedal_stroke_max = 850;
 		setting_.pedal_stroke_min = -500;
@@ -1292,7 +1214,7 @@ public:
 		lafvc.add(limit10); lafvc.add(limit15); lafvc.add(limit20); lafvc.add(limit30); lafvc.add(limit40);
 
 		pub_microbus_can_sender_status_ = nh_.advertise<autoware_can_msgs::MicroBusCanSenderStatus>("/microbus/can_sender_status", 1, true);
-		pub_acceleration_write_ = nh_.advertise<std_msgs::String>("/microbus/acceleration_write", 1);
+		pub_acceralation_write_ = nh_.advertise<std_msgs::String>("/microbus/acceralation_write", 1);
 
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
 		sub_microbus_steer_mode_ = nh_.subscribe("/microbus/steer_mode_send", 10, &kvaser_can_sender::callbackSModeSend, this);

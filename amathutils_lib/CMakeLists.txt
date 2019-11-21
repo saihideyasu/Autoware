@@ -4,12 +4,9 @@ project(amathutils_lib) # autoware math utility
 find_package(autoware_build_flags REQUIRED)
 
 find_package(autoware_msgs REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         autoware_msgs
-        tf
-        tf2
         )
 
 set(CMAKE_CXX_FLAGS "-O2 -Wall ${CMAKE_CXX_FLAGS}")
@@ -18,8 +15,6 @@ catkin_package(
         INCLUDE_DIRS include
         LIBRARIES amathutils_lib
         CATKIN_DEPENDS roscpp autoware_msgs
-        tf
-        tf2
 )
 
 include_directories(amathutils_lib
@@ -30,8 +25,6 @@ include_directories(amathutils_lib
 
 add_library(amathutils_lib
         src/Amathutils.cpp
-        src/kalman_filter.cpp
-        src/time_delay_kalman_filter.cpp
         )
 target_link_libraries(amathutils_lib
         ${catkin_LIBRARIES}
@@ -56,10 +49,4 @@ if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   add_rostest_gtest(amathutils-test test/test_amathutils_lib.test test/src/test_amathutils_lib.cpp)
   target_link_libraries(amathutils-test ${catkin_LIBRARIES} amathutils_lib)
-  add_rostest_gtest(test-kalman_filter 
-                    test/test_kalman_filter.test
-                    test/src/test_kalman_filter.cpp
-                    src/kalman_filter.cpp
-                    src/time_delay_kalman_filter.cpp)
-  target_link_libraries(test-kalman_filter ${catkin_LIBRARIES})
 endif()

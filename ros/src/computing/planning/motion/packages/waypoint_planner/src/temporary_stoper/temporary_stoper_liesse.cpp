@@ -18,6 +18,7 @@ private:
 	autoware_can_msgs::MicroBusCan502 can_;
 	geometry_msgs::TwistStamped current_velocity_;
 
+	double front_bumper_to_baselink_;
 	uint32_t stop_waypoint_id_;
 	ros::Time timer_;
 	double stop_time_, distance_;
@@ -113,6 +114,7 @@ private:
 		int stop_index = stop_line_search(lane); std::cout << stop_index << std::endl;
 		if(stop_index < 0)
 		{
+			stop_waypoint_id_ = 0;
 			flag.data = 0;//そのまま
 			pub_temporari_flag_.publish(flag);
 			return lane;
@@ -125,7 +127,7 @@ private:
 			{
 				flag.data = 2;
 				pub_temporari_flag_.publish(flag);
-				return lane;//低判定終了
+				return lane;//停止判定終了
 			}
 			else
 			{
@@ -149,6 +151,19 @@ private:
 		l = apply_acceleration(l, acceleration, reverse_stop_index, ahead_cnt + 1, 0);
 		std::reverse(l.waypoints.begin(), l.waypoints.end());
 
+		if(distance_ >= 0)
+		{
+			if(distance_ <= 1) l.waypoints[0].twist.twist.linear.x = 0;
+			else if(distance_ <= 20.0)
+			{
+				for(int i=0; i<stop_index-1; i++)
+				{
+					int ind = i + (int)front_bumper_to_baselink_;
+					if(ind >= l.waypoints.size()) break;
+					l.waypoints[i].twist.twist.linear.x = l.waypoints[ind].twist.twist.linear.x;
+				}
+			}
+		}
 		return l;
 	}
 
@@ -195,6 +210,7 @@ public:
 		timer_ = ros::Time::now();
 		can_.velocity_actual = 0;
 
+		nh_.param<double>("/vehicle_info/front_bumper_to_baselink", front_bumper_to_baselink_, 4.55);
 		pub_waypoint_ = nh_.advertise<autoware_msgs::Lane>("/temporary_stop_waypoints", 1);
 		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);

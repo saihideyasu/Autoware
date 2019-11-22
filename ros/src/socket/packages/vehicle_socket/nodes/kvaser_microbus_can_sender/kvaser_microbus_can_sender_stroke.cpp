@@ -281,6 +281,7 @@ private:
 	geometry_msgs::TwistStamped current_velocity_;
 	geometry_msgs::PoseStamped current_pose_;
 	double acceleration_, acceleration2_, jurk_, jurk2_;
+	std::vector<double> acceleration_vec1_, acceleration_vec2_;
 	autoware_msgs::VehicleCmd twist_;
 	short input_steer_, input_drive_;
 	short pedal_;
@@ -450,8 +451,26 @@ private:
 		double v_sa = v * v - v0 * v0;
 		double acc = 0;
 		if(x >= 0.01) acc = (v_sa) / (2 * x);
+		acceleration_vec1_.insert(acceleration_vec1_.begin(), acc);
+		if(acceleration_vec1_.size() > 3) acceleration_vec1_.resize(3);
+		acc = 0;
+		int vec_cou;
+		for(vec_cou=0; vec_cou<acceleration_vec1_.size(); vec_cou++)
+		{
+			acc += acceleration_vec1_[vec_cou];
+		}
+		acc /= vec_cou;
 		double jurk = (acc - acceleration_) / td;
+
 		double acc2 = (twist_msg->twist.linear.x - current_velocity_.twist.linear.x) / td;
+		acceleration_vec2_.insert(acceleration_vec2_.begin(), acc2);
+		if(acceleration_vec2_.size() > 3) acceleration_vec2_.resize(3);
+		acc2 = 0;
+		for(vec_cou=0; vec_cou<acceleration_vec2_.size(); vec_cou++)
+		{
+			acc2 += acceleration_vec2_[vec_cou];
+		}
+		acc2 /= vec_cou;
 		double jurk2 = (acc2 - acceleration2_) / td;
 		std::cout << "acceleration," << acc << "," << acc2 << std::endl;
 
@@ -905,7 +924,7 @@ private:
 		pid_params.set_brake_e_prev_velocity(e);
 
 		//distance PID
-		if(stopper_distance_ >= 0 && acceleration_ >= 0.01)
+		if(stopper_distance_ >= 0 && acceleration_ < -0.01)
 		{
 			double mps = current_velocity / 3.6;
 			//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration_);
@@ -1020,7 +1039,7 @@ private:
 		}
 	}
 
-	void bufset_drive(unsigned char *buf, double current_velocity)
+	void bufset_drive(unsigned char *buf, double current_velocity, short stroke_speed)
 	{
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
 		{
@@ -1093,7 +1112,7 @@ private:
 			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && fabs(cmd_velocity) > 0.0
 			        && current_velocity < setting_.velocity_limit
-			        && (stopper_distance_<0 || stopper_distance_>10.0))
+			        && (stopper_distance_<0 || stopper_distance_>current_velocity))
 			{
 				std::cout << "yosou stroke drive" << std::endl;
 
@@ -1102,7 +1121,7 @@ private:
 			}
 			//減速判定
 			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
-			         && fabs(cmd_velocity) > 0.0)
+			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_>=0 && stopper_distance_ <=current_velocity) )
 			{
 				std::cout << "yosou stroke brake" << std::endl;
 
@@ -1110,7 +1129,7 @@ private:
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止線判定
-			else if (stopper_distance_ > 0 && stopper_distance_ < 10.0)
+			else if (stopper_distance_ > 0 && stopper_distance_ < 20.0)
 			{
 				std::cout << "yosoku stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
@@ -1167,7 +1186,13 @@ private:
 				short tmp = pid_params.get_stroke_prev() + 5;
 				if(tmp < new_stroke) new_stroke = tmp;
 			}
-
+			//ブレーキをゆっくり踏む
+			if(pid_params.get_stroke_prev() < 0 && pid_params.get_stroke_prev() < new_stroke)
+			{
+				short tmp = pid_params.get_stroke_prev() - stroke_speed;
+				if(tmp > new_stroke) new_stroke = tmp;
+				if(new_stroke < setting_.pedal_stroke_min) new_stroke = setting_.pedal_stroke_min;
+			}
 			pid_params.set_stroke_prev(new_stroke);
 
 			//if(input_drive_mode_ == true) new_stroke = input_drive_;
@@ -1376,7 +1401,7 @@ public:
 			unsigned char buf[SEND_DATA_SIZE] = {0,0,0,0,0,0,0,0};
 			bufset_mode(buf);
 			bufset_steer(buf);
-			bufset_drive(buf, current_velocity);
+			bufset_drive(buf, current_velocity, 2);
 			bufset_car_control(buf, current_velocity);
 			kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
 		}

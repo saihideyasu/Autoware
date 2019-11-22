@@ -12,7 +12,7 @@ namespace {
     ros::Publisher nmea_pub;
 }
 
-void publish(const char buf[], const int bufSize)
+void publish(char buf[], const int bufSize)
 {
     /*std::stringstream stream(buf);
     std::string str;
@@ -80,7 +80,16 @@ void publish(const char buf[], const int bufSize)
         }
     }*/
 
-    std::string str(buf);
+	std::string str_check(buf);
+	if(str_check.compare(0,9,"#RAWIMUXA") == 0)
+	{
+		if(str_check.find('\r') != std::string::npos)
+		{
+			buf[str_check.find('\r')] = '\n';
+		}
+	}
+
+	std::string str(buf);
     nmea_msgs::Sentence sentence;
     sentence.header.stamp=ros::Time::now();
     sentence.header.frame_id="gps";

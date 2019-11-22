@@ -50,22 +50,22 @@ namespace gnss_localizer
 class geo_array
 {
 private:
-	unsigned int listSize;
-	unsigned counter;
-	geo_pos_conv *list;
-	double *yaw_list;
-	double *lat_std,*lon_std,*alt_std;
-	double *surface_speed;
-	double *hdt_list;
+    unsigned int listSize;
+    unsigned counter;
+    geo_pos_conv *list;
+    double *yaw_list;
+    double *lat_std,*lon_std,*alt_std;
+    double *surface_speed;
+    double *hdt_list;
 public:
-	geo_array(unsigned int arraySize);
-	~geo_array();
+    geo_array(unsigned int arraySize);
+    ~geo_array();
 
-	void push_back(const geo_pos_conv &gpc, double latstd, double lonstd, double altstd,
-	               double surfacespeed, double hdt);
-	double returnAngle_movingAverage(unsigned int range);
-	double returnHDT_movingAverage();
-	geo_pos_conv operator[](unsigned int index);
+    void push_back(const geo_pos_conv &gpc, double latstd, double lonstd, double altstd,
+                   double surfacespeed, double hdt);
+    double returnAngle_movingAverage(unsigned int range);
+    double returnHDT_movingAverage();
+    geo_pos_conv operator[](unsigned int index);
 };
 
 class Nmea2TFPoseNode
@@ -114,6 +114,8 @@ private:
   double position_add_x_, position_add_y_;
   int curve_flag;
   double x_accel_, y_accel_, z_accel_;
+
+  ros::Publisher pub_imu_;
 
   // callbacks
   void callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg);

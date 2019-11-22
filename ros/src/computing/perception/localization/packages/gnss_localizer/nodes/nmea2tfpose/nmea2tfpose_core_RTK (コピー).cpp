@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2015, Nagoya University
+
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,12 +41,12 @@ namespace gnss_localizer
 
 double degrees_minutes_seconds(double deg)
 {
-	int degrees = (int)deg;
-	double d_minutes = (deg-degrees)*60.0;
-	int minutes = (int)d_minutes;
-	double seconds = (d_minutes-minutes)*60.0;
-	//return degrees*100.0+minutes+seconds/100.0;
-	return degrees*100.0+d_minutes;
+    int degrees = (int)deg;
+    double d_minutes = (deg-degrees)*60.0;
+    int minutes = (int)d_minutes;
+    double seconds = (d_minutes-minutes)*60.0;
+    //return degrees*100.0+minutes+seconds/100.0;
+    return degrees*100.0+d_minutes;
 }
 
 // Constructor
@@ -114,6 +115,7 @@ void Nmea2TFPoseNode::initForROS()
   pub_hdt = nh_.advertise<std_msgs::Float64>("gnss_hdt", 10);
   pub_std = nh_.advertise<autoware_msgs::GnssStandardDeviation>("gnss_standard_deviation", 10);
   pub_surface_speed = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("gnss_surface_speed", 10);
+  pub_imu_ = nh_.advertise<geometry_msgs::TwistStamped>("gnss_imu", 10);
 }
 
 void Nmea2TFPoseNode::run()
@@ -149,6 +151,14 @@ void Nmea2TFPoseNode::publishPoseStamped()
   gss.header.stamp = current_time_;
   gss.surface_speed = surface_speed_;
   pub_surface_speed.publish(gss);
+
+  geometry_msgs::TwistStamped imu;
+  imu.header.frame_id = MAP_FRAME_;
+  imu.header.stamp = current_time_;
+  imu.twist.linear.x = x_accel_;
+  imu.twist.linear.y = y_accel_;
+  imu.twist.linear.z = z_accel_;
+  pub_imu_.publish(imu);
 }
 
 void Nmea2TFPoseNode::publishTF()
@@ -168,9 +178,9 @@ void Nmea2TFPoseNode::createOrientation()
   //yaw_ = gphdt_value + hdt_add_*M_PI/180.0;//-30*M_PI/180.0;
   yaw_ = last_geo_.returnHDT_movingAverage();
   /*if(curve_flag == 0)
-	yaw_ = -1*last_geo_.returnHDT_movingAverage()+M_PI/2;
+    yaw_ = -1*last_geo_.returnHDT_movingAverage()+M_PI/2;
   else
-	yaw_ = gphdt_value;*/
+    yaw_ = gphdt_value;*/
   //yaw_ = atan2(geo2_.x() - geo_.x(), geo2_.y() - geo_.y());
   roll_ = 0;
   pitch_ = 0;
@@ -183,122 +193,123 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 {
   try
   {
-		/*if (nmea.at(0).compare(0, 2, "QQ") == 0)
-	{
-	  orientation_time_ = stod(nmea.at(3));
-	  roll_ = stod(nmea.at(4)) * M_PI / 180.;
-	  pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
-	  yaw_ = -1 * stod(nmea.at(6)) * M_PI / 180. + M_PI / 2;
-	  orientation_stamp_ = current_stamp;
-	  ROS_INFO("QQ is subscribed.");
-	}
-	else if (nmea.at(0) == "$PASHR")
-	{
-	  orientation_time_ = stod(nmea.at(1));
-	  roll_ = stod(nmea.at(4)) * M_PI / 180.;
-	  pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
-	  yaw_ = -1 * stod(nmea.at(2)) * M_PI / 180. + M_PI / 2;
-	  ROS_INFO("PASHR is subscribed.");
-	}
-	else*/ /*if(nmea.at(0).compare(3, 3, "GGA") == 0)
-	{
-	  position_time_ = stod(nmea.at(1));
-	  double lat = stod(nmea.at(2)); std::cout << "ggalat : " << std::setprecision(16) << lat << std::endl;
-	  double lon = stod(nmea.at(4)); std::cout << "ggalon : " << std::setprecision(16) << lon << std::endl;
-	  double h = stod(nmea.at(9)); std::cout << "ggah : " << std::setprecision(16) << h << std::endl;
-	  geo_.set_llh_nmea_degrees(lat, lon, h);
-	  //if(writeCou == 1)
-	  //{
-	  //  writebuf << "geo,gpgga," << std::setprecision(16) << geo_.x() << "," << geo_.y() << "," << geo_.z() << std::endl;
-	  //  writeCou = 2;
-	  //}
-	  double fai = gphdt_value;
-	  const double earth_R = 6.3781E6;
-	  const double ant_distance = 1.28;
-	  double lat2 = (ant_distance*cos(fai))/earth_R+lat;
-	  double lon2 = (ant_distance*sin(fai))/earth_R+lon;
-	  geo2_.set_llh_nmea_degrees(lat2, lon2, h);
-	  ROS_INFO("GGA is subscribed.");
-	}*/
-		/*else if(nmea.at(0) == "$GPRMC")
-	{
-	  position_time_ = stoi(nmea.at(1));
-	  double lat = stod(nmea.at(3));
-	  double lon = stod(nmea.at(5));
-	  double h = 0.0;
-	  geo_.set_llh_nmea_degrees(lat, lon, h);
-	  ROS_INFO("GPRMC is subscribed.");
-	}*/
-		/*else if(nmea.at(0) == "$GPVTG")
-	{
-	  surface_speed_ = stod(nmea.at(7))/3.6;
-	  ROS_INFO("GPVGT is subscribed.");
-	}*/
-		/*else if(nmea.at(0) == "$GPHDT")
-	{
-	  double val=stod(nmea.at(1));
-	  std::cout << "hdt : " << std::setprecision(16) << val << std::endl;
-	  while(val <0 || val >=360){
-		if(val<0) val+=360;
-		else if(val>=360) val-=360;
-	  }std::cout << "hdt : "<< val << std::endl;
-	  gphdt_value = val*M_PI/180.0;
-	  ROS_INFO("GPHDT is subscribed.");
-	}
-	else*/ if(nmea.at(0) == "#INSATTXA")
-		{
-			double val=stod(nmea.at(13));
-		std::cout << "insattx : " << std::setprecision(16) << val << std::endl;
-		while(val <0 || val >=360){
-			if(val<0) val+=360;
-		  else if(val>=360) val-=360;
-		}std::cout << "insattxa : "<< val << std::endl;
-		gphdt_value = val*M_PI/180.0;
+    /*if (nmea.at(0).compare(0, 2, "QQ") == 0)
+    {
+      orientation_time_ = stod(nmea.at(3));
+      roll_ = stod(nmea.at(4)) * M_PI / 180.;
+      pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
+      yaw_ = -1 * stod(nmea.at(6)) * M_PI / 180. + M_PI / 2;
+      orientation_stamp_ = current_stamp;
+      ROS_INFO("QQ is subscribed.");
+    }
+    else if (nmea.at(0) == "$PASHR")
+    {
+      orientation_time_ = stod(nmea.at(1));
+      roll_ = stod(nmea.at(4)) * M_PI / 180.;
+      pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
+      yaw_ = -1 * stod(nmea.at(2)) * M_PI / 180. + M_PI / 2;
+      ROS_INFO("PASHR is subscribed.");
+    }
+    else*/ /*if(nmea.at(0).compare(3, 3, "GGA") == 0)
+    {
+      position_time_ = stod(nmea.at(1));
+      double lat = stod(nmea.at(2)); std::cout << "ggalat : " << std::setprecision(16) << lat << std::endl;
+      double lon = stod(nmea.at(4)); std::cout << "ggalon : " << std::setprecision(16) << lon << std::endl;
+      double h = stod(nmea.at(9)); std::cout << "ggah : " << std::setprecision(16) << h << std::endl;
+      geo_.set_llh_nmea_degrees(lat, lon, h);
+      //if(writeCou == 1)
+      //{
+      //  writebuf << "geo,gpgga," << std::setprecision(16) << geo_.x() << "," << geo_.y() << "," << geo_.z() << std::endl;
+      //  writeCou = 2;
+      //}
+      double fai = gphdt_value;
+      const double earth_R = 6.3781E6;
+      const double ant_distance = 1.28;
+      double lat2 = (ant_distance*cos(fai))/earth_R+lat;
+      double lon2 = (ant_distance*sin(fai))/earth_R+lon;
+      geo2_.set_llh_nmea_degrees(lat2, lon2, h);
+      ROS_INFO("GGA is subscribed.");
+    }*/
+    /*else if(nmea.at(0) == "$GPRMC")
+    {
+      position_time_ = stoi(nmea.at(1));
+      double lat = stod(nmea.at(3));
+      double lon = stod(nmea.at(5));
+      double h = 0.0;
+      geo_.set_llh_nmea_degrees(lat, lon, h);
+      ROS_INFO("GPRMC is subscribed.");
+    }*/
+    /*else if(nmea.at(0) == "$GPVTG")
+    {
+      surface_speed_ = stod(nmea.at(7))/3.6;
+      ROS_INFO("GPVGT is subscribed.");
+    }*/
+    /*else if(nmea.at(0) == "$GPHDT")
+    {
+      double val=stod(nmea.at(1));
+      std::cout << "hdt : " << std::setprecision(16) << val << std::endl;
+      while(val <0 || val >=360){
+        if(val<0) val+=360;
+        else if(val>=360) val-=360;
+      }std::cout << "hdt : "<< val << std::endl;
+      gphdt_value = val*M_PI/180.0;
+      ROS_INFO("GPHDT is subscribed.");
+    }
+    else*/ if(nmea.at(0) == "#INSATTXA")
+    {
+        double val=stod(nmea.at(13));
+        std::cout << "insattx : " << std::setprecision(16) << val << std::endl;
+        while(val <0 || val >=360){
+          if(val<0) val+=360;
+          else if(val>=360) val-=360;
+        }std::cout << "insattxa : "<< val << std::endl;
+        gphdt_value = val*M_PI/180.0;
 
-		/*val=stod(nmea.at(11));
-		std::cout << "insattx : " << std::setprecision(16) << val << std::endl;
-		while(val <0 || val >=360){
-		  if(val<0) val+=360;
-		  else if(val>=360) val-=360;
-		}std::cout << "insattxa : "<< val << std::endl;
-		gphdt_value_roll = val;
-		val=stod(nmea.at(12));
-		std::cout << "insattx : " << std::setprecision(16) << val << std::endl;
-		while(val <0 || val >=360){
-		  if(val<0) val+=360;
-		  else if(val>=360) val-=360;
-		}std::cout << "insattxa : "<< val << std::endl;
-		gphdt_value_pitch = val;*/
-		ROS_INFO("INSATTX is subscribed.");
-		}
-		/*else if(nmea.at(0) == "$GPGST")
-	{
-		lat_std = stod(nmea.at(6)); std::cout << "gpgst : " << std::setprecision(16) << lat_std << std::endl;
-		lon_std = stod(nmea.at(7));
-		alt_std = stod(nmea.at(8));
-		ROS_INFO("GPGST is subscribed.");
-	}*/
-		/*else if(nmea.at(0) == "#BESTGNSSPOSA")
-	{
-		//std::cout << "aaa : " << nmea.at(16) << std::endl;
-		double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
-		double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
-		double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
-		geo_.set_llh_nmea_degrees(lat, lon, h);
-		writebuf.str(""); // バッファをクリアする。
-		writebuf.clear(std::stringstream::goodbit);
-		writeCou = 1;
-		writebuf << "geo,bestgnsspos," << std::setprecision(16) << geo_.x() << "," << geo_.y() << "," << geo_.z() << std::endl;
-		double fai = gphdt_value;
-		const double earth_R = 6.3781E6;
-		const double ant_distance = 1.28;
-		double lat2 = (ant_distance*cos(fai))/earth_R+lat;
-		double lon2 = (ant_distance*sin(fai))/earth_R+lon;
-		geo2_.set_llh_nmea_degrees(lat2, lon2, h);
-		ROS_INFO("BESTGNSSPOS is subscribed.");
-	}*/
-		else if(nmea.at(0) == "#BESTPOSA")
-		{
+        /*val=stod(nmea.at(11));
+        std::cout << "insattx : " << std::setprecision(16) << val << std::endl;
+        while(val <0 || val >=360){
+          if(val<0) val+=360;
+          else if(val>=360) val-=360;
+        }std::cout << "insattxa : "<< val << std::endl;
+        gphdt_value_roll = val;
+
+        val=stod(nmea.at(12));
+        std::cout << "insattx : " << std::setprecision(16) << val << std::endl;
+        while(val <0 || val >=360){
+          if(val<0) val+=360;
+          else if(val>=360) val-=360;
+        }std::cout << "insattxa : "<< val << std::endl;
+        gphdt_value_pitch = val;*/
+        ROS_INFO("INSATTX is subscribed.");
+    }
+    /*else if(nmea.at(0) == "$GPGST")
+    {
+        lat_std = stod(nmea.at(6)); std::cout << "gpgst : " << std::setprecision(16) << lat_std << std::endl;
+        lon_std = stod(nmea.at(7));
+        alt_std = stod(nmea.at(8));
+        ROS_INFO("GPGST is subscribed.");
+    }*/
+    /*else if(nmea.at(0) == "#BESTGNSSPOSA")
+    {
+        //std::cout << "aaa : " << nmea.at(16) << std::endl;
+        double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+        double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+        double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
+        geo_.set_llh_nmea_degrees(lat, lon, h);
+        writebuf.str(""); // バッファをクリアする。
+        writebuf.clear(std::stringstream::goodbit);
+        writeCou = 1;
+        writebuf << "geo,bestgnsspos," << std::setprecision(16) << geo_.x() << "," << geo_.y() << "," << geo_.z() << std::endl;
+        double fai = gphdt_value;
+        const double earth_R = 6.3781E6;
+        const double ant_distance = 1.28;
+        double lat2 = (ant_distance*cos(fai))/earth_R+lat;
+        double lon2 = (ant_distance*sin(fai))/earth_R+lon;
+        geo2_.set_llh_nmea_degrees(lat2, lon2, h);
+        ROS_INFO("BESTGNSSPOS is subscribed.");
+    }*/
+    else if(nmea.at(0) == "#BESTPOSA")
+    {
 		if(nmea.size() == 30)
 		{
 			//std::cout << "aaa : " << nmea.at(16) << std::endl;
@@ -320,14 +331,14 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			geo2_.set_llh_nmea_degrees(lat2, lon2, h);
 			ROS_INFO("BESTGNSSPOS is subscribed.");
 		}
-		}
-		else if(nmea.at(0) == "#INSPVAXA")
-		{
-			//std::cout << "aaa : " << nmea.at(11) << std::endl;
-			//double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
-			//double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
-			//double h = stod(nmea.at(13));
-			//geo_.set_llh_nmea_degrees(lat, lon, h);
+    }
+    else if(nmea.at(0) == "#INSPVAXA")
+    {
+        //std::cout << "aaa : " << nmea.at(11) << std::endl;
+        //double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+        //double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+        //double h = stod(nmea.at(13));
+        //geo_.set_llh_nmea_degrees(lat, lon, h);
 
 		if(nmea.size() == 32)
 		{
@@ -358,49 +369,61 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 
 			ROS_INFO("INSPVAXA is subscribed.");
 		}
-		}
-		/*else if(nmea.at(0) == "%INSPVASA")
-	{
-		//double lat = degrees_minutes_seconds(stod(nmea.at(4))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
-		//double lon = degrees_minutes_seconds(stod(nmea.at(5))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
-		//double h = stod(nmea.at(6));
-		//geo_.set_llh_nmea_degrees(lat, lon, h);
-		double val=stod(nmea.at(12));
-		std::cout << "angle : " << std::setprecision(16) << val << std::endl;
-		while(val <0 || val >=360){
-		  if(val<0) val+=360;
-		  else if(val>=360) val-=360;
-		}//std::cout << "aaa : "<< val << std::endl;
-		gphdt_value = val*M_PI/180.0;
-	}*/
+    }
+    /*else if(nmea.at(0) == "%INSPVASA")
+    {
+        //double lat = degrees_minutes_seconds(stod(nmea.at(4))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+        //double lon = degrees_minutes_seconds(stod(nmea.at(5))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+        //double h = stod(nmea.at(6));
+        //geo_.set_llh_nmea_degrees(lat, lon, h);
+
+        double val=stod(nmea.at(12));
+        std::cout << "angle : " << std::setprecision(16) << val << std::endl;
+        while(val <0 || val >=360){
+          if(val<0) val+=360;
+          else if(val>=360) val-=360;
+        }//std::cout << "aaa : "<< val << std::endl;
+        gphdt_value = val*M_PI/180.0;
+    }*/
 	else if(nmea.at(0) == "%INSSTDEVSA")
-		{
+    {
 		std::vector<std::string> str = split(nmea.at(2), ';');
 		lat_std = stod(str.at(1)); std::cout << "insstdevsa : " << std::setprecision(16) << lat_std << std::endl;
 		lon_std = stod(nmea.at(3));
 		alt_std = stod(nmea.at(4));
-		ROS_INFO("GPGST is subscribed.");
-		}
+        ROS_INFO("GPGST is subscribed.");
+    }
 	else if(nmea.at(0) == "#RAWIMUXA")
 	{
 		if(nmea.size() == 19)
 		{
-			x_accel_ = stod(nmea.at(16)) * 2E-29;
-			y_accel_ = stod(nmea.at(15)) * 2E-29;
-			z_accel_ = stod(nmea.at(14)) * 2E-29;
+			x_accel_ = stod(nmea.at(16)) * pow(2.0,-29) * 100;
+			y_accel_ = -stod(nmea.at(15)) * pow(2.0,-29) * 100;
+			z_accel_ = stod(nmea.at(14)) * pow(2.0,-29) * 100;
 			ROS_INFO("RAWIMU is subscribed.");
 			std::cout << "x:" << x_accel_ << " y:" << y_accel_ << " z:" << z_accel_ << std::endl;
 		}
 	}
+	else if(nmea.at(0) == "%RAWIMUSA")
+	{
+		if(nmea.size() == 11)
+		{
+			x_accel_ = stod(nmea.at(7));// * pow(2.0,-29) * 100;
+			y_accel_ = -stod(nmea.at(6));// * pow(2.0,-29)  * 100;
+			z_accel_ = stod(nmea.at(5));// * pow(2.0,-29)  * 100;
+			ROS_INFO("RAWIMU is subscribed.");
+			std::cout << "imu   x:" << x_accel_ << " y:" << y_accel_ << " z:" << z_accel_ << std::endl;
+		}
+	}
   }catch (const std::exception &e)
   {
-		ROS_WARN_STREAM("Message is invalid : " << e.what());
+    ROS_WARN_STREAM("Message is invalid : " << e.what());
   }
 }
 
 void Nmea2TFPoseNode::callbackWaypointParam(const autoware_msgs::WaypointParam::ConstPtr &msg)
 {
-	curve_flag = msg->curve_flag;
+    curve_flag = msg->curve_flag;
 }
 
 void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg)
@@ -414,40 +437,40 @@ void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstP
   double timeout = 10.0;
   if (fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
   {
-	double dt = sqrt(pow(geo_.x() - last_geo_[0].x(), 2) + pow(geo_.y() - last_geo_[0].y(), 2));
-	double threshold = 0.10;
-	//if (dt >= threshold)
-	{   //std::printf("x:%Lf y:%Lf\n",geo_.x(),geo_.y());
-		//std::printf("xl:%Lf yl:%Lf\n",last_geo_.x(),last_geo_.y());
-		//std::printf("xs:%Lf ys:%Lf yaw:%Lf\n",geo_.x() - last_geo_.x(),geo_.y() - last_geo_.y(),atan2((double)geo_.x() - (double)last_geo_.x(), (double)geo_.y() - (double)last_geo_.y()));
-		//std::cout<<"x:"<<geo_.x()<<" y:"<<geo_.y()<<std::endl;
-		//std::cout<<"xl:"<<last_geo_.x()<<" yl:"<<last_geo_.y()<<std::endl;
-		//std::cout<<"xs:"<<geo_.x() - last_geo_.x()<<" ys:"<<geo_.y() - last_geo_.y()<<" yaw:"<<atan2(geo_.x() - last_geo_.x(), geo_.y() - last_geo_.y())<<std::endl;
-		ROS_INFO("QQ is not subscribed. Orientation is created by atan2");
-		last_geo_.push_back(geo_,lat_std,lon_std,alt_std,surface_speed_,gphdt_value);
-		createOrientation();
+    double dt = sqrt(pow(geo_.x() - last_geo_[0].x(), 2) + pow(geo_.y() - last_geo_[0].y(), 2));
+    double threshold = 0.10;
+    //if (dt >= threshold)
+    {   //std::printf("x:%Lf y:%Lf\n",geo_.x(),geo_.y());
+        //std::printf("xl:%Lf yl:%Lf\n",last_geo_.x(),last_geo_.y());
+        //std::printf("xs:%Lf ys:%Lf yaw:%Lf\n",geo_.x() - last_geo_.x(),geo_.y() - last_geo_.y(),atan2((double)geo_.x() - (double)last_geo_.x(), (double)geo_.y() - (double)last_geo_.y()));
+        //std::cout<<"x:"<<geo_.x()<<" y:"<<geo_.y()<<std::endl;
+        //std::cout<<"xl:"<<last_geo_.x()<<" yl:"<<last_geo_.y()<<std::endl;
+        //std::cout<<"xs:"<<geo_.x() - last_geo_.x()<<" ys:"<<geo_.y() - last_geo_.y()<<" yaw:"<<atan2(geo_.x() - last_geo_.x(), geo_.y() - last_geo_.y())<<std::endl;
+        ROS_INFO("QQ is not subscribed. Orientation is created by atan2");
+        last_geo_.push_back(geo_,lat_std,lon_std,alt_std,surface_speed_,gphdt_value);
+        createOrientation();
 		if(sentence_split.at(0) == "#BESTPOSA")
 		{
 			publishPoseStamped();
 			publishTF();
 		}
-		//last_geo_ = geo_;
-	}
-	/*}else
-	{
-		createOrientation();
-		publishPoseStamped();
-		publishTF();
-	}*/
-	return;
+        //last_geo_ = geo_;
+    }
+    /*}else
+    {
+        createOrientation();
+        publishPoseStamped();
+        publishTF();
+    }*/
+    return;
   }
 
   double e = 1e-2;
   if (fabs(orientation_time_ - position_time_) < e)
   {
-	publishPoseStamped();
-	publishTF();
-	return;
+    publishPoseStamped();
+    publishTF();
+    return;
   }
 }
 
@@ -458,9 +481,9 @@ std::vector<std::string> split(const std::string &string, const char sep)
   std::stringstream ss(string);
 
   while (getline(ss, token, sep))
-	str_vec_ptr.push_back(token);
+    str_vec_ptr.push_back(token);
 
   return str_vec_ptr;
 }
 
-}  // gnss_localize
+}  // gnss_localizer

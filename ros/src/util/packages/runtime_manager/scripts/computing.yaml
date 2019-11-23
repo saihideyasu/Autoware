@@ -113,6 +113,10 @@ subs :
         param: icp
         gui  :
           dialog_height : 400
+      - name : imu_tidy
+        desc : imu_tidy
+        cmd  : roslaunch lidar_localizer imu_tidy.launch
+        param : imu_tidy
     - name : fusion_localizer
       desc : fusion_localizer desc sample
       subs :
@@ -6157,6 +6161,28 @@ params :
         dash      : ''
         delim     : ':='
 
+  - name  : imu_tidy
+    topic : /config/imu_tidy
+    msg   : ConfigImuTidy
+    vars  :
+    - name : lowpass_filter_weight
+      desc : lowpass_filter_weight
+      label: lowpass_filter_weight
+      min  : 0.0
+      max  : 1.0
+      v    : 0.8
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name      : imu_topic
+      desc      : imu_topic desc sample
+      label     : imu_topic
+      kind      : str
+      v         : '/gnss_imu'
+      cmd_param :
+         dash    : ''
+         delim   : ':='
+
   - name  : localizer_switch
     topic : /config/fusion_select
     msg   : ConfigLocalizerSwitchFusion
@@ -6656,3 +6682,27 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name  : use_velocity_data
+      desc  : use_velocity_data desc sample
+      label : use_velocity_data
+      kind  : radio_box
+      choices:
+      - can
+      - twist
+      descs :
+      - can
+      - twist
+      v     : 1
+    - name  : use_acceleration_data
+      desc  : use_acceleration_data desc sample
+      label : use_acceleration_data
+      kind  : radio_box
+      choices:
+      - twist1
+      - twist2
+      - imu
+      descs :
+      - twist1
+      - twist2
+      - imu
+      v     : 2

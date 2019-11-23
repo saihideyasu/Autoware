@@ -49,6 +49,7 @@ add_message_files(
   ConfigManualDriveStroke.msg
   ConfigMicroBusCan.msg
   ConfigTemporaryStoper.msg
+  ConfigImuTidy.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

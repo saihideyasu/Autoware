@@ -13,6 +13,7 @@
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <sensor_msgs/Imu.h>
 #include <autoware_msgs/VehicleCmd.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -243,6 +244,11 @@ private:
 	const static int USE_VELOCITY_CAN = 0;
 	const static int USE_VELOCITY_TWIST = 1;
 
+	//ues acceleration topic
+	const static int USE_ACCELERATION_TWIST1 = 0;
+	const static int USE_ACCELERATION_TWIST2 = 1;
+	const static int USE_ACCELERATION_IMU = 2;
+
 	//safety
 	const LIMIT_ANGLE_FROM_VELOCITY_STRUCT limit10 = {10,680,-680}, limit15 = {15,360,-360}, limit20 = {20,180,-180}, limit30={30,90,-90}, limit40={40,45,-45};
 	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc;
@@ -254,7 +260,6 @@ private:
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
 	ros::Subscriber sub_microbus_can_501_, sub_microbus_can_502_, sub_microbus_can_503_;
 	//ros::Subscriber sub_current_pose_, sub_current_velocity_;
-	ros::Subscriber sub_use_velocity_topic_;
 	ros::Subscriber sub_emergency_reset_, sub_stroke_mode_, sub_velocity_mode_, sub_drive_control_;
 	ros::Subscriber sub_input_steer_flag_, sub_input_drive_flag_, sub_input_steer_value_, sub_input_drive_value_;
 	ros::Subscriber sub_waypoint_param_, sub_position_checker_, sub_config_microbus_can_;
@@ -264,7 +269,7 @@ private:
 	ros::Subscriber sub_blinker_right_, sub_blinker_left_, sub_blinker_stop_;
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
-	ros::Subscriber sub_lidar_detector_objects_;
+	ros::Subscriber sub_lidar_detector_objects_, sub_imu_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -280,7 +285,8 @@ private:
 	autoware_can_msgs::MicroBusCan503 can_receive_503_;
 	geometry_msgs::TwistStamped current_velocity_;
 	geometry_msgs::PoseStamped current_pose_;
-	double acceleration_, acceleration2_, jurk_, jurk2_;
+	sensor_msgs::Imu imu_;
+	double acceleration1_twist_, acceleration2_twist_, jurk1_twist_, jurk2_twist_;
 	std::vector<double> acceleration_vec1_, acceleration_vec2_;
 	autoware_msgs::VehicleCmd twist_;
 	short input_steer_, input_drive_;
@@ -295,12 +301,17 @@ private:
 	double stopper_distance_;
 	autoware_msgs::WaypointParam waypoint_param_;
 	PID_params pid_params;
-	char use_velocity_topic_;
+	int use_velocity_data_, use_acceleration_data_;
 
 	ros::Time automatic_door_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
+
+	void callbackImu(const sensor_msgs::Imu::ConstPtr msg)
+	{
+		imu_ = *msg;
+	}
 
 	void callbackLidarDetectorObjects (const autoware_msgs::DetectedObjectArray::ConstPtr &msg)
 	{
@@ -460,7 +471,7 @@ private:
 			acc += acceleration_vec1_[vec_cou];
 		}
 		acc /= vec_cou;
-		double jurk = (acc - acceleration_) / td;
+		double jurk = (acc - acceleration1_twist_) / td;
 
 		double acc2 = (twist_msg->twist.linear.x - current_velocity_.twist.linear.x) / td;
 		acceleration_vec2_.insert(acceleration_vec2_.begin(), acc2);
@@ -471,10 +482,8 @@ private:
 			acc2 += acceleration_vec2_[vec_cou];
 		}
 		acc2 /= vec_cou;
-		double jurk2 = (acc2 - acceleration2_) / td;
+		double jurk2 = (acc2 - acceleration2_twist_) / td;
 		std::cout << "acceleration," << acc << "," << acc2 << std::endl;
-
-
 
 		std::stringstream str;
 		str << std::setprecision(10) << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << "," << pose_msg->pose.orientation.z << ",";
@@ -487,10 +496,10 @@ private:
 
 		current_velocity_ = *twist_msg;
 		current_pose_ = *pose_msg;
-		acceleration_ = acc;
-		acceleration2_ = acc2;
-		jurk_ = jurk;
-		jurk2_ = jurk2;
+		acceleration1_twist_ = acc;
+		acceleration2_twist_ = acc2;
+		jurk1_twist_ = jurk;
+		jurk2_twist_ = jurk2;
 	}
 
 	void callbackTwistCmd(const autoware_msgs::VehicleCmd::ConstPtr &msg)
@@ -538,12 +547,6 @@ private:
 		}
 
 		twist_ = *msg;
-	}
-
-	void callbackUseVelocityTopic(const std_msgs::Int8::ConstPtr &msg)
-	{
-		use_velocity_topic_ = msg->data;
-		publisStatus("");
 	}
 
 	void callbackStrokeMode(const std_msgs::Empty::ConstPtr &msg)
@@ -685,7 +688,7 @@ private:
 		msg.use_position_checker = setting_.use_position_checker;
 		msg.use_input_steer = input_steer_mode_;
 		msg.use_input_drive = input_drive_mode_;
-		msg.use_velocity_topic = use_velocity_topic_;
+		msg.use_velocity_topic = use_velocity_data_;
 		if(safety_error_message != "") msg.safety_error_message = safety_error_message;
 		else msg.safety_error_message = "";
 		std::cout << msg.safety_error_message << std::endl;
@@ -881,7 +884,7 @@ private:
 		return ret;
 	}
 
-	short _brake_stroke_pid_control(double current_velocity, double cmd_velocity)
+	short _brake_stroke_pid_control(double current_velocity, double cmd_velocity, double acceleration)
 	{
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
@@ -924,11 +927,11 @@ private:
 		pid_params.set_brake_e_prev_velocity(e);
 
 		//distance PID
-		if(stopper_distance_ >= 0 && acceleration_ < -0.01)
+		if(stopper_distance_ >= 0 && acceleration < -0.01)
 		{
 			double mps = current_velocity / 3.6;
-			//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration_);
-			double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration_);
+			//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration);
+			double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration);
 			//x = current_velocity*current_velocity / (2.0*acc);
 			double cmd_distance = stopper_distance_;
 			double current_distance = estimated_stopping_distance;
@@ -1006,11 +1009,6 @@ private:
 			}
 		}*/
 
-
-
-
-
-
 		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_velocity << std::endl;
 		if (ret < setting_.pedal_stroke_min)
 			ret = setting_.pedal_stroke_min;
@@ -1039,7 +1037,7 @@ private:
 		}
 	}
 
-	void bufset_drive(unsigned char *buf, double current_velocity, short stroke_speed)
+	void bufset_drive(unsigned char *buf, double current_velocity, double acceleration, short stroke_speed)
 	{
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
 		{
@@ -1065,20 +1063,6 @@ private:
 		}
 		else
 		{
-			/*double current_velocity;// = can_receive_502_.velocity_average / 100.0;
-			switch(use_velocity_topic_)
-			{
-			case USE_VELOCITY_CAN:
-				current_velocity = can_receive_502_.velocity_average / 100.0;
-				break;
-			case USE_VELOCITY_TWIST:
-				current_velocity = current_velocity_.pose.position.x * 3.6;
-				break;
-			default:
-				current_velocity = current_velocity_.pose.position.x * 3.6;
-				break;
-			}*/
-
 			/*double cmd_velocity;
 			if(input_drive_mode_ == false)
 				cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
@@ -1089,8 +1073,8 @@ private:
 				cmd_velocity = input_drive_ / 100.0;
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 			double cv_s = current_velocity /3.6;
-			if(acceleration_ <= 0 && stopper_distance_ >= 0)
-				std::cout << "yosou teisi," << - cv_s*cv_s/(2.0*acceleration_) << "," << stopper_distance_ <<  std::endl;
+			if(acceleration <= 0 && stopper_distance_ >= 0)
+				std::cout << "yosou teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_ <<  std::endl;
 			//AUTOモードじゃない場合、stroke値0をcanに送る
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
 			        can_receive_503_.clutch == false)
@@ -1166,7 +1150,7 @@ private:
 				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
-				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity);
+				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);
 				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
 					new_stroke > pid_params.get_stroke_prev())
 						new_stroke = pid_params.get_stroke_prev();*/
@@ -1195,7 +1179,7 @@ private:
 			}
 			pid_params.set_stroke_prev(new_stroke);
 
-			//if(input_drive_mode_ == true) new_stroke = input_drive_;
+			if(input_drive_mode_ == true) new_stroke = input_drive_;
 			unsigned char *drive_point = (unsigned char*)&new_stroke;
 			buf[4] = drive_point[1];  buf[5] = drive_point[0];
 		}
@@ -1263,7 +1247,7 @@ private:
 		}
 	}
 public:
-	kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh, int kvaser_channel, int use_velocity_topic)
+	kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : nh_(nh)
 	    , private_nh_(p_nh)
 	    , flag_drive_mode_(false)
@@ -1287,9 +1271,13 @@ public:
 	    , drive_clutch_(true)
 	    , steer_clutch_(true)
 	    , config_result(CONFIG_OK)
-	    , use_velocity_topic_(USE_VELOCITY_TWIST)
+	    , use_velocity_data_(USE_VELOCITY_TWIST)
+	    , use_acceleration_data_(USE_ACCELERATION_IMU)
 	    , stopper_distance_(-1)
-	    , acceleration_(0)
+	    , acceleration1_twist_(0)
+	    , acceleration2_twist_(0)
+	    , jurk1_twist_(0)
+	    , jurk2_twist_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -1309,6 +1297,11 @@ public:
 		setting_.accel_stroke_offset = 10;
 		setting_.accel_stroke_offset = -10;*/
 
+		int kvaser_channel;
+		private_nh_.param<int>("kvaser_channel", kvaser_channel, 0);
+		private_nh_.param<int>("use_velocity_data", use_velocity_data_, USE_VELOCITY_TWIST);
+		private_nh_.param<int>("use_acceleration_data", use_acceleration_data_, USE_ACCELERATION_IMU);
+
 		can_receive_501_.emergency = true;
 		can_receive_501_.blinker_right = can_receive_501_.blinker_left = false;
 		canStatus res = kc.init(kvaser_channel, canBITRATE_500K);
@@ -1327,7 +1320,6 @@ public:
 		sub_microbus_can_503_ = nh_.subscribe("/microbus/can_receive503", 10, &kvaser_can_sender::callbackMicrobusCan503, this);
 		//sub_current_pose_ = nh_.subscribe("/current_pose", 10, &kvaser_can_sender::callbackCurrentPose, this);
 		//sub_current_velocity_ = nh_.subscribe("/current_velocity", 10, &kvaser_can_sender::callbackCurrentVelocity, this);
-		sub_use_velocity_topic_ = nh_.subscribe("/microbus/use_velocity_topic", 10, &kvaser_can_sender::callbackUseVelocityTopic, this);
 		sub_emergency_reset_ = nh_.subscribe("/microbus/emergency_reset", 10, &kvaser_can_sender::callbackEmergencyReset, this);
 		sub_input_steer_flag_ = nh_.subscribe("/microbus/input_steer_flag", 10, &kvaser_can_sender::callbackInputSteerFlag, this);
 		sub_input_steer_value_ = nh_.subscribe("/microbus/input_steer_value", 10, &kvaser_can_sender::callbackInputSteerValue, this);
@@ -1355,6 +1347,7 @@ public:
 		sub_obtracle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 10, &kvaser_can_sender::callbackObstracleWaypoint, this);
 		sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &kvaser_can_sender::callbackStopperDistance, this);
 		sub_lidar_detector_objects_ = nh_.subscribe("/detection/lidar_detector/objects", 10, &kvaser_can_sender::callbackLidarDetectorObjects, this);
+		sub_imu_ = nh_.subscribe("/imu_raw_tidy", 10, &kvaser_can_sender::callbackImu, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);
@@ -1385,7 +1378,7 @@ public:
 		//if(can_receive_501_.emergency == false)
 		{
 			double current_velocity = 0;// = can_receive_502_.velocity_average / 100.0;
-			switch(use_velocity_topic_)
+			switch(use_velocity_data_)
 			{
 			case USE_VELOCITY_CAN:
 				current_velocity = can_receive_502_.velocity_average / 100.0;
@@ -1398,10 +1391,30 @@ public:
 				break;
 			}
 
+			double acceleration = 0;
+			switch(use_acceleration_data_)
+			{
+			case USE_ACCELERATION_TWIST1:
+				acceleration = acceleration1_twist_;
+				break;
+			case USE_ACCELERATION_TWIST2:
+				acceleration = acceleration2_twist_;
+				break;
+			case USE_ACCELERATION_IMU:
+				/*double ax = imu_.linear_acceleration.x;
+				double ay = imu_.linear_acceleration.y;
+				double az = imu_.linear_acceleration.z;
+				acceleration = sqrt(ax*ax + ay*ay + az*az);*/
+				acceleration = imu_.linear_acceleration.x;
+				break;
+			default:
+				break;
+			}
+
 			unsigned char buf[SEND_DATA_SIZE] = {0,0,0,0,0,0,0,0};
 			bufset_mode(buf);
 			bufset_steer(buf);
-			bufset_drive(buf, current_velocity, 2);
+			bufset_drive(buf, current_velocity, acceleration, 2);
 			bufset_car_control(buf, current_velocity);
 			kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
 		}
@@ -1414,11 +1427,7 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 
-	int kvaser_channel;
-	int use_velocity_topic;
-	private_nh.param<int>("kvaser_channel", kvaser_channel, 0);
-	private_nh.param<int>("use_velocity_topic", use_velocity_topic, 1);
-	kvaser_can_sender kcs(nh, private_nh, kvaser_channel, use_velocity_topic);
+	kvaser_can_sender kcs(nh, private_nh);
 	if(kcs.isOpen() == false)
 	{
 		std::cerr << "error : open" << std::endl;

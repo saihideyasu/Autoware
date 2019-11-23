@@ -28,7 +28,7 @@
 #include <tf/transform_broadcaster.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/GnssSurfaceSpeed.h>
-#include <sensor_msgs/Imu.h>
+
 #include <gnss/geo_pos_conv.hpp>
 
 namespace gnss_localizer
@@ -53,7 +53,6 @@ private:
   double roll_, pitch_, yaw_;
   double orientation_time_, position_time_, surface_speed_;
   double lat_std_, lon_std_, alt_std_;
-  double x_accel_, y_accel_, z_accel_, x_gyro_, y_gyro_, z_gyro_;
   ros::Time current_time_, orientation_stamp_;
   tf::TransformBroadcaster br_;
 
@@ -63,7 +62,7 @@ private:
 
   // publisher
   ros::Publisher pub1_;
-  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_imu_;
+  ros::Publisher pub_surface_speed_, pub_std_dev_;
 
   // subscriber
   ros::Subscriber sub1_;

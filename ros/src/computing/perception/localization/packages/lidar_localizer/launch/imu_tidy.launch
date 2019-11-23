@@ -1,0 +1,9 @@
+<launch>
+
+    <arg name="imu_topic" default="gnss_imu" />
+
+    <node pkg="lidar_localizer" type="imu_tidy" name="imu_tidy" output="log">
+        <param name="imu_topic" value="$(arg imu_topic)" />
+    </node>
+
+</launch>

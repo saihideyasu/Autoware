@@ -143,6 +143,10 @@ add_executable(icp_matching nodes/icp_matching/icp_matching.cpp)
 target_link_libraries(icp_matching ${catkin_LIBRARIES})
 add_dependencies(icp_matching ${catkin_EXPORTED_TARGETS})
 
+add_executable(imu_tidy nodes/imu_tidy/imu_tidy.cpp)
+target_link_libraries(imu_tidy ${catkin_LIBRARIES})
+add_dependencies(imu_tidy ${catkin_EXPORTED_TARGETS})
+
 install(TARGETS
             ndt_matching
             ndt_matching_gnss_subscribe
@@ -153,6 +157,7 @@ install(TARGETS
             ndt_matching_monitor_lib
             ndt_matching_monitor
             icp_matching
+            imu_tidy
             queue_counter
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

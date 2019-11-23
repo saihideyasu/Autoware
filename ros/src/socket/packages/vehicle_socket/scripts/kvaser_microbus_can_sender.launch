@@ -2,8 +2,12 @@
 
 	<!-- declare arguments with default values -->
 	<arg name="kvaser_channel" default="0"/>
+    <arg name="use_velocity_data" default="1"/>
+    <arg name="use_acceleration_data" default="2"/>
 
 	<node pkg="vehicle_socket" type="kvaser_microbus_can_sender" name="kvaser_microbus_can_sender" output="log">
 		<param name="kvaser_channel" value="$(arg kvaser_channel)"/>
+        <param name="use_velocity_data" value="$(arg use_velocity_data)"/>
+        <param name="use_acceleration_data" value="$(arg use_acceleration_data)"/>
     </node>
 </launch><arg name="kvaser_channel" default="0"/>

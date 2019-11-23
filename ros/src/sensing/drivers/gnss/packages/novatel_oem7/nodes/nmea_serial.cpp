@@ -80,15 +80,6 @@ void publish(char buf[], const int bufSize)
         }
     }*/
 
-	std::string str_check(buf);
-	if(str_check.compare(0,9,"#RAWIMUXA") == 0)
-	{
-		if(str_check.find('\r') != std::string::npos)
-		{
-			buf[str_check.find('\r')] = '\n';
-		}
-	}
-
 	std::string str(buf);
     nmea_msgs::Sentence sentence;
     sentence.header.stamp=ros::Time::now();

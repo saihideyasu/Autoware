@@ -39,7 +39,6 @@ add_dependencies(nmea2tfpose ${catkin_EXPORTED_TARGETS})
 add_executable(nmea2tfpose_RTK
         nodes/nmea2tfpose/nmea2tfpose_core_RTK.cpp
         nodes/nmea2tfpose/nmea2tfpose_node.cpp
-        nodes/nmea2tfpose/geo_array.cpp
         )
 target_include_directories(nmea2tfpose_RTK PRIVATE nodes/nmea2tfpose ${catkin_INCLUDE_DIRS})
 target_link_libraries(nmea2tfpose_RTK ${catkin_LIBRARIES})

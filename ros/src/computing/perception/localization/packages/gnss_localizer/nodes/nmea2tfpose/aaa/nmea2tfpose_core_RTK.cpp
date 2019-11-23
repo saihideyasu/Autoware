@@ -63,18 +63,6 @@ double dig2rad(double dig)
 	return dig*M_PI/180.0;
 }
 
-std::vector<std::string> split(const std::string &string, const char sep)
-{
-  std::vector<std::string> str_vec_ptr;
-  std::string token;
-  std::stringstream ss(string);
-
-  while (getline(ss, token, sep))
-	str_vec_ptr.push_back(token);
-
-  return str_vec_ptr;
-}
-
 void Nmea2TFPoseNode::initForROS()
 {
   // ros parameter settings
@@ -84,10 +72,9 @@ void Nmea2TFPoseNode::initForROS()
   sub1_ = nh_.subscribe("nmea_sentence", 100, &Nmea2TFPoseNode::callbackFromNmeaSentence, this);
 
   // setup publisher
-  pub1_ = nh_.advertise<geometry_msgs::PoseStamped>("/gnss_pose", 10);
-  pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("/gnss_surface_speed", 10);
-  pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("/gnss_standard_deviation", 10);
-  pub_imu_ = nh_.advertise<sensor_msgs::Imu>("/gnss_imu", 10);
+  pub1_ = nh_.advertise<geometry_msgs::PoseStamped>("gnss_pose", 10);
+  pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("gnss_surface_speed", 10);
+  pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("gnss_standard_deviation", 10);
 }
 
 void Nmea2TFPoseNode::run()
@@ -119,17 +106,6 @@ void Nmea2TFPoseNode::publishPoseStamped()
   gsd.lon_std = lon_std_;
   gsd.alt_std = alt_std_;
   pub_std_dev_.publish(gsd);
-
-  sensor_msgs::Imu imu;
-  imu.header.frame_id = MAP_FRAME_;
-  imu.header.stamp = current_time_;
-  imu.linear_acceleration.x = x_accel_;
-  imu.linear_acceleration.y = y_accel_;
-  imu.linear_acceleration.z = z_accel_;
-  imu.angular_velocity.x = x_gyro_;
-  imu.angular_velocity.y = y_gyro_;
-  imu.angular_velocity.z = z_gyro_;
-  pub_imu_.publish(imu);
 }
 
 void Nmea2TFPoseNode::publishTF()
@@ -177,34 +153,14 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 
 			roll_= 0;//dig2rad(stod(nmea.at(18)));
 			pitch_= 0;//dig2rad(stod(nmea.at(19)));
-			yaw_ = dig2rad(stod(nmea.at(20)));
-			std::cout << "yaw : " << yaw_ << std::endl;
-			double x = cos(yaw_), y = sin(yaw_);
-			yaw_ = atan2(x,y);
+			yaw_ = stod(nmea.at(20));//dig2rad(stod(nmea.at(20)));
+std::cout << "yaw : " << yaw_ << std::endl;
 
             lat_std_ = stod(nmea.at(21));
 			lon_std_ = stod(nmea.at(22));
 			alt_std_ = stod(nmea.at(23));
 
 			ROS_INFO("INSPVAXA is subscribed.");
-		}
-	}
-	else if(nmea.at(0) == "#RAWIMUA")
-	{
-		if(nmea.size() == 18)
-		{
-			x_accel_ = stod(nmea.at(14)) * pow(2,-29) * 100;
-			y_accel_ = stod(nmea.at(13)) * pow(2,-29) * 100;
-			z_accel_ = stod(nmea.at(12)) * pow(2,-29) * 100;
-			y_gyro_ = stod(nmea.at(16)) * pow(2,-33) * 100;
-			z_gyro_ = stod(nmea.at(15)) * pow(2,-33) * 100;
-			std::vector<std::string> ss = split(nmea[17], '*');
-			x_gyro_ = stod(ss.at(0)) * pow(2,-33) * 100;
-			ROS_INFO("RAWIMU is subscribed.");
-			std::cout << "imu_acc : x," << stod(nmea.at(14)) << " y," << stod(nmea.at(13)) << " z," << stod(nmea.at(12)) << std::endl;
-			std::cout << "imu_acc : x," << x_accel_ << " y," << y_accel_ << " z," << z_accel_ << std::endl;
-			std::cout << "imu_gyro : x," << stod(nmea.at(17)) << " y," << stod(nmea.at(16)) << " z," << stod(nmea.at(15)) << std::endl;
-			std::cout << "imu_gyro : x," << x_gyro_ << " y," << y_gyro_ << " z," << z_gyro_ << std::endl;
 		}
 	}
   }catch (const std::exception &e)
@@ -216,7 +172,7 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg)
 {
   current_time_ = msg->header.stamp;
-  convert(split(msg->sentence, ','), msg->header.stamp);
+  convert(split(msg->sentence), msg->header.stamp);
 
   double timeout = 10.0;
   if (fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
@@ -242,4 +198,17 @@ void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstP
 	return;
   }
 }
+
+std::vector<std::string> split(const std::string &string)
+{
+  std::vector<std::string> str_vec_ptr;
+  std::string token;
+  std::stringstream ss(string);
+
+  while (getline(ss, token, ','))
+	str_vec_ptr.push_back(token);
+
+  return str_vec_ptr;
+}
+
 }  // gnss_localizer

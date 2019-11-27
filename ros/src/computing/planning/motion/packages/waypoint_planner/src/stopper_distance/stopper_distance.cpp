@@ -29,7 +29,7 @@ private:
 	}
 
 	int obstacle_waypoint_ = -1;
-	const int obstacle_offset_ = 2;
+	const int obstacle_offset_ = 6;
 	void cameraObstacleWaypoint(const std_msgs::Int32& msg)
 	{
 		obstacle_waypoint_ = msg.data;

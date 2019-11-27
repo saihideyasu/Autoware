@@ -16,6 +16,10 @@
 
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_32" args="2.30 0.0 2.83 -1.578 0.0 0.0 base_link velodyne3 10"/>
 
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_front_left" args="4.55 1.0 1.2 0.00 0.0 0.0 base_link velodyne4 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_front_right" args="4.55 -1.0 1.2 0.00 0.0 0.0 base_link velodyne5 10"/>
+
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer" args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg frame_id) $(arg child_frame_id) $(arg period_in_ms)"/>
 
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="1.9 0.0 1.2 0.0 0.0 0.0 base_link me_viz 10"/>

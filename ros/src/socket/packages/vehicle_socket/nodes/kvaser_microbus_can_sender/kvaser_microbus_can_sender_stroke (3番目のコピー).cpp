@@ -231,7 +231,7 @@ private:
 	//other params
 	const unsigned int SEND_DATA_SIZE = 8;
 
-	//error params pid_params.get_stroke_prev();
+	//error params
 	const int CONFIG_OK = 0;
 	const int ERROR_STROKE_MAX_MIN_INCONSISTENCY = 1;
 	const int ERROR_STROKE_CENTER_INCONSISTENCY = 2;
@@ -815,11 +815,11 @@ private:
 			        / (handle_control_max_speed - handle_control_min_speed) + 1;
 			if(wheel_ang > 0)
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_left;// - 250;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_left - 250;
 			}
 			else
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_right;// - 250;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_right - 250;
 			}
 		}
 		else steer_val = input_steer_;
@@ -926,8 +926,6 @@ private:
 		        setting_.k_brake_d_velocity * e_d;
 		pid_params.set_brake_e_prev_velocity(e);
 
-	//	static double target_brake_stroke_prev=target_brake_stroke;
-
 		//distance PID
 		if(stopper_distance_ >= 0 && acceleration < -0.01)
 		{
@@ -961,7 +959,7 @@ private:
 			std::cout << "stopper_distance plus : " << val_plus << "," << stopper_distance_ << "," << estimated_stopping_distance<< std::endl;
 	//		target_brake_stroke += val_plus;
     //
-			//      if(val_plus < 0 ) target_brake_stroke += val_plus;
+            if(val_plus < 0 ) target_brake_stroke += val_plus;
 
 			pid_params.set_brake_e_prev_distance(e_dist);
 		}
@@ -987,9 +985,6 @@ private:
 				double d = 500 - target_brake_stroke;
 				target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
-			}
-			else {
-	//			target_brake_stroke = target_brake_stroke_prev;
 			}
 		}
 		else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
@@ -1017,15 +1012,11 @@ private:
 			}
 		}*/
 
-
-	//	target_brake_stroke_prev = target_brake_stroke;
-
 		short ret = -1 * (short)(target_brake_stroke + 0.5);std::cout << "ret " << setting_.k_brake_p_velocity << std::endl;
 		if (ret < setting_.pedal_stroke_min)
 			ret = setting_.pedal_stroke_min;
 		else if (ret > setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
-
 
 		return ret;
 	}

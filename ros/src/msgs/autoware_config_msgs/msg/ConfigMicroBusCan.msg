@@ -28,4 +28,7 @@ int16 pedal_stroke_min
 int16 brake_stroke_stopping_med
 int16 accel_stroke_offset
 int16 brake_stroke_offset
+float64 gnss_lat_limit
+float64 gnss_lon_limit
+float64 gnss_alt_limit
 float64 acceptable_velocity_variation

@@ -175,10 +175,12 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			double up_vel = stod(nmea.at(17));
 			this->surface_speed_ = sqrt(north_vel*north_vel + east_vel*east_vel + up_vel*up_vel);
 
-			roll_= 0;//dig2rad(stod(nmea.at(18)));
-			pitch_= 0;//dig2rad(stod(nmea.at(19)));
+			roll_= dig2rad(stod(nmea.at(18)));
+			pitch_= -dig2rad(stod(nmea.at(19)));
 			yaw_ = dig2rad(stod(nmea.at(20)));
-			std::cout << "yaw : " << yaw_ << std::endl;
+			std::cout << "yaw  : " << yaw_ << std::endl;
+			std::cout << "roll : " << roll_ << std::endl;
+			std::cout << "pitch: " << pitch_ << std::endl;
 			double x = cos(yaw_), y = sin(yaw_);
 			yaw_ = atan2(x,y);
 

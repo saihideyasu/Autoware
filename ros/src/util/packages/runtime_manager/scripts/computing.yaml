@@ -6682,6 +6682,33 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : gnss_lat_limit
+      desc : gnss_lat_limit
+      label: gnss_lat_limit
+      min  : 0.0
+      max  : 1.0
+      v    : 0.1
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : gnss_lon_limit
+      desc : gnss_lon_limit
+      label: gnss_lon_limit
+      min  : 0.0
+      max  : 1.0
+      v    : 0.1
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : gnss_alt_limit
+      desc : gnss_alt_limit
+      label: gnss_alt_limit
+      min  : 0.0
+      max  : 1.0
+      v    : 0.1
+      cmd_param:
+        dash     : ''
+        delim    : ':='
     - name  : use_velocity_data
       desc  : use_velocity_data desc sample
       label : use_velocity_data

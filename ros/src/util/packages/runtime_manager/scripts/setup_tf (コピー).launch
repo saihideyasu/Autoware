@@ -10,11 +10,11 @@
   <arg name="child_frame_id" default="velodyne"/>
   <arg name="period_in_ms" default="10"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_hi" args="2.275 0.0 2.92 -0.025 0.0 0.0 base_link velodyne1 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_hi" args="2.30 0.0 2.92 -0.025 0.0 0.0 base_link velodyne1 10"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_ro" args="2.275 0.0 3.01 0.01 0.0 0.0 base_link velodyne2 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_ro" args="2.30 0.0 3.01 0.01 0.0 0.0 base_link velodyne2 10"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_32" args="2.275 0.0 3.19 -1.578 0.0 0.0 base_link velodyne3 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_32" args="2.30 0.0 3.19 -1.578 0.0 0.0 base_link velodyne3 10"/>
 
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_front_left" args="4.55 1.0 1.2 0.00 0.0 0.0 base_link velodyne4 10"/>
 
@@ -24,12 +24,16 @@
 
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="1.9 0.0 1.2 0.0 0.0 0.0 base_link me_viz 10"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.0 -0.905 -1.5875 0.0 -1.4530 velodyne camera 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.0 0.0 -0.5 0.0 0.0 0.0 velodyne camera 10"/>
 
-  <param name="/gx" value="1.695"/>
+  <param name="/gx" value="1.5"/>
   <param name="/gy" value="0.0"/>
-  <param name="/gz" value="2.64"/>
+  <param name="/gz" value="2.85"/>
   <param name="/ax" value="0.0"/>
   <param name="/ay" value="0.0"/>
   <param name="/az" value="0.0"/>
+
+  <param name="/imu_pose_x" value="0.305"/>
+  <param name="/imu_pose_y" value="0.0"/>
+  <param name="/imu_pose_z" value="0.59"/>
 </launch>

@@ -34,7 +34,7 @@
   <arg name="proc_stddev_wz_c" default="0.05"/>
 
 
-  <node pkg="ekf_localizer" type="ekf_localizer" name="ekf_localizer" output="screen">
+  <node pkg="ekf_localizer" type="ekf_localizer" name="ekf_localizer" output="log">
 
     <param name="pose_frame_id" value="/map"/>
     <param name="input_pose_name" value="$(arg input_pose_name)"/>

@@ -20,7 +20,7 @@
 
   <group unless="$(arg sim_mode)">
     <node pkg="autoware_connector" type="can_status_translator" name="can_status_translator" output="log" />
-    <node pkg="autoware_connector" type="localizer_switch" name="localizer_switch" output="screen">
+    <node pkg="autoware_connector" type="localizer_switch" name="localizer_switch" output="log">
         <param name="base_link_pose1" value="$(arg base_link_pose_topic1)" />
         <param name="estimate_twist1" value="$(arg estimate_twist_topic1)" />
         <param name="localizer_pose1" value="$(arg localizer_pose_topic1)" />

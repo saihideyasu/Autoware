@@ -209,13 +209,16 @@ public:
 
         tf::StampedTransform tf_stamped;
         ros::Time time = ros::Time::now();
-        bool flag;
+		bool flag;std::cout << "aaa" << std::endl;
         flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
         //if(flag == true) std::cout << "bbb\n" << std::flush;
         //else std::cout << "ccc\n" << std::flush;
+		std::cout << twist_.header.frame_id << std::endl;
         tf_listener->lookupTransform("map", twist_.header.frame_id, twist_.header.stamp, tf_stamped);
         //if(flag == false) std::cout << "bbb\n";
+		std::cout << "ccc" << std::endl;
         trans_broad.sendTransform(tf::StampedTransform(tf_stamped, twist_.header.stamp, "/map", "/base_link"));
+		std::cout << "ddd" << std::endl;
 
         geometry_msgs::TwistStamped twist_pose_msg;
         twist_pose_msg.header.frame_id = "base_link";
@@ -266,7 +269,7 @@ private:
 
     void fusion_select_callback(const autoware_config_msgs::ConfigLocalizerSwitchFusionConstPtr &msg)
     {
-        std::cout << "fusuion select : " << msg->fusion_select << std::flush << std::endl;
+		std::cout << "fusuion select : " << (int)msg->fusion_select << std::endl;
 
         switch(msg->fusion_select)
         {

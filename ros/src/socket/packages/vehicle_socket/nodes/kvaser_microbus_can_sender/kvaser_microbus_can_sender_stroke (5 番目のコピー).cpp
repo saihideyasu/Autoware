@@ -26,7 +26,6 @@
 #include <autoware_msgs/PositionChecker.h>
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/DetectedObjectArray.h>
-#include <autoware_msgs/GnssStandardDeviation.h>
 #include "kvaser_can.h"
 #include <time.h>
 
@@ -253,7 +252,7 @@ private:
 
 	//safety
 	const LIMIT_ANGLE_FROM_VELOCITY_STRUCT limit10 = {10,680,-680}, limit15 = {15,360,-360}, limit20 = {20,180,-180}, limit30={30,90,-90}, limit40={40,45,-45};
-	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc_;
+	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc;
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_;
@@ -271,7 +270,7 @@ private:
 	ros::Subscriber sub_blinker_right_, sub_blinker_left_, sub_blinker_stop_;
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
-	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
+	ros::Subscriber sub_lidar_detector_objects_, sub_imu_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -305,38 +304,11 @@ private:
 	PID_params pid_params;
 	int use_velocity_data_, use_acceleration_data_;
 	autoware_msgs::PositionChecker position_checker_;
-	bool angle_limit_over_;
-	double steer_correction_;
 
-	ros::Time automatic_door_time_;
+	ros::Time automatic_door_time_, drive_clutch_time_, steer_clutch_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
-
-	void callbackGnssStandardDeviation(const autoware_msgs::GnssStandardDeviation::ConstPtr &msg)
-	{
-		std::cout << "gnss_lat : " << msg->lat_std << "," << setting_.gnss_lat_limit << std::endl;
-		std::cout << "gnss_lon : " << msg->lon_std << "," << setting_.gnss_lon_limit << std::endl;
-		std::cout << "gnss_alt : " << msg->alt_std << "," << setting_.gnss_alt_limit << std::endl;
-
-		if(msg->lat_std > setting_.gnss_lat_limit ||
-		        msg->lon_std > setting_.gnss_lon_limit ||
-		        msg->alt_std > setting_.gnss_alt_limit)
-		{
-			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
-				drive_clutch_ = false;
-			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
-				steer_clutch_ = false;
-			//flag_drive_mode_ = false;
-			//flag_steer_mode_ = false;
-			shift_auto_ = false;
-			std::cout << "Denger! Gnss deviation limit over : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std << std::endl;
-			std::stringstream safety_error_message;
-			safety_error_message << "Gnss deviation error : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;
-			publisStatus(safety_error_message.str());
-			can_send();
-		}
-	}
 
 	void callbackImu(const sensor_msgs::Imu::ConstPtr msg)
 	{
@@ -544,7 +516,7 @@ private:
 
 		bool flag = false;
 
-		LIMIT_ANGLE_FROM_VELOCITY_STRUCT limitAngleData = lafvc_.getLimit(zisoku);
+		LIMIT_ANGLE_FROM_VELOCITY_STRUCT limitAngleData = lafvc.getLimit(zisoku);
 		std::cout <<"angle range : " << limitAngleData.limit_angle_bottom << "," << deg << "," << limitAngleData.limit_angle_top << std::endl;
 
 		//double targetAngleTimeVal = fabs(deg - front_deg_)/time_sa;
@@ -557,30 +529,25 @@ private:
 			if(msg->ctrl_cmd.steering_angle != 0)
 			{
 				flag = true;
-				angle_limit_over_ = true;
 				std::cout << "Denger! target angle over" << std::endl;
 			}
-			else angle_limit_over_ = false;
 		}
-		else angle_limit_over_ = false;
 
 		//クラッチが入っている(autoモードである)場合だけエラー判定を出す
-		std::stringstream safety_error_message;
 		if(flag == true && can_receive_502_.clutch == true)
 		{
-			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
-				steer_clutch_ = false;
-			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
-				drive_clutch_ = false;
+			drive_clutch_ = false;
+			steer_clutch_ = false;
 			//flag_drive_mode_ = false;
 			//flag_steer_mode_ = false;
 			shift_auto_ = false;
+			std::stringstream safety_error_message;
 			safety_error_message << "target angle over , " << deg;
 			//std::cout << safety_error_message.str() << std::endl;
+			publisStatus(safety_error_message.str());
 			can_send();
 		}
 
-		publisStatus(safety_error_message.str());
 		twist_ = *msg;
 	}
 
@@ -693,12 +660,6 @@ private:
 			shift_position_ = msg->liesse.shift;
 		}
 
-		if(msg->steer_correction)
-		{
-			steer_correction_ = msg->steer_correction;
-			if(steer_correction_ > 500 || steer_correction_ < -500) steer_correction_ = 0;
-		}
-
 		waypoint_param_ = *msg;
 	}
 
@@ -709,10 +670,8 @@ private:
 		{
 			if(msg->stop_flag != 0)// && can_receive_502_.clutch == true)
 			{
-				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
-					drive_clutch_ = false;
-				if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
-					steer_clutch_ = false;
+				drive_clutch_ = false;
+				steer_clutch_ = false;
 				//flag_drive_mode_ = false;
 				//flag_steer_mode_ = false;
 				shift_auto_ = false;
@@ -727,7 +686,7 @@ private:
 				std::stringstream safety_error_message;
 				safety_error_message << "position ok";
 				publisStatus(safety_error_message.str());
-				//can_send();
+				can_send();
 			}
 		}
 		else
@@ -735,7 +694,7 @@ private:
 			std::stringstream safety_error_message;
 			safety_error_message << "";
 			publisStatus(safety_error_message.str());
-			//can_send();
+			can_send();
 		}
 	}
 
@@ -748,7 +707,6 @@ private:
 		msg.use_input_drive = input_drive_mode_;
 		msg.use_velocity_topic = use_velocity_data_;
 		msg.position_check_stop = position_checker_.stop_flag;
-		msg.angle_limit_over = angle_limit_over_;
 		if(safety_error_message != "") msg.safety_error_message = safety_error_message;
 		else msg.safety_error_message = "";
 		std::cout << msg.safety_error_message << std::endl;
@@ -806,12 +764,16 @@ private:
 
 	void callbackDriveClutch(const std_msgs::Bool::ConstPtr &msg)
 	{
-		drive_clutch_ = msg->data;
+		drive_clutch_ = !msg->data;
+		ros::Time nowtime = ros::Time::now();
+		drive_clutch_time_ = ros::Time(nowtime.sec + 1, nowtime.nsec);
 	}
 
 	void callbackSteerClutch(const std_msgs::Bool::ConstPtr &msg)
 	{
-		steer_clutch_ = msg->data;
+		steer_clutch_ = !msg->data;
+		ros::Time nowtime = ros::Time::now();
+		steer_clutch_time_ = ros::Time(nowtime.sec + 1, nowtime.nsec);
 	}
 
 	void blinkerRight()
@@ -875,11 +837,11 @@ private:
 			        / (handle_control_max_speed - handle_control_min_speed) + 1;
 			if(wheel_ang > 0)
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_left + steer_correction_;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_left - 0;
 			}
 			else
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_right + steer_correction_;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_right - 0;
 			}
 		}
 		else steer_val = input_steer_;
@@ -1254,8 +1216,20 @@ private:
 
 		if(emergency_stop_ == 0x2) {buf[6] |= 0x80;  emergency_stop_ = 0;}
 		else if(emergency_stop_ == 0x1) {buf[6] |= 0x40;  emergency_stop_ = 0;}
-		if(drive_clutch_ == false) {buf[6] |= 0x20;}// drive_clutch_ = true;}
-		if(steer_clutch_ == false) {buf[6] |= 0x10;}// steer_clutch_ = true;}
+		//if(drive_clutch_ == false) {buf[6] |= 0x20;}// drive_clutch_ = true;}
+		if(drive_clutch_ == false)
+		{
+			buf[6] |= 0x20;
+			ros::Time time = ros::Time::now();
+			if(time > drive_clutch_time_)  drive_clutch_ = true;
+		}
+		//if(steer_clutch_ == false) {buf[6] |= 0x10;}// steer_clutch_ = true;}
+		if(steer_clutch_ == false)
+		{
+			buf[6] |= 0x10;
+			ros::Time time = ros::Time::now();
+			if(time > steer_clutch_time_)  steer_clutch_ = true;
+		}
 		if(automatic_door_ != 0x0)
 		{
 			if(automatic_door_ == 0x2) {buf[6] |= 0x08;}
@@ -1341,8 +1315,6 @@ public:
 	    , acceleration2_twist_(0)
 	    , jurk1_twist_(0)
 	    , jurk2_twist_(0)
-	    , angle_limit_over_(false)
-	    , steer_correction_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -1374,7 +1346,7 @@ public:
 		canStatus res = kc.init(kvaser_channel, canBITRATE_500K);
 		if(res != canStatus::canOK) {std::cout << "open error" << std::endl;}
 
-		lafvc_.add(limit10); lafvc_.add(limit15); lafvc_.add(limit20); lafvc_.add(limit30); lafvc_.add(limit40);
+		lafvc.add(limit10); lafvc.add(limit15); lafvc.add(limit20); lafvc.add(limit30); lafvc.add(limit40);
 
 		pub_microbus_can_sender_status_ = nh_.advertise<autoware_can_msgs::MicroBusCanSenderStatus>("/microbus/can_sender_status", 1, true);
 		pub_acceleration_write_ = nh_.advertise<std_msgs::String>("/microbus/acceleration_write", 1);
@@ -1415,7 +1387,7 @@ public:
 		sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &kvaser_can_sender::callbackStopperDistance, this);
 		sub_lidar_detector_objects_ = nh_.subscribe("/detection/lidar_detector/objects", 10, &kvaser_can_sender::callbackLidarDetectorObjects, this);
 		sub_imu_ = nh_.subscribe("/imu_raw_tidy", 10, &kvaser_can_sender::callbackImu, this);
-		sub_gnss_standard_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &kvaser_can_sender::callbackGnssStandardDeviation, this);
+
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);
 		sync_twist_pose_ = new message_filters::Synchronizer<TwistPoseSync>(TwistPoseSync(SYNC_FRAMES), *sub_current_velocity_, *sub_current_pose_);
@@ -1425,7 +1397,7 @@ public:
 		publisStatus(safety_error_message);
 
 		waypoint_param_.blinker = 0;
-		automatic_door_time_ = blinker_right_time_ = blinker_left_time_ =
+		automatic_door_time_ = blinker_right_time_ = blinker_left_time_ = drive_clutch_time_ = steer_clutch_time_ =
 		        blinker_stop_time_ = ros::Time::now();
 
 		pid_params.init(0.0);

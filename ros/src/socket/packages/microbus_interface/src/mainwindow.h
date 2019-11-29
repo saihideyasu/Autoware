@@ -6,8 +6,11 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
+#include <autoware_can_msgs/MicroBusCan503.h>
+#include <autoware_can_msgs/MicroBusCanSenderStatus.h>
 
 namespace Ui {
 class MainWindow;
@@ -23,6 +26,8 @@ public:
 
     void window_updata();
 private:
+    const short PEDAL_VOLTAGE_CENTER_ = 1024;//ペダルをニュートラルにしている際の電圧値
+
     Ui::MainWindow *ui;
 
     ros::NodeHandle nh_, private_nh_;
@@ -31,16 +36,27 @@ private:
     ros::Publisher pub_drive_mode_, pub_steer_mode_;//autoモードとmanualモードのチェンジ
     ros::Publisher pub_drive_control_;//driveのコントロールモード(velocity操作とstroke操作の切り替え)
     ros::Publisher pub_drive_input_, pub_steer_input_;//programモード時の自動入力と手動入力の切り替え
-
-    ros::Subscriber sub_can501_, sub_can502_;//マイクロバスcanのID501,502
+    ros::Publisher pub_drive_clutch_, pub_steer_clutch_;//クラッチの状態変更フラグ
+    ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
+    ros::Subscriber sub_can_status_;//canステータス情報
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
+    void callbackCan503(const autoware_can_msgs::MicroBusCan503 &msg);//マイコン応答ID502
+    void callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg);//canステータス
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
+    autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
+    autoware_can_msgs::MicroBusCan503 can503_;//マイコン応答ID503
+    autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
+    geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
 
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror
+    QPalette palette_position_check_ok_, palette_position_check_error_;//canステータス(正確にはposition_chekerのフラグ)の自動走行OKフラグ用パレット
+    QPalette palette_angle_limit_over_ok_, palette_angle_limit_over_error_;//ハンドル回転司令チェック用テキストボックスのパレット
+    QPalette palette_drive_clutch_connect_, palette_drive_clutch_cut_;//ドライブクラッチのテキストボックスパレット
+    QPalette palette_steer_clutch_connect_, palette_steer_clutch_cut_;//ハンドルクラッチのテキストボックスパレット
 private slots:
     void publish_emergency_clear();
     void publish_Dmode_manual();
@@ -53,6 +69,10 @@ private slots:
     void publish_Dmode_input_auto();
     void publish_Smode_input_direct();
     void publish_Smode_input_auto();
+    void publish_drive_clutch_connect();
+    void publish_drive_clutch_cut();
+    void publish_steer_clutch_connect();
+    void publish_steer_clutch_cut();
 };
 
 #endif // MAINWINDOW_H

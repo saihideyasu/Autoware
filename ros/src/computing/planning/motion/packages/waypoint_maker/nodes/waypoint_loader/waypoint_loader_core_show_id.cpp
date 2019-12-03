@@ -243,7 +243,9 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.temporary_stop_line = (char)((map.find("temporary_stop_line") != map.end()) ? std::stoi(map["temporary_stop_line"]) : 0);
   wp->waypoint_param.fusion_select = (char)((map.find("fusion_select") != map.end()) ? std::stoi(map["fusion_select"]) : -1);
   wp->waypoint_param.liesse.shift = (char)((map.find("liesse_shift") != map.end()) ? std::stoi(map["liesse_shift"]) : -1);
-  wp->waypoint_param.steer_correction = ((map.find("steer_correction") != map.end()) ? std::stod(map["steer_correction"]) : 0.0);
+  wp->waypoint_param.steer_correction = ((map.find("steer_correction") != map.end()) ? std::stod(map["steer_correction"]) : -1000.0);
+  wp->waypoint_param.lookahead_ratio = ((map.find("lookahead_ratio") != map.end()) ? std::stod(map["lookahead_ratio"]) : 0.0);
+  wp->waypoint_param.minimum_lookahead_distance = ((map.find("minimum_lookahead_distance") != map.end()) ? std::stod(map["minimum_lookahead_distance"]) : 0.0);
 
   if(wp->waypoint_param.signal_stop_line != 0)
   {

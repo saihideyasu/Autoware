@@ -693,7 +693,7 @@ private:
 			shift_position_ = msg->liesse.shift;
 		}
 
-		if(msg->steer_correction)
+		if(msg->steer_correction > -1000)
 		{
 			steer_correction_ = msg->steer_correction;
 			if(steer_correction_ > 500 || steer_correction_ < -500) steer_correction_ = 0;
@@ -881,6 +881,7 @@ private:
 			{
 				steer_val = wheel_ang * wheelrad_to_steering_can_value_right + steer_correction_;
 			}
+			std::cout << "steer_correction : " << steer_correction_ << std::endl;
 		}
 		else steer_val = input_steer_;
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
@@ -1490,7 +1491,7 @@ public:
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "kvaser_microbus_can_sender_storke");
+	ros::init(argc, argv, "kvaser_microbus_can_sender_stroke");
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 

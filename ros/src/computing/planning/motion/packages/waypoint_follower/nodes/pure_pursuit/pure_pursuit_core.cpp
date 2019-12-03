@@ -60,6 +60,7 @@ void PurePursuitNode::initForROS()
   sub2_ = nh_.subscribe("current_pose", 10, &PurePursuitNode::callbackFromCurrentPose, this);
   sub3_ = nh_.subscribe("config/waypoint_follower", 10, &PurePursuitNode::callbackFromConfig, this);
   sub4_ = nh_.subscribe("current_velocity", 10, &PurePursuitNode::callbackFromCurrentVelocity, this);
+  sub_config_look_ahead_ = nh_.subscribe("config/look_ahead", 10, &PurePursuitNode::callbackFromConfigLookAhead, this);
 
   // setup publisher
   pub1_ = nh_.advertise<geometry_msgs::TwistStamped>("twist_raw", 10);
@@ -192,6 +193,12 @@ void PurePursuitNode::callbackFromConfig(const autoware_config_msgs::ConfigWaypo
   lookahead_distance_ratio_ = config->lookahead_ratio;
   minimum_lookahead_distance_ = config->minimum_lookahead_distance;
   is_config_set_ = true;
+}
+
+void PurePursuitNode::callbackFromConfigLookAhead(const autoware_config_msgs::ConfigLookAheadConstPtr &config)
+{
+	lookahead_distance_ratio_ = config->lookahead_ratio;
+	minimum_lookahead_distance_ = config->minimum_lookahead_distance;
 }
 
 void PurePursuitNode::publishDeviationCurrentPosition(const geometry_msgs::Point &point,

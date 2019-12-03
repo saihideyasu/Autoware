@@ -26,4 +26,6 @@ int8 signal_stop_line
 int8 temporary_stop_line
 int8 fusion_select
 float64 steer_correction
+float32 lookahead_ratio
+float32 minimum_lookahead_distance
 LiesseXZB70MParam liesse

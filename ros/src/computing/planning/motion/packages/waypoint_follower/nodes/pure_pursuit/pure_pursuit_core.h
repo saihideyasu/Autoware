@@ -26,6 +26,7 @@
 
 // User defined includes
 #include "autoware_config_msgs/ConfigWaypointFollower.h"
+#include "autoware_config_msgs/ConfigLookAhead.h"
 #include "autoware_msgs/ControlCommandStamped.h"
 #include "autoware_msgs/Lane.h"
 #include "pure_pursuit.h"
@@ -73,7 +74,7 @@ private:
   ros::Publisher pub1_, pub2_, pub11_, pub12_, pub13_, pub14_, pub15_, pub16_, pub17_;
 
   // subscriber
-  ros::Subscriber sub1_, sub2_, sub3_, sub4_;
+  ros::Subscriber sub1_, sub2_, sub3_, sub4_, sub_config_look_ahead_;
 
   // constant
   const int LOOP_RATE_;  // processing frequency
@@ -95,7 +96,7 @@ private:
   void callbackFromCurrentPose(const geometry_msgs::PoseStampedConstPtr &msg);
   void callbackFromCurrentVelocity(const geometry_msgs::TwistStampedConstPtr &msg);
   void callbackFromWayPoints(const autoware_msgs::LaneConstPtr &msg);
-
+  void callbackFromConfigLookAhead(const autoware_config_msgs::ConfigLookAheadConstPtr &msg);
   // initializer
   void initForROS();
 

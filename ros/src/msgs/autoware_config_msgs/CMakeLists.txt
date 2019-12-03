@@ -50,6 +50,7 @@ add_message_files(
   ConfigMicroBusCan.msg
   ConfigTemporaryStoper.msg
   ConfigImuTidy.msg
+  ConfigLookAhead.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

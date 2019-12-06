@@ -60,6 +60,9 @@ struct VehicleInfo
   double minimum_turning_radius;
   double maximum_steering_angle;
 
+  double wheelrad_to_steering_can_value_left = 20935.4958411006;//20691.8161699557;//20952.8189547718;
+  double wheelrad_to_steering_can_value_right = 20791.4464661611;//20802.5331916036;//20961.415734248;
+
   VehicleInfo()
   {
     is_stored = false;
@@ -71,6 +74,20 @@ struct VehicleInfo
   {
 	  std::cout << "tan : " << tan(deg2rad(getCurrentTireAngle(cur_angle_deg))) << "," << cur_angle_deg << std::endl;
     return is_stored ? tan(deg2rad(getCurrentTireAngle(cur_angle_deg))) * cur_vel_mps / wheel_base : 0;
+  }
+  double convertSteeringAngleToAngularVelocity_microbus(const double cur_vel_mps, const double angle_actual)
+  {
+      double wheel_val;
+      if(angle_actual > 0)
+      {
+          wheel_val = angle_actual / wheelrad_to_steering_can_value_left;
+      }
+      else
+      {
+          wheel_val = angle_actual / wheelrad_to_steering_can_value_right;
+      }
+      std::cout << "wheel : " << wheel_val << std::endl;
+      return is_stored ? tan(wheel_val) * cur_vel_mps / wheel_base : 0;
   }
   double getCurrentTireAngle(const double angle_deg)  // steering [degree] -> tire [degree]
   {

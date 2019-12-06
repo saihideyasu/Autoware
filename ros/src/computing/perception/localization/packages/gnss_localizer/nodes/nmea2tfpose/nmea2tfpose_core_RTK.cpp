@@ -34,6 +34,7 @@ Nmea2TFPoseNode::Nmea2TFPoseNode()
   , lat_std_(0)
   , lon_std_(0)
   , alt_std_(0)
+  , gnss_stat_(0)
 {
   initForROS();
   geo_.set_plane(plane_number_);
@@ -88,6 +89,7 @@ void Nmea2TFPoseNode::initForROS()
   pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("/gnss_surface_speed", 10);
   pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("/gnss_standard_deviation", 10);
   pub_imu_ = nh_.advertise<sensor_msgs::Imu>("/gnss_imu", 10);
+  pub_stat_ = nh_.advertise<std_msgs::UInt8>("/gnss_stat", 10);
 }
 
 void Nmea2TFPoseNode::run()
@@ -130,6 +132,10 @@ void Nmea2TFPoseNode::publishPoseStamped()
   imu.angular_velocity.y = y_gyro_;
   imu.angular_velocity.z = z_gyro_;
   pub_imu_.publish(imu);
+
+  std_msgs::UInt8 stat;
+  stat.data = gnss_stat_;
+  pub_stat_.publish(stat);
 }
 
 void Nmea2TFPoseNode::publishTF()
@@ -187,6 +193,8 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
             lat_std_ = stod(nmea.at(21));
 			lon_std_ = stod(nmea.at(22));
 			alt_std_ = stod(nmea.at(23));
+
+			gnss_stat_ = stoi(nmea.at(9));
 
 			ROS_INFO("INSPVAXA is subscribed.");
 		}

@@ -41,6 +41,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt_drive_clutch_cut, SIGNAL(clicked()), this, SLOT(publish_drive_clutch_cut()));
     connect(ui->bt_steer_clutch_connect, SIGNAL(clicked()), this, SLOT(publish_steer_clutch_connect()));
     connect(ui->bt_steer_clutch_cut, SIGNAL(clicked()), this, SLOT(publish_steer_clutch_cut()));
+    connect(ui->bt_error_text_reset, SIGNAL(clicked()), this, SLOT(click_error_text_reset()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -59,6 +60,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can_status_ = nh_.subscribe("/microbus/can_sender_status", 10, &MainWindow::callbackCanStatus, this);
 
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
+    error_text_lock_ = false;
 }
 
 MainWindow::~MainWindow()
@@ -281,6 +283,12 @@ void MainWindow::window_updata()
         ui->tx_angle_actual->setText("");
         ui->tx_position_check->setText("");
     }
+
+    if(can_status_.safety_error_message != "" && error_text_lock_ == false)
+    {
+        ui->tx_error_text->setText(can_status_.safety_error_message.c_str());
+        error_text_lock_ = true;
+    }
 }
 
 void MainWindow::callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg)
@@ -406,4 +414,10 @@ void MainWindow::publish_steer_clutch_cut()
     std_msgs::Bool msg;
     msg.data = false;
     pub_steer_clutch_.publish(msg);
+}
+
+void MainWindow::click_error_text_reset()
+{
+    error_text_lock_ = false;
+    ui->tx_error_text->setText("");
 }

@@ -19,7 +19,7 @@
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <autoware_can_msgs/MicroBusCan503.h>
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
-#include <autoware_can_msgs/MicroBusCanSenderPositionCheck.h>
+//#include <autoware_can_msgs/MicroBusCanSenderPositionCheck.h>
 #include <autoware_config_msgs/ConfigMicroBusCan.h>
 #include <autoware_config_msgs/ConfigVelocitySet.h>
 #include <autoware_msgs/WaypointParam.h>
@@ -272,6 +272,7 @@ private:
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
+	ros::Subscriber sub_ndt_stat_, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -307,11 +308,67 @@ private:
 	autoware_msgs::PositionChecker position_checker_;
 	bool angle_limit_over_;
 	double steer_correction_;
+	std::string ndt_stat_;
+	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_;
+	unsigned char gnss_stat_;
 
 	ros::Time automatic_door_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
+
+	void NdtGnssCheck()
+	{
+		bool flag = true;
+		if((gnss_stat_ & 0x3) == 0) flag = false;
+		//if(ndt_stat_ != "NDT_OK") flag = false;
+
+		double ndtx = ndt_pose_.pose.position.x;
+		double ndty = ndt_pose_.pose.position.y;
+		double gnssx = gnss_pose_.pose.position.x;
+		double gnssy = gnss_pose_.pose.position.y;
+		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
+		//if(distance >= 0.5) flag = false;//0.5
+
+
+		if(flag == false)
+		{
+			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+				drive_clutch_ = false;
+			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+				steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
+			std::cout << "Denger! Ndt Gnss check : " << std::endl;
+			std::stringstream safety_error_message;
+			safety_error_message << "Ndt Gnss error : ";
+			publisStatus(safety_error_message.str());
+			can_send();
+		}
+	}
+
+	void callbackNdtPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	{
+		ndt_pose_ = *msg;
+		NdtGnssCheck();
+	}
+
+	void callbackGnssPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	{
+		gnss_pose_ = *msg;
+		NdtGnssCheck();
+	}
+
+	void callbackNdtStat(const std_msgs::String::ConstPtr &msg)
+	{
+		ndt_stat_ = msg->data;
+	}
+
+	void callbackGnssStat(const std_msgs::UInt8::ConstPtr &msg)
+	{
+		gnss_stat_ = msg->data;
+	}
 
 	void callbackGnssStandardDeviation(const autoware_msgs::GnssStandardDeviation::ConstPtr &msg)
 	{
@@ -332,7 +389,7 @@ private:
 			shift_auto_ = false;
 			std::cout << "Denger! Gnss deviation limit over : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std << std::endl;
 			std::stringstream safety_error_message;
-			safety_error_message << "Gnss deviation error : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;
+			safety_error_message << "Gnss deviation error : ";// << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;
 			publisStatus(safety_error_message.str());
 			can_send();
 		}
@@ -550,7 +607,7 @@ private:
 		//double targetAngleTimeVal = fabs(deg - front_deg_)/time_sa;
 		std::cout << "time_sa," << time_sa << ",targetAngleTimeVal," << deg << std::endl;
 		double deg_th;
-		if(zisoku <= 15) deg_th = 80;
+		if(zisoku <= 20) deg_th = 90;
 		else deg_th = 40;
 		if(deg > deg_th)// && strinf.mode == MODE_PROGRAM)
 		{
@@ -725,7 +782,7 @@ private:
 			else
 			{
 				std::stringstream safety_error_message;
-				safety_error_message << "position ok";
+				safety_error_message << "";
 				publisStatus(safety_error_message.str());
 				//can_send();
 			}
@@ -1417,6 +1474,11 @@ public:
 		sub_lidar_detector_objects_ = nh_.subscribe("/detection/lidar_detector/objects", 10, &kvaser_can_sender::callbackLidarDetectorObjects, this);
 		sub_imu_ = nh_.subscribe("/imu_raw_tidy", 10, &kvaser_can_sender::callbackImu, this);
 		sub_gnss_standard_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &kvaser_can_sender::callbackGnssStandardDeviation, this);
+		sub_ndt_stat_ = nh_.subscribe("/ndt_monitor/ndt_status", 10, &kvaser_can_sender::callbackNdtStat, this);
+		sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &kvaser_can_sender::callbackGnssStat, this);
+		sub_ndt_pose_ = nh_.subscribe("/ndt_pose", 10, &kvaser_can_sender::callbackNdtPose, this);
+		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
+
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);
 		sync_twist_pose_ = new message_filters::Synchronizer<TwistPoseSync>(TwistPoseSync(SYNC_FRAMES), *sub_current_velocity_, *sub_current_pose_);

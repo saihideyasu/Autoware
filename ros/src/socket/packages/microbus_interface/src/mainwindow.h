@@ -51,6 +51,8 @@ private:
     autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
 
+    bool error_text_lock_;
+
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror
     QPalette palette_position_check_ok_, palette_position_check_error_;//canステータス(正確にはposition_chekerのフラグ)の自動走行OKフラグ用パレット
@@ -73,6 +75,7 @@ private slots:
     void publish_drive_clutch_cut();
     void publish_steer_clutch_connect();
     void publish_steer_clutch_cut();
+    void click_error_text_reset();
 };
 
 #endif // MAINWINDOW_H

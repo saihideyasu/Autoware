@@ -30,6 +30,7 @@
 #include <autoware_msgs/GnssSurfaceSpeed.h>
 #include <sensor_msgs/Imu.h>
 #include <gnss/geo_pos_conv.hpp>
+#include <std_msgs/UInt8.h>
 
 namespace gnss_localizer
 {
@@ -54,6 +55,7 @@ private:
   double orientation_time_, position_time_, surface_speed_;
   double lat_std_, lon_std_, alt_std_;
   double x_accel_, y_accel_, z_accel_, x_gyro_, y_gyro_, z_gyro_;
+  unsigned char gnss_stat_;
   ros::Time current_time_, orientation_stamp_;
   tf::TransformBroadcaster br_;
 
@@ -63,7 +65,7 @@ private:
 
   // publisher
   ros::Publisher pub1_;
-  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_imu_;
+  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_imu_, pub_stat_;
 
   // subscriber
   ros::Subscriber sub1_;

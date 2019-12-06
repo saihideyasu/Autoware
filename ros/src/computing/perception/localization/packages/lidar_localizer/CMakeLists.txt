@@ -143,7 +143,7 @@ add_executable(icp_matching nodes/icp_matching/icp_matching.cpp)
 target_link_libraries(icp_matching ${catkin_LIBRARIES})
 add_dependencies(icp_matching ${catkin_EXPORTED_TARGETS})
 
-add_executable(imu_tidy nodes/imu_tidy/imu_tidy.cpp)
+add_executable(imu_tidy nodes/imu_tidy/imu_tidy.cpp nodes/imu_tidy/Kalman.cpp)
 target_link_libraries(imu_tidy ${catkin_LIBRARIES})
 add_dependencies(imu_tidy ${catkin_EXPORTED_TARGETS})
 

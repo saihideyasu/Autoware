@@ -115,7 +115,7 @@ void CanOdometryNode::callbackFromVehicleStatus(const autoware_msgs::VehicleStat
 void CanOdometryNode::callbackFromVehicleStatus_microbus(const autoware_can_msgs::MicroBusCan502ConstPtr &msg)
 {
 	double vx = kmph2mps(msg->velocity_mps);
-	double vth = v_info_.convertSteeringAngleToAngularVelocity(vx, msg->angle_deg);
+        double vth = v_info_.convertSteeringAngleToAngularVelocity_microbus(vx, msg->angle_actual);
 	odom_.updateOdometry(vx, vth, msg->header.stamp);
 
 	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_.th);

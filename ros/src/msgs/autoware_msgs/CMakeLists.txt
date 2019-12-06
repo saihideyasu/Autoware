@@ -79,6 +79,7 @@ add_message_files(
             WaypointParam.msg
             Format7Info.msg
             LinearArray.msg
+            ImuMathValue.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

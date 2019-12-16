@@ -61,6 +61,7 @@ void PurePursuitNode::initForROS()
   sub3_ = nh_.subscribe("config/waypoint_follower", 10, &PurePursuitNode::callbackFromConfig, this);
   sub4_ = nh_.subscribe("current_velocity", 10, &PurePursuitNode::callbackFromCurrentVelocity, this);
   sub_config_look_ahead_ = nh_.subscribe("config/look_ahead", 10, &PurePursuitNode::callbackFromConfigLookAhead, this);
+  sub_difference_to_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &PurePursuitNode::callbackFromDifferenceToDistance, this);
 
   // setup publisher
   pub1_ = nh_.advertise<geometry_msgs::TwistStamped>("twist_raw", 10);
@@ -183,6 +184,11 @@ double PurePursuitNode::computeAngularGravity(double velocity, double kappa) con
 {
   const double gravity = 9.80665;
   return (velocity * velocity) / (1.0 / kappa * gravity);
+}
+
+void PurePursuitNode::callbackFromDifferenceToDistance(const autoware_msgs::DifferenceToWaypointDistanceConstPtr &msg)
+{
+
 }
 
 void PurePursuitNode::callbackFromConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config)

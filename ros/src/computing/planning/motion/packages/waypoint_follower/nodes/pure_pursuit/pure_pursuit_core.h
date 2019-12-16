@@ -29,6 +29,7 @@
 #include "autoware_config_msgs/ConfigLookAhead.h"
 #include "autoware_msgs/ControlCommandStamped.h"
 #include "autoware_msgs/Lane.h"
+#include "autoware_msgs/DifferenceToWaypointDistance.h"
 #include "pure_pursuit.h"
 #include "pure_pursuit_viz.h"
 
@@ -75,6 +76,7 @@ private:
 
   // subscriber
   ros::Subscriber sub1_, sub2_, sub3_, sub4_, sub_config_look_ahead_;
+  ros::Subscriber sub_difference_to_distance_;
 
   // constant
   const int LOOP_RATE_;  // processing frequency
@@ -97,6 +99,8 @@ private:
   void callbackFromCurrentVelocity(const geometry_msgs::TwistStampedConstPtr &msg);
   void callbackFromWayPoints(const autoware_msgs::LaneConstPtr &msg);
   void callbackFromConfigLookAhead(const autoware_config_msgs::ConfigLookAheadConstPtr &msg);
+  void callbackFromDifferenceToDistance(const autoware_msgs::DifferenceToWaypointDistanceConstPtr &msg);
+
   // initializer
   void initForROS();
 

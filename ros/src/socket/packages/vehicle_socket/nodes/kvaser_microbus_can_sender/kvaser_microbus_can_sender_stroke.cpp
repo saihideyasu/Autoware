@@ -27,6 +27,7 @@
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/DetectedObjectArray.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
+#include <autoware_msgs/DifferenceToWaypointDistance.h>
 #include "kvaser_can.h"
 #include <time.h>
 
@@ -273,6 +274,7 @@ private:
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
 	ros::Subscriber sub_ndt_stat_, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_;
+	ros::Subscriber sub_difference_to_waypoint_distance_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -316,6 +318,25 @@ private:
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
+
+	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
+	{
+		/*if(fabs(msg->distance) > 2.0 || fabs(msg->angular) > 30.0)
+		{
+			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+				drive_clutch_ = false;
+			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+				steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
+			std::cout << "Denger! distance : " << msg->distance << "  angular : " << msg->angular << std::endl;
+			std::stringstream safety_error_message;
+			safety_error_message << "distance," << msg->distance << "\nangular," << msg->angular;
+			publisStatus(safety_error_message.str());
+			can_send();
+		}*/
+	}
 
 	void NdtGnssCheck()
 	{
@@ -607,15 +628,15 @@ private:
 		//double targetAngleTimeVal = fabs(deg - front_deg_)/time_sa;
 		std::cout << "time_sa," << time_sa << ",targetAngleTimeVal," << deg << std::endl;
 		double deg_th;
-		if(zisoku <= 20) deg_th = 90;
-		else deg_th = 40;
+		if(zisoku <= 20) deg_th = 100;
+		else deg_th = 60;
 		if(deg > deg_th)// && strinf.mode == MODE_PROGRAM)
 		{
 			if(msg->ctrl_cmd.steering_angle != 0)
 			{
 				flag = true;
 				angle_limit_over_ = true;
-				std::cout << "Denger! target angle over" << std::endl;
+				std::cout << "Denger! target angle over : " << deg << std::endl;
 			}
 			else angle_limit_over_ = false;
 		}
@@ -1478,6 +1499,7 @@ public:
 		sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &kvaser_can_sender::callbackGnssStat, this);
 		sub_ndt_pose_ = nh_.subscribe("/ndt_pose", 10, &kvaser_can_sender::callbackNdtPose, this);
 		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
+		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);

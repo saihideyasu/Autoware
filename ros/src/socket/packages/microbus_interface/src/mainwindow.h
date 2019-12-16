@@ -11,6 +11,7 @@
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <autoware_can_msgs/MicroBusCan503.h>
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
+#include <autoware_msgs/DifferenceToWaypointDistance.h>
 
 namespace Ui {
 class MainWindow;
@@ -39,16 +40,19 @@ private:
     ros::Publisher pub_drive_clutch_, pub_steer_clutch_;//クラッチの状態変更フラグ
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
+    ros::Subscriber sub_distance_angular_check_;//経路と自車位置のチェック用
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
     void callbackCan503(const autoware_can_msgs::MicroBusCan503 &msg);//マイコン応答ID502
     void callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg);//canステータス
+    void callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
     autoware_can_msgs::MicroBusCan503 can503_;//マイコン応答ID503
     autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
+    autoware_msgs::DifferenceToWaypointDistance distance_angular_check_;
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
 
     bool error_text_lock_;
@@ -59,6 +63,7 @@ private:
     QPalette palette_angle_limit_over_ok_, palette_angle_limit_over_error_;//ハンドル回転司令チェック用テキストボックスのパレット
     QPalette palette_drive_clutch_connect_, palette_drive_clutch_cut_;//ドライブクラッチのテキストボックスパレット
     QPalette palette_steer_clutch_connect_, palette_steer_clutch_cut_;//ハンドルクラッチのテキストボックスパレット
+    QPalette palette_distance_angular_ok_, palette_distance_angular_error_;
 private slots:
     void publish_emergency_clear();
     void publish_Dmode_manual();

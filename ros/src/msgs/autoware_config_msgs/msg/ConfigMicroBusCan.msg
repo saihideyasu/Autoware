@@ -32,3 +32,5 @@ float64 gnss_lat_limit
 float64 gnss_lon_limit
 float64 gnss_alt_limit
 float64 acceptable_velocity_variation
+float64 difference_to_waypoint_distance
+float64 difference_to_waypoint_angular

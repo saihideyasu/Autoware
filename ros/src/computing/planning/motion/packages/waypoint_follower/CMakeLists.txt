@@ -97,8 +97,13 @@ target_link_libraries(position_checker ${catkin_LIBRARIES})
 add_dependencies(position_checker
         ${catkin_EXPORTED_TARGETS})
 
+add_executable(lookahead_ratio_magn nodes/lookahead_ratio_magn/lookahead_ratio_magn.cpp)
+target_link_libraries(lookahead_ratio_magn ${catkin_LIBRARIES})
+add_dependencies(lookahead_ratio_magn
+        ${catkin_EXPORTED_TARGETS})
+
 ## Install executables and/or libraries
-install(TARGETS libwaypoint_follower pure_pursuit wf_simulator twist_filter twist_gate position_checker
+install(TARGETS libwaypoint_follower pure_pursuit wf_simulator twist_filter twist_gate position_checker lookahead_ratio_magn
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

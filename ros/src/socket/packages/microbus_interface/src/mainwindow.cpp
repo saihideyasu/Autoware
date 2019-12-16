@@ -13,18 +13,22 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_angle_limit_over_ok_ = ui->tx_angle_limit_over->palette();
     palette_drive_clutch_connect_ = ui->tx_drive_clutch->palette();
     palette_steer_clutch_connect_ = ui->tx_steer_clutch->palette();
+    palette_distance_angular_ok_ = ui->tx_distance_check->palette();
     palette_drive_mode_error_ = palette_drive_mode_ok_;
     palette_steer_mode_error_ = palette_steer_mode_ok_;
     palette_position_check_error_ = palette_position_check_ok_;
     palette_angle_limit_over_ok_ = palette_angle_limit_over_ok_;
     palette_drive_clutch_cut_ = palette_drive_clutch_connect_;
     palette_steer_clutch_cut_ = palette_steer_clutch_connect_;
+    palette_distance_angular_error_ = palette_distance_angular_ok_;
     palette_drive_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_position_check_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_angle_limit_over_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_drive_clutch_cut_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_clutch_cut_.setColor(QPalette::Base, QColor("#FF0000"));
+    palette_distance_angular_error_.setColor(QPalette::Base, QColor("#FF0000"));
+    palette_distance_angular_ok_.setColor(QPalette::Base, QColor("#0000FF"));
 
     connect(ui->bt_emergency_clear, SIGNAL(clicked()), this, SLOT(publish_emergency_clear()));
     connect(ui->bt_drive_mode_manual, SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
@@ -58,9 +62,12 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can502_ = nh_.subscribe("/microbus/can_receive502", 10, &MainWindow::callbackCan502, this);
     sub_can503_ = nh_.subscribe("/microbus/can_receive503", 10, &MainWindow::callbackCan503, this);
     sub_can_status_ = nh_.subscribe("/microbus/can_sender_status", 10, &MainWindow::callbackCanStatus, this);
+    sub_distance_angular_check_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &MainWindow::callbackDistanceAngularCheck, this);
 
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
+    distance_angular_check_.distance = 10000;
+    distance_angular_check_.angular = 180;
 }
 
 MainWindow::~MainWindow()
@@ -289,6 +296,28 @@ void MainWindow::window_updata()
         ui->tx_error_text->setText(can_status_.safety_error_message.c_str());
         error_text_lock_ = true;
     }
+
+    if(fabs(distance_angular_check_.distance) <= 2)
+    {
+        ui->tx_distance_check->setText("distance OK");
+        ui->tx_distance_check->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        ui->tx_distance_check->setText("distance NG");
+        ui->tx_distance_check->setPalette(palette_distance_angular_error_);
+    }
+
+    if(fabs(distance_angular_check_.angular) <= 20)
+    {
+        ui->tx_angular_check->setText("angular OK");
+        ui->tx_angular_check->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        ui->tx_angular_check->setText("angular NG");
+        ui->tx_angular_check->setPalette(palette_distance_angular_error_);
+    }
 }
 
 void MainWindow::callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg)
@@ -309,6 +338,11 @@ void MainWindow::callbackCan503(const autoware_can_msgs::MicroBusCan503 &msg)
 void MainWindow::callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg)
 {
     can_status_ = msg;
+}
+
+void MainWindow::callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg)
+{
+    distance_angular_check_ = msg;
 }
 
 void MainWindow::publish_emergency_clear()

@@ -1,0 +1,5 @@
+<!-- -->
+<launch>
+	<node pkg="waypoint_follower" type="lookahead_ratio_magn" name="lookahead_ratio_magn" output="log">
+	</node>
+</launch>

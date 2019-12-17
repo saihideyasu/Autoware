@@ -35,6 +35,9 @@ PurePursuitNode::PurePursuitNode()
   , lookahead_distance_ratio_(2.0)
   , minimum_lookahead_distance_(6.0)
 {
+  lookahead_ratio_magn_.max_magn = 1.0;
+  lookahead_ratio_magn_.min_magn = 1.0;
+
   initForROS();
   node_status_publisher_ptr_ = std::make_shared<autoware_health_checker::NodeStatusPublisher>(nh_,private_nh_);
   node_status_publisher_ptr_->ENABLE();
@@ -61,8 +64,8 @@ void PurePursuitNode::initForROS()
   sub3_ = nh_.subscribe("config/waypoint_follower", 10, &PurePursuitNode::callbackFromConfig, this);
   sub4_ = nh_.subscribe("current_velocity", 10, &PurePursuitNode::callbackFromCurrentVelocity, this);
   sub_config_look_ahead_ = nh_.subscribe("config/look_ahead", 10, &PurePursuitNode::callbackFromConfigLookAhead, this);
-  sub_difference_to_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &PurePursuitNode::callbackFromDifferenceToDistance, this);
-
+  sub_config_look_ahead_ratio_magn_ = nh_.subscribe("config/look_ahead_ratio_magn", 10, &PurePursuitNode::callbackFromConfigLookAheadRatioMagn, this);
+  
   // setup publisher
   pub1_ = nh_.advertise<geometry_msgs::TwistStamped>("twist_raw", 10);
   pub2_ = nh_.advertise<autoware_msgs::ControlCommandStamped>("ctrl_cmd", 10);
@@ -152,6 +155,8 @@ double PurePursuitNode::computeLookaheadDistance() const
     return const_lookahead_distance_;
 
   double maximum_lookahead_distance = current_linear_velocity_ * 10;
+  double magn = lookahead_distance_ratio_ < lookahead_ratio_magn_.min_magn ? lookahead_ratio_magn_.min_magn:
+                       lookahead_distance_ratio_ > lookahead_ratio_magn_.max_magn ? lookahead_ratio_magn_.max_magn : lookahead_distance_ratio_;
   double ld = current_linear_velocity_ * lookahead_distance_ratio_;
 
   return ld < minimum_lookahead_distance_ ? minimum_lookahead_distance_ :
@@ -186,11 +191,6 @@ double PurePursuitNode::computeAngularGravity(double velocity, double kappa) con
   return (velocity * velocity) / (1.0 / kappa * gravity);
 }
 
-void PurePursuitNode::callbackFromDifferenceToDistance(const autoware_msgs::DifferenceToWaypointDistanceConstPtr &msg)
-{
-
-}
-
 void PurePursuitNode::callbackFromConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config)
 {
   param_flag_ = config->param_flag;
@@ -205,6 +205,11 @@ void PurePursuitNode::callbackFromConfigLookAhead(const autoware_config_msgs::Co
 {
 	lookahead_distance_ratio_ = config->lookahead_ratio;
 	minimum_lookahead_distance_ = config->minimum_lookahead_distance;
+}
+
+void PurePursuitNode::callbackFromConfigLookAheadRatioMagn(const autoware_config_msgs::ConfigLookAheadRatioMagnConstPtr &config)
+{
+  lookahead_ratio_magn_ = *config;
 }
 
 void PurePursuitNode::publishDeviationCurrentPosition(const geometry_msgs::Point &point,

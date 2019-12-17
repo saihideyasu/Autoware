@@ -876,6 +876,10 @@ subs :
              depend : param_flag
              depend_bool : 'lambda v : v == 0'
            stat_topic : [ lf ]
+       - name : lookahead_ratio_magn
+         desc : lookahead_ratio_magn desc sample
+         cmd  : roslaunch waypoint_follower lookahead_ratio_magn.launch
+         param: lookahead_ratio_magn
        - name : twist_filter
          desc : twist_filter desc sample
          cmd  : roslaunch waypoint_follower twist_filter.launch
@@ -6393,6 +6397,29 @@ params :
       min  : 0.0
       max  : 100.0
       v    : 0.01
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+
+  - name  : lookahead_ratio_magn
+    topic : /config/lookahead_ratio_magn
+    msg   : ConfigLookAheadRatioMagn
+    vars  :
+    - name : max_magn
+      desc : max_magn
+      label: max_magn
+      min  : 1.0
+      max  : 5.0
+      v    : 1.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : min_magn
+      desc : min_magn
+      label: min_magn
+      min  : 1.0
+      max  : 5.0
+      v    : 1.0
       cmd_param:
         dash     : ''
         delim    : ':='

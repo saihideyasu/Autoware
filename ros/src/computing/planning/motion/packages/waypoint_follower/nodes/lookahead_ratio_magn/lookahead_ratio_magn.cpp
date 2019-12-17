@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <autoware_config_msgs/ConfigLookaheadRatioMagn.h>
+#include <autoware_config_msgs/ConfigLookAheadRatioMagn.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -8,6 +8,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_datatypes.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
+#include <std_msgs/Float64.h>
 
 static const int SYNC_FRAMES = 50;
 typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::TwistStamped, geometry_msgs::PoseStamped>
@@ -20,16 +21,23 @@ private:
 
 	ros::NodeHandle nh_, private_nh_;
 
-	ros::Subscriber sub_waypoints;
-	ros::Publisher pub_difference_to_waypoint_distance_;
+	ros::Subscriber sub_config_, sub_waypoints_;
+	ros::Publisher pub_difference_to_waypoint_distance_, pub_lookahead_ratio_magn_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
 	message_filters::Synchronizer<TwistPoseSync> *sync_twist_pose_;
 
+	autoware_config_msgs::ConfigLookAheadRatioMagn config_;
+
 	geometry_msgs::Pose waypose1_, waypose2_;
 	geometry_msgs::TwistStamped current_twist_;
 	geometry_msgs::PoseStamped current_pose_;
+
+	void callbackConfig(const autoware_config_msgs::ConfigLookAheadRatioMagn &msg)
+	{
+		config_ = msg;
+	}
 
 	void callbackWaypoints(const autoware_msgs::Lane &msg)
 	{
@@ -51,7 +59,9 @@ public:
 		, private_nh_(p_nh)
 	{
 		pub_difference_to_waypoint_distance_ = nh_.advertise<autoware_msgs::DifferenceToWaypointDistance>("/difference_to_waypoint_distance", 1);
-		sub_waypoints= nh_.subscribe("/final_waypoints", 1, &LookaheadRatioMagn::callbackWaypoints, this);
+		pub_lookahead_ratio_magn_ = nh_.advertise<std_msgs::Float64>("/lookahead_ratio_magn", 1);
+		sub_config_= nh_.subscribe("/config/lookahead_ratio_magn", 1, &LookaheadRatioMagn::callbackConfig, this);
+		sub_waypoints_= nh_.subscribe("/final_waypoints", 1, &LookaheadRatioMagn::callbackWaypoints, this);
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);
 		sync_twist_pose_ = new message_filters::Synchronizer<TwistPoseSync>(TwistPoseSync(SYNC_FRAMES), *sub_current_velocity_, *sub_current_pose_);
@@ -60,6 +70,8 @@ public:
 	
 	void run()
 	{
+		///////////////////////////////
+
 		double x1 = waypose1_.position.x, x2 = waypose2_.position.x;
 		double y1 = waypose1_.position.y, y2 = waypose2_.position.y;
 		double a = y2 - y1;
@@ -98,6 +110,29 @@ public:
 		dist.distance = d;
 		dist.angular = sa_yaw;
 		pub_difference_to_waypoint_distance_.publish(dist);
+
+		//////////////////////////////////////
+
+		double magn = 1.0;
+		if(fabs(d) > config_.max_distance)
+		{
+			magn = config_.min_magn;
+		}
+		else if(fabs(d) <=config_.max_distance && fabs(d) >=config_.min_distance)
+		{
+			double distance_length = config_.max_distance - config_.min_distance;
+			double size1 = (d - config_.min_magn) / distance_length;
+			double magn_length = config_.max_magn -config_.min_magn;
+			magn = size1 * magn_length + config_.min_magn;
+		}
+		else
+		{
+			magn = config_.max_magn;
+		}
+
+		std_msgs::Float64 magn_msg;
+		magn_msg.data = magn;
+		pub_lookahead_ratio_magn_.publish(magn_msg);
 	}
 };
 

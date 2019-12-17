@@ -27,9 +27,9 @@
 // User defined includes
 #include "autoware_config_msgs/ConfigWaypointFollower.h"
 #include "autoware_config_msgs/ConfigLookAhead.h"
+#include "autoware_config_msgs/ConfigLookAheadRatioMagn.h"
 #include "autoware_msgs/ControlCommandStamped.h"
 #include "autoware_msgs/Lane.h"
-#include "autoware_msgs/DifferenceToWaypointDistance.h"
 #include "pure_pursuit.h"
 #include "pure_pursuit_viz.h"
 
@@ -75,8 +75,7 @@ private:
   ros::Publisher pub1_, pub2_, pub11_, pub12_, pub13_, pub14_, pub15_, pub16_, pub17_;
 
   // subscriber
-  ros::Subscriber sub1_, sub2_, sub3_, sub4_, sub_config_look_ahead_;
-  ros::Subscriber sub_difference_to_distance_;
+  ros::Subscriber sub1_, sub2_, sub3_, sub4_, sub_config_look_ahead_, sub_config_look_ahead_ratio_magn_;
 
   // constant
   const int LOOP_RATE_;  // processing frequency
@@ -92,6 +91,7 @@ private:
   double const_velocity_;            // km/h
   double lookahead_distance_ratio_;
   double minimum_lookahead_distance_;  // the next waypoint must be outside of this threshold.
+  autoware_config_msgs::ConfigLookAheadRatioMagn lookahead_ratio_magn_;
 
   // callbacks
   void callbackFromConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
@@ -99,7 +99,7 @@ private:
   void callbackFromCurrentVelocity(const geometry_msgs::TwistStampedConstPtr &msg);
   void callbackFromWayPoints(const autoware_msgs::LaneConstPtr &msg);
   void callbackFromConfigLookAhead(const autoware_config_msgs::ConfigLookAheadConstPtr &msg);
-  void callbackFromDifferenceToDistance(const autoware_msgs::DifferenceToWaypointDistanceConstPtr &msg);
+  void callbackFromConfigLookAheadRatioMagn(const autoware_config_msgs::ConfigLookAheadRatioMagnConstPtr &msg);
 
   // initializer
   void initForROS();

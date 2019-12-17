@@ -51,7 +51,7 @@ add_message_files(
   ConfigTemporaryStoper.msg
   ConfigImuTidy.msg
   ConfigLookAhead.msg
-  ConfigLookaheadRatioMagn.msg
+  ConfigLookAheadRatioMagn.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

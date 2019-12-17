@@ -5,6 +5,7 @@
 #include <autoware_msgs/Signals.h>
 #include <autoware_config_msgs/ConfigLocalizerSwitchFusion.h>
 #include <autoware_config_msgs/ConfigLookAhead.h>
+#include <std_msgs/Float64.h>
 
 class WaypointMaker
 {
@@ -13,7 +14,7 @@ private:
 
 	ros::Subscriber sub_local_waypoint_;
 	ros::Publisher pub_waypoint_param_, pub_adjust_xy_, pub_voxelGridFilter_, pub_roi_signal_, pub_fusion_select_;
-	ros::Publisher pub_look_ahead_;
+	ros::Publisher pub_look_ahead_, pub_look_ahead_ratio_magn_;
 
 	void callback_local_waypoints(const autoware_msgs::Lane& msg)
 	{
@@ -86,6 +87,13 @@ private:
 			msg.minimum_lookahead_distance = param.minimum_lookahead_distance;
 			pub_look_ahead_.publish(msg);
 		}
+
+		if(param.lookahead_ratio_magn > 0)
+		{
+			std_msgs::Float64 msg;
+			msg.data = param.lookahead_ratio_magn;
+			pub_look_ahead_ratio_magn_.publish(msg);
+		}
 	}
 public:
 	WaypointMaker(ros::NodeHandle nh, ros::NodeHandle p_nh)
@@ -98,6 +106,7 @@ public:
 		pub_waypoint_param_ = nh_.advertise<autoware_msgs::WaypointParam>("/waypoint_param", 1);
 		pub_fusion_select_ = nh_.advertise<autoware_config_msgs::ConfigLocalizerSwitchFusion>("/config/fusion_select", 1);
 		pub_look_ahead_ = nh_.advertise<autoware_config_msgs::ConfigLookAhead>("/config/look_ahead", 1);
+		pub_look_ahead_ratio_magn_ = nh_.advertise<std_msgs::Float64>("/lookahead_ratio_magn", 1);
 		sub_local_waypoint_ = nh_.subscribe("/final_waypoints", 10, &WaypointMaker::callback_local_waypoints, this);
 	}
 };

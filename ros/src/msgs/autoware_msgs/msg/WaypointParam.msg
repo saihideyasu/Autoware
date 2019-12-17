@@ -28,4 +28,5 @@ int8 fusion_select
 float64 steer_correction
 float32 lookahead_ratio
 float32 minimum_lookahead_distance
+float32 lookahead_ratio_magn
 LiesseXZB70MParam liesse

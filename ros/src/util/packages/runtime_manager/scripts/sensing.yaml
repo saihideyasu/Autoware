@@ -387,6 +387,13 @@ cmds:
       gui  :
         dialog_height : 450
 
+    - name : ray_ground_filter_box
+      desc : ray_ground_filter box performs ground filtering using a radial-concentric based approach
+      cmd  : roslaunch points_preprocessor ray_ground_filter_box.launch node_name:=ray_ground_filter_box
+      param: ray_ground_filter_box
+      gui  :
+        dialog_height : 450
+
     - name : points_concat_filter
       desc : points_concat_filter filter performs merging multiple lidar inputs
       cmd  : roslaunch points_preprocessor points_concat_filter.launch node_name:=points_concat_filter
@@ -1283,6 +1290,101 @@ params :
   - name  : ray_ground_filter
     topic : /config/ray_ground_filter
     msg   : ConfigRayGroundFilter
+    vars  :
+    - name  : input_point_topic
+      desc  : Input PointCloud Topic name, ground filtering will be performed.
+      label : 'input_point_topic'
+      kind  : topic
+      topic_type : sensor_msgs/PointCloud2
+      v     : /points_raw
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : sensor_height
+      desc  : Height of the sensor from the ground
+      label : sensor_height
+      min   : -5
+      max   : 5
+      v     : 1.8
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : clipping_height
+      desc  : Remove Points above this height value (default 0.2 meters)
+      label : clipping_height
+      min   : -5
+      max   : 5
+      v     : 0.2
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : min_point_distance
+      desc  : Removes Points closer than this distance from the sensor origin (default 1.85 meters)
+      label : min_point_distance
+      min   : 0
+      max   : 5
+      v     : 1.85
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : radial_divider_angle
+      desc  : Angle of each Radial division on the XY Plane (default 0.08 degrees)
+      label : radial_divider_angle
+      min   : 0.01
+      max   : 5
+      v     : 0.08
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : concentric_divider_distance
+      desc  : Distance of each concentric division on the XY Plane (default 0.01 meters)
+      label : concentric_divider_distance
+      min   : 0.01
+      max   : 1
+      v     : 0.01
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : local_max_slope
+      desc  : Max Slope of the ground between Points (default 8 degrees)
+      label : local_max_slope
+      min   : 1
+      max   : 25
+      v     : 8
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : general_max_slope
+      desc  : Max Slope of the ground in the entire PointCloud (default 5 degrees)
+      label : general_max_slope
+      min   : 1
+      max   : 25
+      v     : 5
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : min_height_threshold
+      desc  : Minimum height threshold between points (default 0.05 meters)
+      label : min_height_threshold
+      min   : 0.01
+      max   : 0.5
+      v     : 0.05
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : reclass_distance_threshold
+      desc  : Distance between points at which re classification will occur (default 0.2 meters)
+      label : reclass_distance_threshold
+      min   : 0.01
+      max   : 1
+      v     : 0.2
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+
+  - name  : ray_ground_filter_box
+    topic : /config/ray_ground_filter_box
+    msg   : ConfigRayGroundFilterBox
     vars  :
     - name  : input_point_topic
       desc  : Input PointCloud Topic name, ground filtering will be performed.

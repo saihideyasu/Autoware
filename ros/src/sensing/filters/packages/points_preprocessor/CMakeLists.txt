@@ -123,6 +123,41 @@ target_link_libraries(ray_ground_filter
 
 add_dependencies(ray_ground_filter ${catkin_EXPORTED_TARGETS})
 
+# Ray Ground Box Filter
+add_library(ray_ground_filter_box_lib SHARED
+        nodes/ray_ground_filter/ray_ground_filter_box.cpp)
+
+if (OPENMP_FOUND)
+    set_target_properties(ray_ground_filter_box_lib PROPERTIES
+            COMPILE_FLAGS ${OpenMP_CXX_FLAGS}
+            LINK_FLAGS ${OpenMP_CXX_FLAGS}
+            )
+endif ()
+
+target_include_directories(ray_ground_filter_box_lib PRIVATE
+        ${OpenCV_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        nodes/ray_ground_filter/include
+        )
+
+target_link_libraries(ray_ground_filter_box_lib
+        ${catkin_LIBRARIES}
+        ${PCL_LIBRARIES}
+        ${OpenCV_LIBRARIES}
+        ${Qt5Core_LIBRARIES}
+        )
+
+add_executable(ray_ground_filter_box
+        nodes/ray_ground_filter/ray_ground_filter_box_main.cpp
+        )
+
+target_include_directories(ray_ground_filter_box PRIVATE
+        nodes/ray_ground_filter/include)
+
+target_link_libraries(ray_ground_filter_box
+        ray_ground_filter_box_lib)
+
+add_dependencies(ray_ground_filter_box ${catkin_EXPORTED_TARGETS})
 
 # Points Concat filter
 add_executable(points_concat_filter
@@ -194,7 +229,9 @@ install(TARGETS
             cloud_transformer
             points_concat_filter
             ray_ground_filter_lib
+            ray_ground_filter_box_lib
             ray_ground_filter
+			ray_ground_filter_box
             ring_ground_filter
             space_filter
             compare_map_filter

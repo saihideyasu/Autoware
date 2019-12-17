@@ -52,6 +52,7 @@ add_message_files(
   ConfigImuTidy.msg
   ConfigLookAhead.msg
   ConfigLookAheadRatioMagn.msg
+  ConfigRayGroundFilterBox.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

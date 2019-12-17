@@ -7,6 +7,9 @@
 - name: /ray_ground_filter
   publish: [/points_no_ground, /points_ground]
   subscribe: [/points_raw, /config/ray_ground_filter]
+- name: /ray_ground_filter_box
+  publish: [/points_no_ground, /points_ground]
+  subscribe: [/points_raw, /config/ray_ground_filter_box]
 - name: /ring_ground_filter
   publish: [/points_no_ground, /points_ground]
   subscribe: [/config/ring_ground_filter, /points_raw]

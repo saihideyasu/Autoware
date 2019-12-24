@@ -297,7 +297,7 @@ void MainWindow::window_updata()
         error_text_lock_ = true;
     }
 
-    if(fabs(distance_angular_check_.distance) <= 2)
+    if(fabs(distance_angular_check_.distance) <= config_.check_distance_th)
     {
         ui->tx_distance_check->setText("distance OK");
         ui->tx_distance_check->setPalette(palette_distance_angular_ok_);
@@ -308,7 +308,7 @@ void MainWindow::window_updata()
         ui->tx_distance_check->setPalette(palette_distance_angular_error_);
     }
 
-    if(fabs(distance_angular_check_.angular) <= 20)
+    if(fabs(distance_angular_check_.angular) <= config_.check_angular_th)
     {
         ui->tx_angular_check->setText("angular OK");
         ui->tx_angular_check->setPalette(palette_distance_angular_ok_);
@@ -318,6 +318,11 @@ void MainWindow::window_updata()
         ui->tx_angular_check->setText("angular NG");
         ui->tx_angular_check->setPalette(palette_distance_angular_error_);
     }
+}
+
+void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg)
+{
+    config_ = msg;
 }
 
 void MainWindow::callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg)

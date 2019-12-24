@@ -48,11 +48,12 @@ add_message_files(
   ConfigLocalizerSwitchFusion.msg
   ConfigManualDriveStroke.msg
   ConfigMicroBusCan.msg
-  ConfigTemporaryStoper.msg
+  ConfigTemporaryStopper.msg
   ConfigImuTidy.msg
   ConfigLookAhead.msg
   ConfigLookAheadRatioMagn.msg
   ConfigRayGroundFilterBox.msg
+  ConfigMicrobusInterface.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

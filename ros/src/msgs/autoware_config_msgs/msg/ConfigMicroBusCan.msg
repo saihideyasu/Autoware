@@ -22,6 +22,10 @@ float64 k_accel_d_distance
 float64 k_brake_p_distance
 float64 k_brake_i_distance
 float64 k_brake_d_distance
+float64 steer_max_i
+float64 k_steer_p_distance
+float64 k_steer_i_distance
+float64 k_steer_d_distance
 int16 pedal_stroke_center
 int16 pedal_stroke_max
 int16 pedal_stroke_min

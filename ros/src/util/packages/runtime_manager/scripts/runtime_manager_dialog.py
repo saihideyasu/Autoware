@@ -75,6 +75,8 @@ from autoware_config_msgs.msg import ConfigLocalizerSwitchFusion
 from autoware_config_msgs.msg import ConfigImuTidy
 from autoware_config_msgs.msg import ConfigLookAheadRatioMagn
 from autoware_config_msgs.msg import ConfigRayGroundFilterBox
+from autoware_config_msgs.msg import ConfigMicrobusInterface
+from autoware_config_msgs.msg import ConfigTemporaryStopper
 from tablet_socket_msgs.msg import mode_cmd
 from tablet_socket_msgs.msg import gear_cmd
 from tablet_socket_msgs.msg import Waypoint

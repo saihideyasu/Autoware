@@ -843,6 +843,7 @@ subs :
       - name : temporary_stoper_liesse
         desc : temporary_stoper_liesse desc sample
         cmd  : roslaunch waypoint_planner temporary_stoper_liesse.launch
+        param: temporary_stopper
       - name : velocity_set
         desc : velocity_set desc sample
         cmd  : roslaunch waypoint_planner velocity_set.launch
@@ -1031,6 +1032,10 @@ subs :
       desc : microbus can stroke desc sample
       cmd  : roslaunch vehicle_socket kvaser_microbus_stroke.launch
       param: microbus_can
+    - name : microbus_interface stroke
+      desc : microbus_interface stroke desc sample
+      cmd  : roslaunch microbus_interface microbus_interface.launch
+      param: microbus_interface
 
 buttons:
   car_dpm :
@@ -6424,6 +6429,79 @@ params :
         dash     : ''
         delim    : ':='
 
+  - name  : microbus_interface
+    topic : /config/microbus_interface
+    msg   : ConfigMicrobusInterface
+    vars  :
+    - name : check_distance_th
+      desc : check_distance_th
+      label: check_distance_th
+      min  : 0.0
+      max  : 10.0
+      v    : 2
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : check_angular_th
+      desc : check_angular_th
+      label: check_angular_th
+      min  : 0.0
+      max  : 50.0
+      v    : 30
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+
+  - name  : temporary_stopper
+    topic : /config/temporary_stopper
+    msg   : ConfigTemporaryStopper
+    vars  :
+    - name : search_distance
+      desc : search_distance
+      label: search_distance
+      min  : 0.0
+      max  : 100.0
+      v    : 7
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : acceleration
+      desc : acceleration
+      label: acceleration
+      min  : 0.0
+      max  : 5.0
+      v    : 1
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : number_of_zeros_ahead
+      desc : number_of_zeros_ahead
+      label: number_of_zeros_ahead
+      min  : 0.0
+      max  : 10.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : number_of_zeros_behind
+      desc : number_of_zeros_behind
+      label: number_of_zeros_behind
+      min  : 0.0
+      max  : 100.0
+      v    : 5
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : stop_speed_threshold
+      desc : stop_speed_threshold
+      label: stop_speed_threshold
+      min  : 0.0
+      max  : 3.0
+      v    : 0.018
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+
   - name  : microbus_can
     topic : /config/microbus_can
     msg   : ConfigMicroBusCan
@@ -6640,6 +6718,42 @@ params :
     - name : k_brake_d_distance
       desc : k_brake_d_distance
       label: k_brake_d_distance
+      min  : 0.0
+      max  : 2
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : steer_max_i
+      desc : steer_max_i
+      label: steer_max_i
+      min  : 0.0
+      max  : 1000
+      v    : 500
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : k_steer_p_distance
+      desc : k_steer_p_distance
+      label: k_steer_p_distance
+      min  : 0.0
+      max  : 2.0
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : k_steer_i_distance
+      desc : k_steer_i_distance
+      label: k_steer_i_distance
+      min  : 0.0
+      max  : 2
+      v    : 0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : k_steer_d_distance
+      desc : k_steer_d_distance
+      label: k_steer_d_distance
       min  : 0.0
       max  : 2
       v    : 0

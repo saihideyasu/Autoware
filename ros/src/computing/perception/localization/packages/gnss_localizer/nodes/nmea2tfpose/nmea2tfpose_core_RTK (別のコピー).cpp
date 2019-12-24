@@ -170,17 +170,6 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
 			geo_.set_llh_nmea_degrees(lat, lon, h);
 			ROS_INFO("BESTGNSSPOS is subscribed.");
-
-      geometry_msgs::PoseStamped pose;
-      pose.header.frame_id = MAP_FRAME_;
-      pose.header.stamp = current_time_;
-      pose.pose.position.x = geo_.y();
-      pose.pose.position.y = geo_.x();
-      pose.pose.position.z = geo_.z();
-      pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
-      pub1_.publish(pose);
-
-
 		}
 	}
 	else if(nmea.at(0) == "#INSPVAXA")
@@ -191,12 +180,6 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			double east_vel = stod(nmea.at(16));
 			double up_vel = stod(nmea.at(17));
 			this->surface_speed_ = sqrt(north_vel*north_vel + east_vel*east_vel + up_vel*up_vel);
-
-      autoware_msgs::GnssSurfaceSpeed gss;
-      gss.header.frame_id = MAP_FRAME_;
-      gss.header.stamp = current_time_;
-      gss.surface_speed = surface_speed_;
-      pub_surface_speed_.publish(gss);
 
 			roll_= dig2rad(stod(nmea.at(18)));
 			pitch_= -dig2rad(stod(nmea.at(19)));
@@ -211,18 +194,7 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			lon_std_ = stod(nmea.at(22));
 			alt_std_ = stod(nmea.at(23));
 
-      autoware_msgs::GnssStandardDeviation gsd;
-      gsd.header.frame_id = MAP_FRAME_;
-      gsd.header.stamp = current_time_;
-      gsd.lat_std = lat_std_;
-      gsd.lon_std = lon_std_;
-      gsd.alt_std = alt_std_;
-      pub_std_dev_.publish(gsd);
-
 			gnss_stat_ = stoi(nmea.at(9));
-      std_msgs::UInt8 stat;
-      stat.data = gnss_stat_;
-      pub_stat_.publish(stat);
 
 			ROS_INFO("INSPVAXA is subscribed.");
 		}
@@ -243,17 +215,6 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 			std::cout << "imu_acc : x," << x_accel_ << " y," << y_accel_ << " z," << z_accel_ << std::endl;
 			std::cout << "imu_gyro : x," << stod(nmea.at(17)) << " y," << stod(nmea.at(16)) << " z," << stod(nmea.at(15)) << std::endl;
 			std::cout << "imu_gyro : x," << x_gyro_ << " y," << y_gyro_ << " z," << z_gyro_ << std::endl;
-
-      sensor_msgs::Imu imu;
-      imu.header.frame_id = MAP_FRAME_;
-      imu.header.stamp = current_time_;
-      imu.linear_acceleration.x = x_accel_;
-      imu.linear_acceleration.y = y_accel_;
-      imu.linear_acceleration.z = z_accel_;
-      imu.angular_velocity.x = x_gyro_;
-      imu.angular_velocity.y = y_gyro_;
-      imu.angular_velocity.z = z_gyro_;
-      pub_imu_.publish(imu);
 		}
 	}
   }catch (const std::exception &e)
@@ -276,7 +237,7 @@ void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstP
 	{
 	  ROS_INFO("QQ is not subscribed. Orientation is created by atan2");
 	  //createOrientation();
-	  //publishPoseStamped();
+	  publishPoseStamped();
 	  publishTF();
 	  last_geo_ = geo_;
 	}

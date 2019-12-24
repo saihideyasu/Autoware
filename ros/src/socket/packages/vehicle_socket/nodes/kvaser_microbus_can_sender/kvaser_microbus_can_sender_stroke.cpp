@@ -6,8 +6,8 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
 #include <std_msgs/Int8.h>
-#include <std_msgs/Int16.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Int16.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
@@ -41,10 +41,12 @@ private:
 	double accel_e_prev_velocity_, brake_e_prev_velocity_;
 	double accel_e_prev_acceleration_, brake_e_prev_acceleration_;
 	double accel_e_prev_distance_, brake_e_prev_distance_;
+	double steer_e_prev_distance_;
 
 	double accel_diff_sum_velocity_, brake_diff_sum_velocity_;
 	double accel_diff_sum_acceleration_, brake_diff_sum_acceleration_;
 	double accel_diff_sum_distance_, brake_diff_sum_distance_;
+	double steer_diff_sum_distance_;
 
 	double stroke_prev_, stop_stroke_prev_;
 	int stroke_state_mode_;
@@ -55,12 +57,13 @@ public:
 	const static int STROKE_STATE_MODE_KEEP_ = 3;
 
 	PID_params() {}
-	int init(double stroke)
+	int init(double acc_stroke)
 	{
 		accel_e_prev_velocity_ = brake_e_prev_velocity_ = accel_diff_sum_velocity_ = brake_diff_sum_velocity_ = 0;
 		accel_e_prev_acceleration_ = brake_e_prev_acceleration_ = accel_diff_sum_acceleration_ = brake_diff_sum_acceleration_ = 0;
 		accel_e_prev_distance_ = brake_e_prev_distance_ = accel_diff_sum_distance_ = brake_diff_sum_distance_ = 0;
-		stroke_prev_ = stop_stroke_prev_ = stroke;
+		steer_e_prev_distance_ = steer_diff_sum_distance_ = 0;
+		stroke_prev_ = stop_stroke_prev_ = acc_stroke;
 		stroke_state_mode_ = PID_params::STROKE_STATE_MODE_ACCEL_;
 	}
 
@@ -79,18 +82,25 @@ public:
 		accel_diff_sum_distance_ = brake_diff_sum_distance_ = 0;
 	}
 
+	void clear_steer_diff_distance()
+	{
+		steer_diff_sum_distance_ = 0;
+	}
+
 	double get_accel_e_prev_velocity() {return accel_e_prev_velocity_;}
 	double get_accel_e_prev_acceleration_() {return accel_e_prev_acceleration_;}
 	double get_accel_e_prev_distance() {return accel_e_prev_distance_;}
 	double get_brake_e_prev_velocity() {return brake_e_prev_velocity_;}
 	double get_brake_e_prev_acceleration() {return brake_e_prev_acceleration_;}
 	double get_brake_e_prev_distance() {return brake_e_prev_distance_;}
+	double get_steer_e_prev_distance() {return steer_e_prev_distance_;}
 	double get_acclel_diff_sum_velocity() {return accel_diff_sum_velocity_;}
 	double get_acclel_diff_sum_acceleration() {return accel_diff_sum_acceleration_;}
 	double get_acclel_diff_sum_distance() {return accel_diff_sum_distance_;}
 	double get_brake_diff_sum_velocity() {return brake_diff_sum_velocity_;}
 	double get_brake_diff_sum_acceleration() {return brake_diff_sum_acceleration_;}
 	double get_brake_diff_sum_distance() {return brake_diff_sum_distance_;}
+	double get_steer_diff_sum_distance() {return steer_diff_sum_distance_;}
 	double get_stop_stroke_prev() {return stop_stroke_prev_;}
 	double get_stroke_prev() {return stroke_prev_;}
 	int get_stroke_state_mode_() {return stroke_state_mode_;}
@@ -101,12 +111,14 @@ public:
 	void set_brake_e_prev_velocity(double val) {brake_e_prev_velocity_ = val;}
 	void set_brake_e_prev_acceleration(double val) {brake_e_prev_acceleration_ = val;}
 	void set_brake_e_prev_distance(double val) {brake_e_prev_distance_ = val;}
+	void set_steer_e_prev_distance(double val) {steer_e_prev_distance_ = val;}
 	void plus_accel_diff_sum_velocity(double val) {accel_diff_sum_velocity_ += val;}
 	void plus_accel_diff_sum_acceleration(double val) {accel_diff_sum_acceleration_ += val;}
 	void plus_accel_diff_sum_distance(double val) {accel_diff_sum_distance_ += val;}
 	void plus_brake_diff_sum_velocity(double val) {brake_diff_sum_velocity_ += val;}
 	void plus_brake_diff_sum_acceleration(double val) {brake_diff_sum_acceleration_ += val;}
 	void plus_brake_diff_sum_distance(double val) {brake_diff_sum_distance_ += val;}
+	void plus_steer_diff_sum_distance(double val) {steer_diff_sum_distance_ += val;}
 	void set_stop_stroke_prev(double val) {stop_stroke_prev_ = val;}
 	void set_stroke_prev(double val) {stroke_prev_ = val;}
 	void set_stroke_state_mode_(int val) {stroke_state_mode_ = val;}
@@ -257,7 +269,7 @@ private:
 	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc_;
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
-	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_;
+	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_, pub_estimate_stopper_distance_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -265,7 +277,7 @@ private:
 	//ros::Subscriber sub_current_pose_, sub_current_velocity_;
 	ros::Subscriber sub_emergency_reset_, sub_stroke_mode_, sub_velocity_mode_, sub_drive_control_;
 	ros::Subscriber sub_input_steer_flag_, sub_input_drive_flag_, sub_input_steer_value_, sub_input_drive_value_;
-	ros::Subscriber sub_waypoint_param_, sub_position_checker_, sub_config_microbus_can_;
+	ros::Subscriber sub_waypoint_param_, sub_waypoints_, sub_position_checker_, sub_config_microbus_can_;
 	ros::Subscriber sub_shift_auto_, sub_shift_position_;
 	ros::Subscriber sub_emergency_stop_;
 	ros::Subscriber sub_light_high_, sub_light_low_, sub_light_small_;
@@ -313,6 +325,7 @@ private:
 	std::string ndt_stat_;
 	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_;
 	unsigned char gnss_stat_;
+	autoware_msgs::DifferenceToWaypointDistance difference_toWaypoint_distance_;
 
 	ros::Time automatic_door_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
@@ -321,7 +334,7 @@ private:
 
 	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
-		/*if(fabs(msg->distance) > 2.0 || fabs(msg->angular) > 30.0)
+		if(fabs(msg->distance) > 2.0 || fabs(msg->angular) > 30.0)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -335,7 +348,9 @@ private:
 			safety_error_message << "distance," << msg->distance << "\nangular," << msg->angular;
 			publisStatus(safety_error_message.str());
 			can_send();
-		}*/
+		}
+
+		difference_toWaypoint_distance_ = *msg;
 	}
 
 	void NdtGnssCheck()
@@ -569,7 +584,7 @@ private:
 		const double v = twist_msg->twist.linear.x;
 		double v_sa = v * v - v0 * v0;
 		double acc = 0;
-		if(x >= 0.01) acc = (v_sa) / (2 * x);
+		//if(x >= 0.01) acc = (v_sa) / (2 * x);
 		acceleration_vec1_.insert(acceleration_vec1_.begin(), acc);
 		if(acceleration_vec1_.size() > 3) acceleration_vec1_.resize(3);
 		acc = 0;
@@ -594,10 +609,14 @@ private:
 		std::cout << "acceleration," << acc << "," << acc2 << std::endl;
 
 		std::stringstream str;
-		str << std::setprecision(10) << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << "," << pose_msg->pose.orientation.z << ",";
-		str << twist_msg->twist.angular.z << "," << twist_msg->twist.linear.x << ",";
-		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
-		str << x << "," << v0 << "," << v << "," << v_sa;
+//		str << std::setprecision(10) << waypoint_id_ << "," << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << "," << pose_msg->pose.orientation.z << ",";
+//		str << twist_msg->twist.angular.z << "," << twist_msg->twist.linear.x << ",";
+//		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
+//		str << x << "," << v0 << "," << v << "," << v_sa;
+		str << std::setprecision(10) << waypoint_id_ << "," << twist_msg->twist.linear.x <<","<< acc2 << "," << jurk2 << ",";
+		str << difference_toWaypoint_distance_.angular << "," << difference_toWaypoint_distance_.distance;
+
+
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
 		pub_acceleration_write_.publish(aw_msg);
@@ -778,6 +797,12 @@ private:
 		}
 
 		waypoint_param_ = *msg;
+	}
+
+	double waypoint_id_ = 0;
+	void callbackWaypoints(const autoware_msgs::Lane::ConstPtr &msg)
+	{
+		waypoint_id_ = msg->waypoints[1].waypoint_param.id;
 	}
 
 	void callbackPositionChecker(const autoware_msgs::PositionChecker::ConstPtr &msg)
@@ -962,14 +987,47 @@ private:
 			std::cout << "steer_correction : " << steer_correction_ << std::endl;
 		}
 		else steer_val = input_steer_;
+		//PID
+		steer_val += _steer_pid_control(difference_toWaypoint_distance_.distance);
+
+
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
 
 		unsigned char *steer_pointer = (unsigned char*)&steer_val;
 		buf[2] = steer_pointer[1];  buf[3] = steer_pointer[0];
 	}
 
+
+	double _steer_pid_control(double distance)
+	{
+//P
+		double e = distance;
+		//I
+		double e_i;
+		pid_params.plus_steer_diff_sum_distance(e);
+		if (pid_params.get_steer_diff_sum_distance() > setting_.steer_max_i)
+			e_i = setting_.steer_max_i;
+		else
+			e_i = pid_params.get_steer_diff_sum_distance();
+
+		//D
+		double e_d = e - pid_params.get_steer_e_prev_distance();
+
+		double target_steer = setting_.k_steer_p_distance* e +
+		       setting_.k_steer_i_distance * e_i +
+		       setting_.k_steer_d_distance * e_d;
+
+		pid_params.set_steer_e_prev_distance(e);
+		return target_steer;
+	}
+
+
+
+
+
 	double _accel_stroke_pid_control(double current_velocity, double cmd_velocity)
 	{
+		double step = 5;
 		//ブレーキからアクセルに変わった場合、Iの積算値をリセット
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
 		std::cout << "voltage stroke : " << stroke << std::endl;
@@ -982,6 +1040,7 @@ private:
 		{
 			pid_params.set_accel_e_prev_velocity(0);
 			pid_params.set_accel_e_prev_acceleration(0);
+			pid_params.set_stop_stroke_prev(0);
 			return 0;
 		}
 
@@ -1015,11 +1074,30 @@ private:
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
+		if(stopper_distance_ <= 100 && stopper_distance_ >=0 && ret > 0) ret = 0;
+
+		if(pid_params.get_stroke_prev() < 0 && ret >= 0)
+		{
+			double tmp = pid_params.get_stroke_prev() + step;
+			if(tmp < ret) ret = tmp;
+		}
+		//ブレーキをゆっくり踏む
+		if(pid_params.get_stroke_prev() < 0.0 && pid_params.get_stroke_prev() < ret)
+		{
+			double tmp = pid_params.get_stroke_prev() - step;
+			if(tmp > ret) ret = tmp;
+			if(ret < setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
+		}
+		
+		pid_params.set_stroke_prev(ret);
 		return ret;
 	}
 
 	double _brake_stroke_pid_control(double current_velocity, double cmd_velocity, double acceleration)
 	{
+		double step = 2;
+		bool use_step_flag = true;
+
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
@@ -1030,6 +1108,7 @@ private:
 			std::cout << "ACCEL_PEDAL_STROKE_OFFSET_" << std::endl;
 			pid_params.set_brake_e_prev_velocity(0);
 			pid_params.set_brake_e_prev_acceleration(0);
+			pid_params.set_stroke_prev(0);
 			return 0;
 		}
 
@@ -1061,7 +1140,7 @@ private:
 		pid_params.set_brake_e_prev_velocity(e);
 
 	//	static double target_brake_stroke_prev=target_brake_stroke;
-
+/*
 		//distance PID
 		if(stopper_distance_ >= 0 && acceleration < -0.01)
 		{
@@ -1103,15 +1182,14 @@ private:
 		{
 			pid_params.clear_diff_distance();
 		}
-
-
+*/
+/*
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
 			std::cout << "tbs," << target_brake_stroke;
 			double d = 500 - target_brake_stroke;
 			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
-		
 		}
 		else if(stopper_distance_ >= 2 && stopper_distance_ <= 8)
 		{
@@ -1123,33 +1201,138 @@ private:
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
 			}
 			else {
-	//			target_brake_stroke = target_brake_stroke_prev;
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
 			}
 		}
 		else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
 		{
 			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
-			target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
+			step = 0.5;
+			target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
+		}
+*/
+/*
 
+		if(stopper_distance_ <= 30 && stopper_distance_ >0)
+		{
+			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
+			{
+				std::cout << "tbs," << target_brake_stroke;
+				double d = 500 - target_brake_stroke;
+				target_brake_stroke  += d * (1 - stopper_distance_/ 30.0 );
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				pid_params.set_stop_stroke_prev(target_brake_stroke);// .set_stroke_prev(target_brake_stroke);
+			}
+			else if(stopper_distance_ >= 2  && fabs(jurk2_twist_) < 10)
+			{
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
+			}
+			else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
+			{
+						step = 0.5;
+						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
+			}
+		}
+*/
+
+		if(stopper_distance_ <= 40 && stopper_distance_ >0)
+		{
+			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
+			{
+				std::cout << "tbs," << target_brake_stroke;
+				double d = 300 - target_brake_stroke;
+				target_brake_stroke  += d * (1 - stopper_distance_/ 30.0 );
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				pid_params.set_stop_stroke_prev(target_brake_stroke);// .set_stroke_prev(target_brake_stroke);
+			}
+			else if(stopper_distance_ >= 2  && fabs(jurk2_twist_) < 10)
+			{
+				double mps = current_velocity / 3.6;
+				//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration);
+				double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration);
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
+			//	double P_d = -13;
+			//double e_d = stopper_distance_ - estimated_stopping_distance; 
+				//target_brake_stroke += e_d * P_d;
+
+			}
+			else if(stopper_distance_ >= 1 && stopper_distance_ <= 2)
+			{
+					if(current_velocity > 0.25 )
+					{
+						target_brake_stroke = pid_params.get_stop_stroke_prev();
+					//	double cmd_acceralation = - current_velocity * current_velocity / (2 * stopper_distance_);				
+				//		double e_a = cmd_acceralation - acceleration2_twist_ ;
+				//		double P_a = -1;
+				//		target_brake_stroke += e_a * P_a;
+
+						step = 0.5;
+						if(fabs(jurk2_twist_) < 10) 
+						{
+							double d = 500 - target_brake_stroke;
+							target_brake_stroke = target_brake_stroke + d * (2.0 - stopper_distance_)/2.0;
+						}
+					}
+					else if(current_velocity < 0.25 )
+					{
+						step = 0.5;
+						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
+					}
+			}
+			else if(stopper_distance_ >= 0 && stopper_distance_ <= 1)
+			{
+				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
+				//step = 2;
+				use_step_flag = false;
+				target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
+			}
 		}
 
-		/*else if(distance >= 0 && distance <= 8)
+/*
+		if(stopper_distance_ <= 25 && stopper_distance_ > 0)
 		{
-			std::cout << "stop_dis_and_estima_stop_dis : " << stopper_distance_ << "," << estimated_stopping_distance << std::endl;
-			if(stopper_distance_ <= estimated_stopping_distance && current_velocity > 5.0)
+			double mps = current_velocity / 3.6;
+			//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration);
+			double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration);
+			std_msgs::Float64 esd;
+			esd.data = estimated_stopping_distance;
+			pub_estimate_stopper_distance_.publish(esd);
+
+			if(current_velocity > 15.0 || abs(jurk2_twist_) < 10 )
+			//if(estimated_stopping_distance > stopper_distance_)// && jurk2_twist_ < 4000 )
 			{
 				std::cout << "tbs," << target_brake_stroke;
 				double d = 500 - target_brake_stroke;
-				target_brake_stroke  += d * (1 - distance/ 20.0 );
-				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << distance << std::endl;
+				target_brake_stroke  += d * (1 - stopper_distance_/ 25.0 );
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				//pid_params.set_stop_stroke_prev(target_brake_stroke);
 			}
-			else
+			else if(stopper_distance_ >= 1)
 			{
-				std::cout << "tbs," << target_brake_stroke;
-				double d = 500 - target_brake_stroke;
-				target_brake_stroke  += d * (1 - 8.0 / 20.0 );
+				step = 0.5;
+				target_brake_stroke = pid_params.get_stop_stroke_prev() - 70;
+				//PID distance
+				double P_d = -13;
+				double e = stopper_distance_ - estimated_stopping_distance; 
+				target_brake_stroke += e * P_d;
+				//target_brake_stroke += -5*fabs((fabs(jurk2_twist_) - 10));
+				if(current_velocity < 0.5  || fabs(jurk2_twist_) > 10)
+				{
+					target_brake_stroke -= 70;
+				}
 			}
-		}*/
+			else if(stopper_distance_ >= 0 && stopper_distance_ <= 1)
+			{
+				step = 0.1;
+				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
+				std::cout <<"get_stroke_prev" << target_brake_stroke << std::endl;
+				double d = 500 - target_brake_stroke;
+				target_brake_stroke = target_brake_stroke + d * (1.0 - stopper_distance_)/1.0;
+				//pid_params.set_stop_stroke_prev(target_brake_stroke);
+			}
+		}
+*/
 
 
 	//	target_brake_stroke_prev = target_brake_stroke;
@@ -1160,6 +1343,23 @@ private:
 		else if (ret > setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
+		if(use_step_flag == true)
+		{
+			if(pid_params.get_stop_stroke_prev() < 0 && ret >= 0)
+			{
+				double tmp = pid_params.get_stop_stroke_prev() + step;
+				if(tmp < ret) ret = tmp;
+			}
+			//ブレーキをゆっくり踏む
+			if(pid_params.get_stop_stroke_prev() < 0.0 && pid_params.get_stop_stroke_prev() < ret)
+			{
+				double tmp = pid_params.get_stop_stroke_prev() - step;
+				if(tmp > ret) ret = tmp;
+				if(ret < setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
+			}
+		}
+
+		pid_params.set_stop_stroke_prev(ret);
 		return ret;
 	}
 
@@ -1219,7 +1419,7 @@ private:
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 			double cv_s = current_velocity /3.6;
 			if(acceleration <= 0 && stopper_distance_ >= 0)
-				std::cout << "yosou teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_ <<  std::endl;
+				std::cout << "teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_ <<  std::endl;
 			//AUTOモードじゃない場合、stroke値0をcanに送る
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
 			        can_receive_503_.clutch == false)
@@ -1227,12 +1427,15 @@ private:
 				pid_params.clear_diff_velocity();
 				pid_params.clear_diff_acceleration();
 				pid_params.clear_diff_distance();
+				pid_params.set_stop_stroke_prev(0);
+				pid_params.set_stroke_prev(0);
 				short drive_val = 0;
 				unsigned char *drive_point = (unsigned char*)&drive_val;
 				buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				std::cout << "manual_mode" << std::endl;
 				return;
 			}
-
+std::cout << "auto_mode" << std::endl;
 			double new_stroke = 0;
 			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
 			//std::cout << "if : " << cmd_velocity << " > " << current_velocity << std::endl;
@@ -1256,7 +1459,7 @@ private:
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止線判定
-			else if (stopper_distance_ > 0 && stopper_distance_ < 20.0)
+			else if (stopper_distance_ > 0 && stopper_distance_ < 30.0)
 			{
 				std::cout << "yosoku stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
@@ -1288,10 +1491,10 @@ private:
 			switch(pid_params.get_stroke_state_mode_())
 			{
 			case PID_params::STROKE_STATE_MODE_ACCEL_:
-				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);
+				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);//, &stroke_speed);
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
-				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);
+				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);//, &stroke_speed);
 				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
 					new_stroke > pid_params.get_stroke_prev())
 						new_stroke = pid_params.get_stroke_prev();*/
@@ -1306,9 +1509,9 @@ private:
 			}
 
 			//ブレーキを離す場合、徐々に離す
-			if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
+			/*if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
 			{
-				double tmp = pid_params.get_stroke_prev() + 5.0;
+				double tmp = pid_params.get_stroke_prev() + stroke_speed;
 				if(tmp < new_stroke) new_stroke = tmp;
 			}
 			//ブレーキをゆっくり踏む
@@ -1318,7 +1521,7 @@ private:
 				if(tmp > new_stroke) new_stroke = tmp;
 				if(new_stroke < setting_.pedal_stroke_min) new_stroke = setting_.pedal_stroke_min;
 			}
-			pid_params.set_stroke_prev(new_stroke);
+			pid_params.set_stroke_prev(new_stroke);*/
 
 			short input_stroke = (short)new_stroke;
 			if(input_drive_mode_ == true) input_stroke = input_drive_;
@@ -1457,7 +1660,8 @@ public:
 
 		pub_microbus_can_sender_status_ = nh_.advertise<autoware_can_msgs::MicroBusCanSenderStatus>("/microbus/can_sender_status", 1, true);
 		pub_acceleration_write_ = nh_.advertise<std_msgs::String>("/microbus/acceleration_write", 1);
-
+		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
+		
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
 		sub_microbus_steer_mode_ = nh_.subscribe("/microbus/steer_mode_send", 10, &kvaser_can_sender::callbackSModeSend, this);
 		sub_twist_cmd_ = nh_.subscribe("/vehicle_cmd", 10, &kvaser_can_sender::callbackTwistCmd, this);
@@ -1475,7 +1679,8 @@ public:
 		sub_velocity_mode_ = nh_.subscribe("/microbus/set_velocity_mode", 10, &kvaser_can_sender::callbackVelocityMode, this);
 		sub_drive_control_ = nh_.subscribe("/microbus/drive_control_", 10, &kvaser_can_sender::callbackDriveControl, this);
 		sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 10, &kvaser_can_sender::callbackWaypointParam, this);
-		sub_position_checker_ = nh_.subscribe("/position_checker", 10, &kvaser_can_sender::callbackPositionChecker, this);
+		sub_waypoints_ = nh_.subscribe("/waypoint_param", 10, &kvaser_can_sender::callbackWaypointParam, this);
+		sub_position_checker_ = nh_.subscribe("/final_waypoints", 10, &kvaser_can_sender::callbackWaypoints, this);
 		sub_config_microbus_can_ = nh_.subscribe("/config/microbus_can", 10, &kvaser_can_sender::callbackConfigMicroBusCan, this);
 		sub_shift_auto_ = nh_.subscribe("/microbus/shift_auto", 10, &kvaser_can_sender::callbackShiftAuto, this);
 		sub_shift_position_ = nh_.subscribe("/microbus/shift_position", 10, &kvaser_can_sender::callbackShiftPosition, this);
@@ -1530,6 +1735,7 @@ public:
 		//if(can_receive_501_.emergency == false)
 		{
 			double current_velocity = 0;// = can_receive_502_.velocity_average / 100.0;
+
 			switch(use_velocity_data_)
 			{
 			case USE_VELOCITY_CAN:
@@ -1544,6 +1750,7 @@ public:
 			}
 
 			double acceleration = 0;
+			use_acceleration_data_ = USE_ACCELERATION_TWIST2;
 			switch(use_acceleration_data_)
 			{
 			case USE_ACCELERATION_TWIST1:

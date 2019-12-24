@@ -12,6 +12,7 @@
 #include <autoware_can_msgs/MicroBusCan503.h>
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
+#include <autoware_config_msgs/ConfigMicrobusInterface.h>
 
 namespace Ui {
 class MainWindow;
@@ -41,12 +42,14 @@ private:
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
     ros::Subscriber sub_distance_angular_check_;//経路と自車位置のチェック用
+    ros::Subscriber sub_config_;
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
     void callbackCan503(const autoware_can_msgs::MicroBusCan503 &msg);//マイコン応答ID502
     void callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg);//canステータス
     void callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg);
+    void callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
@@ -54,6 +57,7 @@ private:
     autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
     autoware_msgs::DifferenceToWaypointDistance distance_angular_check_;
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
+    autoware_config_msgs::ConfigMicrobusInterface config_;
 
     bool error_text_lock_;
 

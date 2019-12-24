@@ -2,19 +2,19 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <autoware_msgs/Lane.h>
-#include <autoware_config_msgs/ConfigTemporaryStoper.h>
+#include <autoware_config_msgs/ConfigTemporaryStopper.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <visualization_msgs/MarkerArray.h>
 
-class TemporaryStoper
+class TemporaryStopper
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
-	ros::Subscriber sub_waypoint_, sub_can_, sub_current_velocity_, sub_distance_;
+	ros::Subscriber sub_waypoint_, sub_can_, sub_current_velocity_, sub_distance_, sub_config_;
 	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_;
 
-	autoware_config_msgs::ConfigTemporaryStoper config_;
+	autoware_config_msgs::ConfigTemporaryStopper config_;
 	autoware_can_msgs::MicroBusCan502 can_;
 	geometry_msgs::TwistStamped current_velocity_;
 
@@ -182,7 +182,7 @@ private:
 		current_velocity_ = msg;
 	}
 
-	void callbackConfig(const autoware_config_msgs::ConfigTemporaryStoper& msg)
+	void callbackConfig(const autoware_config_msgs::ConfigTemporaryStopper& msg)
 	{
 		config_ = msg;
 	}
@@ -194,18 +194,18 @@ private:
 		pub_waypoint_.publish(lane);
 	}
 public:
-	TemporaryStoper(ros::NodeHandle nh, ros::NodeHandle p_nh)
+	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(0)
 	    , stop_time_(5.0)
 	    , distance_(0.0)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
 
-		config_.search_distance = 7;
+		/*config_.search_distance = 7;
 		config_.acceleration = 1;
 		config_.number_of_zeros_ahead = 0;
 		config_.number_of_zeros_behind = 5;
-		config_.stop_speed_threshold = 0.018;
+		config_.stop_speed_threshold = 0.018;*/
 
 		timer_ = ros::Time::now();
 		can_.velocity_actual = 0;
@@ -215,20 +215,21 @@ public:
 		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
 		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
-		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStoper::callbackWaypoint, this);
-		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStoper::callbackCan, this);
-		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStoper::callbackCurrentVelocity, this);
-		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStoper::callbackDistance, this);
+		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStopper::callbackWaypoint, this);
+		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan, this);
+		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStopper::callbackCurrentVelocity, this);
+		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
+		sub_config_ = nh_.subscribe("/config/stopper_distance", 1, &TemporaryStopper::callbackConfig, this);
 	}
 };
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "temporary_stoper");
+	ros::init(argc, argv, "temporary_stopper");
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 
-	TemporaryStoper ts(nh, private_nh);
+	TemporaryStopper ts(nh, private_nh);
 	ros::Rate rate(100);
 	while(ros::ok())
 	{

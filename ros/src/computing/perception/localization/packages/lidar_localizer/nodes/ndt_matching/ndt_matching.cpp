@@ -65,6 +65,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 
+#include <autoware_msgs/ImuMathValue.h>
 #include <autoware_config_msgs/ConfigNDT.h>
 
 #include <autoware_msgs/NDTStat.h>
@@ -919,6 +920,14 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
   previous_imu_yaw = imu_yaw;
 }
 
+static void imu_math_value_callback(const autoware_msgs::ImuMathValue::ConstPtr& input)
+{
+  imu.header = input->header;
+  imu.linear_acceleration = input->acceleration;
+  imu.angular_velocity = input->angular_velocity;
+  imu_calc(input->header.stamp);
+}
+
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
   node_status_publisher_ptr_->CHECK_RATE("/topic/rate/points_raw/slow",8,5,1,"topic points_raw subscribe rate low.");
@@ -1666,6 +1675,7 @@ int main(int argc, char** argv)
   ros::Subscriber points_sub = nh.subscribe("filtered_points", _queue_size, points_callback);
   ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
   ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
+  ros::Subscriber imu_math_value = nh.subscribe("/imu_math_value", _queue_size * 10, imu_math_value_callback);
 
   pthread_t thread;
   pthread_create(&thread, NULL, thread_func, NULL);

@@ -6746,7 +6746,7 @@ params :
       desc : k_steer_i_distance
       label: k_steer_i_distance
       min  : 0.0
-      max  : 2
+      max  : 100
       v    : 0
       cmd_param:
         dash     : ''
@@ -6755,7 +6755,7 @@ params :
       desc : k_steer_d_distance
       label: k_steer_d_distance
       min  : 0.0
-      max  : 2
+      max  : 100
       v    : 0
       cmd_param:
         dash     : ''

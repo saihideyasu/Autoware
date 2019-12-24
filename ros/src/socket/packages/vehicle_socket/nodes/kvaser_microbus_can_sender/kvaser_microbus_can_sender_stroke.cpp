@@ -988,7 +988,7 @@ private:
 		}
 		else steer_val = input_steer_;
 		//PID
-		steer_val += _steer_pid_control(difference_toWaypoint_distance_.distance);
+		//steer_val += _steer_pid_control(difference_toWaypoint_distance_.distance);
 
 
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
@@ -1074,7 +1074,8 @@ private:
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
-		if(stopper_distance_ <= 100 && stopper_distance_ >=0 && ret > 0) ret = 0;
+		if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
+			current_velocity >= 10.0 && ret > 0) ret = 0;
 
 		if(pid_params.get_stroke_prev() < 0 && ret >= 0)
 		{
@@ -1183,7 +1184,7 @@ private:
 			pid_params.clear_diff_distance();
 		}
 */
-/*
+
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
 			std::cout << "tbs," << target_brake_stroke;
@@ -1210,7 +1211,7 @@ private:
 			step = 0.5;
 			target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
 		}
-*/
+
 /*
 
 		if(stopper_distance_ <= 30 && stopper_distance_ >0)
@@ -1234,7 +1235,7 @@ private:
 			}
 		}
 */
-
+/*
 		if(stopper_distance_ <= 40 && stopper_distance_ >0)
 		{
 			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
@@ -1287,7 +1288,7 @@ private:
 				target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
 			}
 		}
-
+*/
 /*
 		if(stopper_distance_ <= 25 && stopper_distance_ > 0)
 		{

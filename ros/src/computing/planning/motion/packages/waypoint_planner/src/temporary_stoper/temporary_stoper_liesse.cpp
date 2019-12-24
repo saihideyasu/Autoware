@@ -219,7 +219,7 @@ public:
 		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan, this);
 		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStopper::callbackCurrentVelocity, this);
 		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
-		sub_config_ = nh_.subscribe("/config/stopper_distance", 1, &TemporaryStopper::callbackConfig, this);
+		sub_config_ = nh_.subscribe("/config/temporary_stopper", 1, &TemporaryStopper::callbackConfig, this);
 	}
 };
 

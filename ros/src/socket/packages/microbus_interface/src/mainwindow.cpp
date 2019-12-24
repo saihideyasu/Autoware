@@ -63,7 +63,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can503_ = nh_.subscribe("/microbus/can_receive503", 10, &MainWindow::callbackCan503, this);
     sub_can_status_ = nh_.subscribe("/microbus/can_sender_status", 10, &MainWindow::callbackCanStatus, this);
     sub_distance_angular_check_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &MainWindow::callbackDistanceAngularCheck, this);
-
+    sub_config_ = nh_.subscribe("/config/microbus_interface", 10, &MainWindow::callbackConfig, this);
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.distance = 10000;
@@ -299,23 +299,32 @@ void MainWindow::window_updata()
 
     if(fabs(distance_angular_check_.distance) <= config_.check_distance_th)
     {
-        ui->tx_distance_check->setText("distance OK");
+        std::stringstream str;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_.distance;
+        ui->tx_distance_check->setText(str.str().c_str());
         ui->tx_distance_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
-        ui->tx_distance_check->setText("distance NG");
+        std::stringstream str;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_.distance;
+        ui->tx_distance_check->setText(str.str().c_str());
         ui->tx_distance_check->setPalette(palette_distance_angular_error_);
     }
 
-    if(fabs(distance_angular_check_.angular) <= config_.check_angular_th)
+    double angular_deg= distance_angular_check_.angular * 180.0 / M_PI;
+    if(fabs(angular_deg) <= config_.check_angular_th)
     {
-        ui->tx_angular_check->setText("angular OK");
+        std::stringstream str;
+        str << "distance OK," << config_.check_angular_th << "," << angular_deg;
+        ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
-        ui->tx_angular_check->setText("angular NG");
+        std::stringstream str;
+        str << "distance NG," << config_.check_angular_th << "," << angular_deg;
+        ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_error_);
     }
 }

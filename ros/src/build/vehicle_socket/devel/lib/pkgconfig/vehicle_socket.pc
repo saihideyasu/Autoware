@@ -1,0 +1,8 @@
+prefix=/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/vehicle_socket/devel
+
+Name: vehicle_socket
+Description: Description of vehicle_socket
+Version: 1.10.0
+Cflags: 
+Libs: -L/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/vehicle_socket/devel/lib 
+Requires: roscpp rospy tf std_msgs geometry_msgs autoware_can_msgs autoware_msgs tablet_socket_msgs

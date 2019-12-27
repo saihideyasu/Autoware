@@ -334,7 +334,7 @@ private:
 
 	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
-		if(fabs(msg->distance) > 2.0 || fabs(msg->angular) > 30.0)
+		if(fabs(msg->baselink_distance) > 2.0 || fabs(msg->angular) > 30.0)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -343,9 +343,9 @@ private:
 			//flag_drive_mode_ = false;
 			//flag_steer_mode_ = false;
 			shift_auto_ = false;
-			std::cout << "Denger! distance : " << msg->distance << "  angular : " << msg->angular << std::endl;
+			std::cout << "Denger! distance : " << msg->baselink_distance << "  angular : " << msg->baselink_angular << std::endl;
 			std::stringstream safety_error_message;
-			safety_error_message << "distance," << msg->distance << "\nangular," << msg->angular;
+			safety_error_message << "distance," << msg->baselink_distance << "\nangular," << msg->baselink_angular;
 			publisStatus(safety_error_message.str());
 			can_send();
 		}
@@ -607,14 +607,19 @@ private:
 		acc2 /= vec_cou;
 		double jurk2 = (acc2 - acceleration2_twist_) / td;
 		std::cout << "acceleration," << acc << "," << acc2 << std::endl;
-
+		double wheel_base = 3.935;
+		double tire_angle;
+		if(twist_.ctrl_cmd.steering_angle > 0) tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_left;
+		else tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_right;
 		std::stringstream str;
 //		str << std::setprecision(10) << waypoint_id_ << "," << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << "," << pose_msg->pose.orientation.z << ",";
 //		str << twist_msg->twist.angular.z << "," << twist_msg->twist.linear.x << ",";
 //		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
 //		str << x << "," << v0 << "," << v << "," << v_sa;
 		str << std::setprecision(10) << waypoint_id_ << "," << twist_msg->twist.linear.x <<","<< acc2 << "," << jurk2 << ",";
-		str << difference_toWaypoint_distance_.angular << "," << difference_toWaypoint_distance_.distance;
+		str << difference_toWaypoint_distance_.angular << "," << difference_toWaypoint_distance_.baselink_distance << "," ;
+		str << difference_toWaypoint_distance_.baselink_distance + wheel_base * tan(difference_toWaypoint_distance_.baselink_angular)<<",";
+		str << _steer_pid_control(difference_toWaypoint_distance_.baselink_distance + wheel_base * tan(difference_toWaypoint_distance_.baselink_angular)) <<",";
 
 
 		std_msgs::String aw_msg;
@@ -988,8 +993,9 @@ private:
 		}
 		else steer_val = input_steer_;
 		//PID
-		//steer_val += _steer_pid_control(difference_toWaypoint_distance_.distance);
-
+		double wheel_base = 3.935;
+//		steer_val += _steer_pid_control(difference_toWaypoint_distance_.base_linkdistance);
+		steer_val += _steer_pid_control(wheel_base * tan(difference_toWaypoint_distance_.baselink_angular) + difference_toWaypoint_distance_.baselink_distance);
 
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
 
@@ -1005,10 +1011,19 @@ private:
 		//I
 		double e_i;
 		pid_params.plus_steer_diff_sum_distance(e);
-		if (pid_params.get_steer_diff_sum_distance() > setting_.steer_max_i)
+
+		if(current_velocity_.twist.linear.x < 1.0)
+		{
+			pid_params.clear_steer_diff_distance();
+		}
+
+		double sum_diff = pid_params.get_steer_diff_sum_distance();
+		if (sum_diff > setting_.steer_max_i && sum_diff >0)
 			e_i = setting_.steer_max_i;
+		else if(sum_diff < setting_.steer_max_i && sum_diff <0)
+			e_i = -setting_.steer_max_i;
 		else
-			e_i = pid_params.get_steer_diff_sum_distance();
+			e_i = sum_diff;
 
 		//D
 		double e_d = e - pid_params.get_steer_e_prev_distance();
@@ -1016,6 +1031,8 @@ private:
 		double target_steer = setting_.k_steer_p_distance* e +
 		       setting_.k_steer_i_distance * e_i +
 		       setting_.k_steer_d_distance * e_d;
+		if(target_steer > 500) target_steer  = 500;
+		if(target_steer < -500) target_steer =-500;
 
 		pid_params.set_steer_e_prev_distance(e);
 		return target_steer;

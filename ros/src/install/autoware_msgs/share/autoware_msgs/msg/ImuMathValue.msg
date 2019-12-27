@@ -1,0 +1,5 @@
+Header header
+geometry_msgs/Vector3 velocity
+geometry_msgs/Vector3 acceleration
+geometry_msgs/Vector3 jurk
+geometry_msgs/Vector3 angular_velocity

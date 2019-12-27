@@ -1,0 +1,6 @@
+Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs -- -j8 -l8
+Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs' returned '0': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs -- -j8 -l8
+Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs --target tests -- -j8 -l8
+Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs' returned '0': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs --target tests -- -j8 -l8
+Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs --target install
+Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs' returned '0': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_can_msgs --target install

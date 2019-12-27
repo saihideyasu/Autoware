@@ -1,0 +1,112 @@
+In file included from [01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:31:0[m[K:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/include/kvaser_can.h:[m[K In constructor ‘[01m[KKVASER_CAN::KVASER_CAN()[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/include/kvaser_can.h:11:15:[m[K [01;35m[Kwarning: [m[K‘[01m[KKVASER_CAN::msgCounter_[m[K’ will be initialized after [-Wreorder]
+  unsigned int msgCounter_;
+[01;32m[K               ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/include/kvaser_can.h:10:7:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kbool KVASER_CAN::open_flag_[m[K’ [-Wreorder]
+  bool open_flag_;
+[01;32m[K       ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/include/kvaser_can.h:17:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  KVASER_CAN()
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/include/kvaser_can.h:20:24:[m[K [01;35m[Kwarning: [m[Kconverting to non-pointer type ‘[01m[KcanHandle {aka int}[m[K’ from NULL [-Wconversion-null]
+      , open_flag_(false)
+[01;32m[K                        ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kint PID_params::init(double)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:68:2:[m[K [01;35m[Kwarning: [m[Kno return statement in function returning non-void [-Wreturn-type]
+  }
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kconst LIMIT_ANGLE_FROM_VELOCITY_STRUCT LIMIT_ANGLE_FROM_VELOCITY_CLASS::getLimit(double)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:172:16:[m[K [01;35m[Kwarning: [m[Kcomparison between signed and unsigned integer expressions [-Wsign-compare]
+   for(int i=0;i<lafvs.size()-1;i++)
+[01;32m[K                ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kvoid kvaser_can_sender::NdtGnssCheck()[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:366:10:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kdistance[m[K’ [-Wunused-variable]
+   double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
+[01;32m[K          ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kvoid kvaser_can_sender::callbackLidarDetectorObjects(const ConstPtr&)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:443:25:[m[K [01;35m[Kwarning: [m[Kcomparison between signed and unsigned integer expressions [-Wsign-compare]
+   for(int obj_i=0; obj_i<msg->objects.size(); obj_i++)
+[01;32m[K                         ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kvoid kvaser_can_sender::TwistPoseCallback(const TwistStampedConstPtr&, const PoseStampedConstPtr&)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:592:25:[m[K [01;35m[Kwarning: [m[Kcomparison between signed and unsigned integer expressions [-Wsign-compare]
+   for(vec_cou=0; vec_cou<acceleration_vec1_.size(); vec_cou++)
+[01;32m[K                         ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:603:25:[m[K [01;35m[Kwarning: [m[Kcomparison between signed and unsigned integer expressions [-Wsign-compare]
+   for(vec_cou=0; vec_cou<acceleration_vec2_.size(); vec_cou++)
+[01;32m[K                         ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:617:110:[m[K [01;31m[Kerror: [m[Kexpected primary-expression before ‘[01m[K;[m[K’ token
+   str << difference_toWaypoint_distance_.angular << "," << difference_toWaypoint_distance_.distance << "," <<;
+[01;32m[K                                                                                                              ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:581:16:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kx[m[K’ [-Wunused-variable]
+   const double x =
+[01;32m[K                ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:585:10:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kv_sa[m[K’ [-Wunused-variable]
+   double v_sa = v * v - v0 * v0;
+[01;32m[K          ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kvoid kvaser_can_sender::bufset_steer(unsigned char*)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:978:11:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kratio[m[K’ [-Wunused-variable]
+    double ratio = ((handle_control_ratio - 1.0) * (zisoku - handle_control_min_speed))
+[01;32m[K           ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In member function ‘[01m[Kvoid kvaser_can_sender::bufset_drive(unsigned char*, double, double, double)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1458:13:[m[K [01;35m[Kwarning: [m[Ksuggest parentheses around ‘[01m[K&&[m[K’ within ‘[01m[K||[m[K’ [-Wparentheses]
+             && fabs(cmd_velocity) > 0.0 || (stopper_distance_>=0 && stopper_distance_ <=current_velocity) )
+[01;32m[K             ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:[m[K In constructor ‘[01m[Kkvaser_can_sender::kvaser_can_sender(ros::NodeHandle, ros::NodeHandle)[m[K’:
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:309:22:[m[K [01;35m[Kwarning: [m[K‘[01m[Kkvaser_can_sender::input_drive_[m[K’ will be initialized after [-Wreorder]
+  short input_steer_, input_drive_;
+[01;32m[K                      ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:299:16:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kunsigned char kvaser_can_sender::drive_control_mode_[m[K’ [-Wreorder]
+  unsigned char drive_control_mode_;
+[01;32m[K                ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1597:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:315:38:[m[K [01;35m[Kwarning: [m[K‘[01m[Kkvaser_can_sender::blinker_stop_[m[K’ will be initialized after [-Wreorder]
+  bool blinker_right_, blinker_left_, blinker_stop_;
+[01;32m[K                                      ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:312:63:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kunsigned char kvaser_can_sender::automatic_door_[m[K’ [-Wreorder]
+  unsigned char shift_position_, drive_clutch_, steer_clutch_, automatic_door_;
+[01;32m[K                                                               ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1597:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:312:63:[m[K [01;35m[Kwarning: [m[K‘[01m[Kkvaser_can_sender::automatic_door_[m[K’ will be initialized after [-Wreorder]
+  unsigned char shift_position_, drive_clutch_, steer_clutch_, automatic_door_;
+[01;32m[K                                                               ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:312:33:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kunsigned char kvaser_can_sender::drive_clutch_[m[K’ [-Wreorder]
+  unsigned char shift_position_, drive_clutch_, steer_clutch_, automatic_door_;
+[01;32m[K                                 ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1597:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:312:48:[m[K [01;35m[Kwarning: [m[K‘[01m[Kkvaser_can_sender::steer_clutch_[m[K’ will be initialized after [-Wreorder]
+  unsigned char shift_position_, drive_clutch_, steer_clutch_, automatic_door_;
+[01;32m[K                                                ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:256:6:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kint kvaser_can_sender::config_result[m[K’ [-Wreorder]
+  int config_result;
+[01;32m[K      ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1597:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:321:26:[m[K [01;35m[Kwarning: [m[K‘[01m[Kkvaser_can_sender::use_acceleration_data_[m[K’ will be initialized after [-Wreorder]
+  int use_velocity_data_, use_acceleration_data_;
+[01;32m[K                          ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:318:9:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kdouble kvaser_can_sender::stopper_distance_[m[K’ [-Wreorder]
+  double stopper_distance_;
+[01;32m[K         ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1597:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
+[01;32m[K  ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:318:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kkvaser_can_sender::stopper_distance_[m[K’ will be initialized after [-Wreorder]
+  double stopper_distance_;
+[01;32m[K         ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:306:9:[m[K [01;35m[Kwarning: [m[K  ‘[01m[Kdouble kvaser_can_sender::acceleration1_twist_[m[K’ [-Wreorder]
+  double acceleration1_twist_, acceleration2_twist_, jurk1_twist_, jurk2_twist_;
+[01;32m[K         ^[m[K
+[01m[K/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/vehicle_socket/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp:1597:2:[m[K [01;35m[Kwarning: [m[K  when initialized here [-Wreorder]
+  kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
+[01;32m[K  ^[m[K
+make[2]: *** [CMakeFiles/kvaser_microbus_can_sender_stroke.dir/nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender_stroke.cpp.o] エラー 1
+make[1]: *** [CMakeFiles/kvaser_microbus_can_sender_stroke.dir/all] エラー 2
+make: *** [all] エラー 2

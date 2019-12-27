@@ -6728,8 +6728,8 @@ params :
       desc : steer_max_i
       label: steer_max_i
       min  : 0.0
-      max  : 1000
-      v    : 500
+      max  : 300
+      v    : 0.5
       cmd_param:
         dash     : ''
         delim    : ':='
@@ -6737,8 +6737,8 @@ params :
       desc : k_steer_p_distance
       label: k_steer_p_distance
       min  : 0.0
-      max  : 2.0
-      v    : 0
+      max  : 300.0
+      v    : 50
       cmd_param:
         dash     : ''
         delim    : ':='

@@ -1,0 +1,14 @@
+Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags -- -j8 -l8
+Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags' returned '0': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags -- -j8 -l8
+Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags --target tests -- -j8 -l8
+Built target tests
+Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags' returned '0': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags --target tests -- -j8 -l8
+Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags --target install
+[36mInstall the project...[0m
+-- Install configuration: ""
+-- Up-to-date: /home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/lib/pkgconfig/autoware_build_flags.pc
+-- Up-to-date: /home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/cmake/autoware_build_flags-extras.cmake
+-- Up-to-date: /home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/cmake/autoware_build_flagsConfig.cmake
+-- Up-to-date: /home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/cmake/autoware_build_flagsConfig-version.cmake
+-- Up-to-date: /home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/package.xml
+Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags' returned '0': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/autoware_build_flags --target install

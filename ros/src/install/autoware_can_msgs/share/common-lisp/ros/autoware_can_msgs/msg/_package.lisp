@@ -1,0 +1,19 @@
+(cl:defpackage autoware_can_msgs-msg
+  (:use )
+  (:export
+   "<CANDATA>"
+   "CANDATA"
+   "<CANINFO>"
+   "CANINFO"
+   "<CANPACKET>"
+   "CANPACKET"
+   "<MICROBUSCAN501>"
+   "MICROBUSCAN501"
+   "<MICROBUSCAN502>"
+   "MICROBUSCAN502"
+   "<MICROBUSCAN503>"
+   "MICROBUSCAN503"
+   "<MICROBUSCANSENDERSTATUS>"
+   "MICROBUSCANSENDERSTATUS"
+  ))
+

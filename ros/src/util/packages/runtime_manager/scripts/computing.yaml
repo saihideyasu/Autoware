@@ -6193,7 +6193,7 @@ params :
          delim   : ':='
 
   - name  : localizer_switch
-    topic : /config/fusion_select
+    topic : /config/localizer_switch
     msg   : ConfigLocalizerSwitchFusion
     vars  :
     - name  : fusion_select
@@ -6207,6 +6207,15 @@ params :
       - Waypoint desc sample
       - Dialog desc sample
       v     : 1
+    - name : localizer_distance_th
+      desc : localizer_distance_th
+      label: localizer_distance_th
+      min  : 0.0
+      max  : 3
+      v    : 0.3
+      cmd_param:
+        dash     : ''
+        delim    : ':='
     - name      : base_link_pose_topic1
       label     : base_link_pose_topic1
       v         : /ndt_pose

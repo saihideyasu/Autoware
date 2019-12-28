@@ -66,8 +66,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_config_ = nh_.subscribe("/config/microbus_interface", 10, &MainWindow::callbackConfig, this);
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
-    distance_angular_check_.distance = 10000;
-    distance_angular_check_.angular = 180;
+    distance_angular_check_.baselink_distance = 10000;
+    distance_angular_check_.baselink_angular = 180;
 }
 
 MainWindow::~MainWindow()
@@ -297,22 +297,22 @@ void MainWindow::window_updata()
         error_text_lock_ = true;
     }
 
-    if(fabs(distance_angular_check_.distance) <= config_.check_distance_th)
+    if(fabs(distance_angular_check_.baselink_distance) <= config_.check_distance_th)
     {
         std::stringstream str;
-        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_.distance;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_.baselink_distance;
         ui->tx_distance_check->setText(str.str().c_str());
         ui->tx_distance_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_.distance;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_.baselink_distance;
         ui->tx_distance_check->setText(str.str().c_str());
         ui->tx_distance_check->setPalette(palette_distance_angular_error_);
     }
 
-    double angular_deg= distance_angular_check_.angular * 180.0 / M_PI;
+    double angular_deg= distance_angular_check_.baselink_angular * 180.0 / M_PI;
     if(fabs(angular_deg) <= config_.check_angular_th)
     {
         std::stringstream str;

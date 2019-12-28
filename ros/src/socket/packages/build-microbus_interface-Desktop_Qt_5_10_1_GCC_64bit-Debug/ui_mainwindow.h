@@ -109,6 +109,8 @@ public:
     QPushButton *bt_error_text_reset;
     QTextEdit *tx_distance_check;
     QTextEdit *tx_angular_check;
+    QLabel *lb_waypoint_num;
+    QTextEdit *tx_waypoint_num;
     QWidget *tab_2;
     QPushButton *bt_emergency_clear;
     QMenuBar *menuBar;
@@ -752,6 +754,18 @@ public:
         tx_angular_check->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         tx_angular_check->setReadOnly(true);
         tx_angular_check->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        lb_waypoint_num = new QLabel(tab);
+        lb_waypoint_num->setObjectName(QStringLiteral("lb_waypoint_num"));
+        lb_waypoint_num->setGeometry(QRect(10, 560, 101, 17));
+        tx_waypoint_num = new QTextEdit(tab);
+        tx_waypoint_num->setObjectName(QStringLiteral("tx_waypoint_num"));
+        tx_waypoint_num->setGeometry(QRect(100, 550, 121, 41));
+        tx_waypoint_num->setAutoFillBackground(true);
+        tx_waypoint_num->setLineWidth(0);
+        tx_waypoint_num->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx_waypoint_num->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx_waypoint_num->setReadOnly(true);
+        tx_waypoint_num->setTextInteractionFlags(Qt::TextSelectableByMouse);
         tabWidget->addTab(tab, QString());
         tab_2 = new QWidget();
         tab_2->setObjectName(QStringLiteral("tab_2"));
@@ -818,7 +832,7 @@ public:
         gb_angle->setTitle(QApplication::translate("MainWindow", "angle", nullptr));
         lb_angle_target->setText(QApplication::translate("MainWindow", "target", nullptr));
         lb_angle_actual->setText(QApplication::translate("MainWindow", "actual", nullptr));
-        lb_steer_clutch->setText(QApplication::translate("MainWindow", "input mode", nullptr));
+        lb_steer_clutch->setText(QApplication::translate("MainWindow", "clutch", nullptr));
         bt_steer_clutch_cut->setText(QApplication::translate("MainWindow", "cut", nullptr));
         bt_steer_clutch_connect->setText(QApplication::translate("MainWindow", "connect", nullptr));
         groupBox_other->setTitle(QApplication::translate("MainWindow", "OTHER_INFOMATION", nullptr));
@@ -831,7 +845,8 @@ public:
         lb_position_check->setText(QApplication::translate("MainWindow", "position", nullptr));
         lb_angle_limit_over->setText(QApplication::translate("MainWindow", "angle limit", nullptr));
         lb_error_text->setText(QApplication::translate("MainWindow", "error text", nullptr));
-        bt_error_text_reset->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
+        bt_error_text_reset->setText(QApplication::translate("MainWindow", "error clear", nullptr));
+        lb_waypoint_num->setText(QApplication::translate("MainWindow", "input mode", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MainWindow", "Tab 1", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("MainWindow", "Tab 2", nullptr));
         bt_emergency_clear->setText(QApplication::translate("MainWindow", "\345\256\211\345\205\250\346\251\237\350\203\275\350\247\243\351\231\244", nullptr));

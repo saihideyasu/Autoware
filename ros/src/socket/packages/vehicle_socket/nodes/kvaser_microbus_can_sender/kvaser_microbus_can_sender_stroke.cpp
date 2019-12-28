@@ -9,6 +9,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Float32.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -28,6 +29,8 @@
 #include <autoware_msgs/DetectedObjectArray.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
+#include <autoware_msgs/NDTStat.h>
+#include <autoware_msgs/LocalizerMatchStat.h>
 #include "kvaser_can.h"
 #include <time.h>
 
@@ -270,6 +273,7 @@ private:
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_, pub_estimate_stopper_distance_;
+	ros::Publisher pub_localizer_match_stat_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -285,8 +289,8 @@ private:
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
-	ros::Subscriber sub_ndt_stat_, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_;
-	ros::Subscriber sub_difference_to_waypoint_distance_;
+	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_;
+	ros::Subscriber sub_difference_to_waypoint_distance_, sub_localizer_select_num_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -322,19 +326,27 @@ private:
 	autoware_msgs::PositionChecker position_checker_;
 	bool angle_limit_over_;
 	double steer_correction_;
-	std::string ndt_stat_;
+	std::string ndt_stat_string_;
 	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_;
 	unsigned char gnss_stat_;
 	autoware_msgs::DifferenceToWaypointDistance difference_toWaypoint_distance_;
-
+	autoware_msgs::GnssStandardDeviation gnss_deviation_;
+	autoware_msgs::NDTStat ndt_stat_;
+	double ndt_reliability_;
+	int localizer_select_num_;
 	ros::Time automatic_door_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
 
 	waypoint_param_geter wpg_;
 
+	void callbackLocalizerSelectNum(const std_msgs::Int32::ConstPtr msg)
+	{
+		localizer_select_num_ = msg->data;
+	}
+
 	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
-		if(fabs(msg->baselink_distance) > 2.0 || fabs(msg->angular) > 30.0)
+		if(fabs(msg->baselink_distance) > 2.0 || fabs(msg->baselink_angular) > 30.0)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -357,7 +369,7 @@ private:
 	{
 		bool flag = true;
 		if((gnss_stat_ & 0x3) == 0) flag = false;
-		//if(ndt_stat_ != "NDT_OK") flag = false;
+		//if(ndt_stat_string != "NDT_OK") flag = false;
 
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
@@ -396,9 +408,19 @@ private:
 		NdtGnssCheck();
 	}
 
-	void callbackNdtStat(const std_msgs::String::ConstPtr &msg)
+	void callbackNdtStatString(const std_msgs::String::ConstPtr &msg)
 	{
-		ndt_stat_ = msg->data;
+		ndt_stat_string_ = msg->data;
+	}
+
+	void callbackNdtStat(const autoware_msgs::NDTStat::ConstPtr &msg)
+	{
+		ndt_stat_ = *msg;
+	}
+
+	void callbackNdtReliability(const std_msgs::Float32::ConstPtr &msg)
+	{
+		ndt_reliability_ = msg->data;
 	}
 
 	void callbackGnssStat(const std_msgs::UInt8::ConstPtr &msg)
@@ -429,6 +451,7 @@ private:
 			publisStatus(safety_error_message.str());
 			can_send();
 		}
+		gnss_deviation_ = *msg;
 	}
 
 	void callbackImu(const sensor_msgs::Imu::ConstPtr msg)
@@ -521,7 +544,7 @@ private:
 		std::cout << "sub can_502" << std::endl;
 		if(msg->clutch==true && can_receive_502_.clutch==false)
 		{
-			input_steer_mode_ = false; std::cout << "aaa" << std::endl;
+			input_steer_mode_ = false; //std::cout << "aaa" << std::endl;
 			std::string safety_error_message = "";
 			publisStatus(safety_error_message);
 		}
@@ -617,10 +640,40 @@ private:
 //		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
 //		str << x << "," << v0 << "," << v << "," << v_sa;
 		str << std::setprecision(10) << waypoint_id_ << "," << twist_msg->twist.linear.x <<","<< acc2 << "," << jurk2 << ",";
-		str << difference_toWaypoint_distance_.angular << "," << difference_toWaypoint_distance_.baselink_distance << "," ;
-		str << difference_toWaypoint_distance_.baselink_distance + wheel_base * tan(difference_toWaypoint_distance_.baselink_angular)<<",";
-		str << _steer_pid_control(difference_toWaypoint_distance_.baselink_distance + wheel_base * tan(difference_toWaypoint_distance_.baselink_angular)) <<",";
+		str << difference_toWaypoint_distance_.baselink_angular << "," << difference_toWaypoint_distance_.baselink_distance << "," ;
+		str << difference_toWaypoint_distance_.front_baselink_distance <<",";
+		str << _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance) ;
+	
+		double mps = current_velocity_.twist.linear.x;
+		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
 
+		std::string gnss_stat_string = (gnss_stat_ & 0x3) ? "GNSS_OK" : "GNSS_ERROR";
+		str << "," << stopper_distance_ << "," << estimated_stopping_distance;
+		str << "," << ndt_stat_.score << "," <<ndt_reliability_ << "," << ndt_stat_.exe_time << "," << ndt_stat_string_ << "," << gnss_stat_string;
+		str << "," << gnss_deviation_.lat_std << "," << gnss_deviation_.lon_std << "," << gnss_deviation_.alt_std;
+		
+
+		double ndtx = ndt_pose_.pose.position.x;
+		double ndty = ndt_pose_.pose.position.y;
+		double gnssx = gnss_pose_.pose.position.x;
+		double gnssy = gnss_pose_.pose.position.y;
+		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
+		str <<","<<ndtx <<"," <<ndty <<"," << gnssx<<"," << gnssy <<"," << distance;
+
+
+		autoware_msgs::LocalizerMatchStat lms;
+		lms.header.stamp = ros::Time::now();
+		if(ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK")
+		{
+			lms.localizer_stat = true;
+			lms.localizer_distance = distance;
+		}
+		else
+		{
+			lms.localizer_stat = false;
+			lms.localizer_distance = distance;
+		}
+		pub_localizer_match_stat_.publish(lms);
 
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
@@ -995,8 +1048,8 @@ private:
 		//PID
 		double wheel_base = 3.935;
 //		steer_val += _steer_pid_control(difference_toWaypoint_distance_.base_linkdistance);
-		steer_val += _steer_pid_control(wheel_base * tan(difference_toWaypoint_distance_.baselink_angular) + difference_toWaypoint_distance_.baselink_distance);
-
+//		steer_val += _steer_pid_control(wheel_base * tan(difference_toWaypoint_distance_.baselink_angular) + difference_toWaypoint_distance_.baselink_distance);
+		steer_val += _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance);
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
 
 		unsigned char *steer_pointer = (unsigned char*)&steer_val;
@@ -1091,8 +1144,8 @@ private:
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
-		if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
-			current_velocity >= 10.0 && ret > 0) ret = 0;
+//		if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
+//			current_velocity >= 10.0 && ret > 0) ret = 0;
 
 		if(pid_params.get_stroke_prev() < 0 && ret >= 0)
 		{
@@ -1201,6 +1254,7 @@ private:
 			pid_params.clear_diff_distance();
 		}
 */
+/*
 
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
@@ -1228,9 +1282,8 @@ private:
 			step = 0.5;
 			target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
 		}
-
+*/
 /*
-
 		if(stopper_distance_ <= 30 && stopper_distance_ >0)
 		{
 			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
@@ -1252,6 +1305,42 @@ private:
 			}
 		}
 */
+		if(stopper_distance_ <= 30 && stopper_distance_ >0)
+		{
+			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
+			{
+				std::cout << "tbs," << target_brake_stroke;
+				double d = 500 - target_brake_stroke;
+				target_brake_stroke  += d * (1 - stopper_distance_/ 30.0 );
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				pid_params.set_stop_stroke_prev(target_brake_stroke);// .set_stroke_prev(target_brake_stroke);
+			}
+			else if(stopper_distance_ >= 2  && fabs(jurk2_twist_) < 10)
+			{
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
+				double mps = current_velocity /3.6;
+				//double estimated_stopping_distance = (前方車両の速度 * 前方車両の速度 - mps*mps)/(2.0*acceleration);
+				double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
+				std_msgs::Float64 esd;
+				esd.data = estimated_stopping_distance;
+				pub_estimate_stopper_distance_.publish(esd);
+
+
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
+				double P_d = -13;
+				double e_d = stopper_distance_ - estimated_stopping_distance; 
+			//	target_brake_stroke += e_d * P_d;
+
+			}
+			else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
+			{
+						step = 0.5;
+						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
+			}
+		}
+
+
+
 /*
 		if(stopper_distance_ <= 40 && stopper_distance_ >0)
 		{
@@ -1302,7 +1391,7 @@ private:
 				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 				//step = 2;
 				use_step_flag = false;
-				target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
+				target_brake_stroke = 0.0 + 500 * (1.0 - stopper_distance_)/1.0;
 			}
 		}
 */
@@ -1679,7 +1768,8 @@ public:
 		pub_microbus_can_sender_status_ = nh_.advertise<autoware_can_msgs::MicroBusCanSenderStatus>("/microbus/can_sender_status", 1, true);
 		pub_acceleration_write_ = nh_.advertise<std_msgs::String>("/microbus/acceleration_write", 1);
 		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
-		
+		pub_localizer_match_stat_ = nh_.advertise<autoware_msgs::LocalizerMatchStat>("/microbus/localizer_match_stat", 1);
+	
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
 		sub_microbus_steer_mode_ = nh_.subscribe("/microbus/steer_mode_send", 10, &kvaser_can_sender::callbackSModeSend, this);
 		sub_twist_cmd_ = nh_.subscribe("/vehicle_cmd", 10, &kvaser_can_sender::callbackTwistCmd, this);
@@ -1718,12 +1808,14 @@ public:
 		sub_lidar_detector_objects_ = nh_.subscribe("/detection/lidar_detector/objects", 10, &kvaser_can_sender::callbackLidarDetectorObjects, this);
 		sub_imu_ = nh_.subscribe("/imu_raw_tidy", 10, &kvaser_can_sender::callbackImu, this);
 		sub_gnss_standard_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &kvaser_can_sender::callbackGnssStandardDeviation, this);
-		sub_ndt_stat_ = nh_.subscribe("/ndt_monitor/ndt_status", 10, &kvaser_can_sender::callbackNdtStat, this);
+		sub_ndt_stat_string = nh_.subscribe("/ndt_monitor/ndt_status", 10, &kvaser_can_sender::callbackNdtStatString, this);
+		sub_ndt_stat_ = nh_.subscribe("/ndt_stat", 10, &kvaser_can_sender::callbackNdtStat, this);
+		sub_ndt_reliability_ = nh_.subscribe("/ndt_reliability", 10, &kvaser_can_sender::callbackNdtReliability, this);
 		sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &kvaser_can_sender::callbackGnssStat, this);
 		sub_ndt_pose_ = nh_.subscribe("/ndt_pose", 10, &kvaser_can_sender::callbackNdtPose, this);
 		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
 		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);
-
+		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);
 		sync_twist_pose_ = new message_filters::Synchronizer<TwistPoseSync>(TwistPoseSync(SYNC_FRAMES), *sub_current_velocity_, *sub_current_pose_);

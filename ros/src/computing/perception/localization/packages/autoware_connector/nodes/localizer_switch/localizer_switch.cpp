@@ -5,10 +5,12 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
+#include <std_msgs/Int32.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <autoware_msgs/NDTStat.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
+#include <autoware_msgs/LocalizerMatchStat.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -262,16 +264,37 @@ private:
 
     std::vector<TopicList> topic_list_;
 
-    ros::Subscriber sub_fusion_select_;
-
+    ros::Publisher pub_localizer_select_num_;
+    ros::Subscriber sub_fusion_select_, sub_localizer_match_stat_, sub_localizer_select_;
 
     tf::TransformBroadcaster tf_Broadcaster_;
 
-    void fusion_select_callback(const autoware_config_msgs::ConfigLocalizerSwitchFusionConstPtr &msg)
-    {
-		std::cout << "fusuion select : " << (int)msg->fusion_select << std::endl;
+    autoware_config_msgs::ConfigLocalizerSwitchFusion config_;
 
-        switch(msg->fusion_select)
+    bool localizer_match_flag = false;
+    unsigned char localizer_select_num_;
+
+    void fusion_select_callback(const std_msgs::Int32ConstPtr &msg)
+    {
+        localizer_select(msg->data);
+    }
+
+    void localizer_match_stat_callback(const autoware_msgs::LocalizerMatchStatConstPtr &msg)
+    {
+        if(msg->localizer_stat == true && msg->localizer_distance <= config_.localizer_distance_th)
+        {
+            localizer_match_flag = true;
+        }
+        else
+        {
+            localizer_match_flag = false;
+        }
+        
+    }
+
+    void localizer_select(int select)
+    {
+        switch(select)
         {
         case 0://pose1 only
             {
@@ -280,7 +303,10 @@ private:
                     if(i == 0) topic_list_[0].set_fusion_select(1);
                     else topic_list_[i].set_fusion_select(0);
                 }
-
+                localizer_select_num_ = 0;
+                std_msgs::Int32 lsn;
+                lsn.data = localizer_select_num_;
+                pub_localizer_select_num_.publish(lsn);
                 break;
             }
         case 1://pose2 only
@@ -290,22 +316,80 @@ private:
                     if(i == 1) topic_list_[1].set_fusion_select(1);
                     else topic_list_[i].set_fusion_select(0);
                 }
+                localizer_select_num_ = 1;
+                std_msgs::Int32 lsn;
+                lsn.data = localizer_select_num_;
+                pub_localizer_select_num_.publish(lsn);
                 break;
+            }
+        case 10:
+            {
+                if(localizer_match_flag == true)
+                {
+                    for(int i=0; i<topic_list_.size(); i++)
+                    {
+                        if(i == 0) topic_list_[0].set_fusion_select(1);
+                        else topic_list_[i].set_fusion_select(0);
+                    }
+                    localizer_select_num_ = 0;
+                    std_msgs::Int32 lsn;
+                    lsn.data = localizer_select_num_;
+                    pub_localizer_select_num_.publish(lsn);
+                    break;
+                }
+            }
+        case 11:
+            {
+                if(localizer_match_flag == true)
+                {
+                    for(int i=0; i<topic_list_.size(); i++)
+                    {
+                        if(i == 1) topic_list_[1].set_fusion_select(1);
+                        else topic_list_[i].set_fusion_select(0);
+                    }
+                    localizer_select_num_ = 1;
+                    std_msgs::Int32 lsn;
+                    lsn.data = localizer_select_num_;
+                    pub_localizer_select_num_.publish(lsn);
+                    break;
+                }
             }
         }
     }
 
+    void config_callback(const autoware_config_msgs::ConfigLocalizerSwitchFusionConstPtr &msg)
+    {
+		std::cout << "fusuion select : " << (int)msg->fusion_select << std::endl;
+
+        localizer_select(msg->fusion_select);
+
+        config_ = *msg;
+    }
+
 public:
-    LocalizerSwitch(ros::NodeHandle nh, ros::NodeHandle private_nh, std::vector<TopicList> list)
+    LocalizerSwitch(ros::NodeHandle nh, ros::NodeHandle private_nh, std::vector<TopicList> list,
+        int localizer_select)
     {
         nh_ = nh;  private_nh_ = private_nh;
+        pub_localizer_select_num_ = nh_.advertise<std_msgs::Int32>("localizer_select_num", 1, true);
+
+        sub_localizer_match_stat_ = nh_.subscribe<autoware_msgs::LocalizerMatchStat>(
+                    "/microbus/localizer_match_stat", 1, &LocalizerSwitch::localizer_match_stat_callback, this);
         sub_fusion_select_ = nh_.subscribe<autoware_config_msgs::ConfigLocalizerSwitchFusion>(
-                    "/config/fusion_select", 10, &LocalizerSwitch::fusion_select_callback, this);
+                    "/config/localizer_switch", 10, &LocalizerSwitch::config_callback, this);
+        sub_localizer_select_ = nh_.subscribe<std_msgs::Int32>(
+                    "/fusion_select", 10, &LocalizerSwitch::fusion_select_callback, this);
+
         topic_list_ = list;
         for(int i=0; i<topic_list_.size(); i++)
         {
             topic_list_[i].callback_run();
         }
+
+        localizer_select_num_ = localizer_select;
+        std_msgs::Int32 lsn;
+        lsn.data = localizer_select_num_;
+        pub_localizer_select_num_.publish(lsn);
     }
 };
 
@@ -319,6 +403,7 @@ int main(int argc, char** argv)
 
     std::vector<TopicList> topicListArray;
 
+    int localizer_select = 0;
     for(int cou=1; cou<=max_localizer_count; cou++)
     {
         std::string base_link_pose_topic, estimate_twist_topic, localizer_pose_topic;
@@ -351,6 +436,7 @@ int main(int argc, char** argv)
                 ndt_status_name << "ndt_status" << cou;
                 private_nh.param<std::string>(ndt_status_name.str(), ndt_status_topic, std::string(""));
                 std::cout << ndt_status_name.str() << " : " << ndt_status_topic << std::endl;
+                localizer_select = 0;
                 break;
             }
         case 1://GNSS(RTK)
@@ -358,10 +444,11 @@ int main(int argc, char** argv)
                 gnss_deviation_name << "gnss_deviation" << cou;
                 private_nh.param<std::string>(gnss_deviation_name.str(), gnss_deviation_topic, std::string(""));
                 std::cout << gnss_deviation_name.str() << " : " << gnss_deviation_topic << std::endl;
+                localizer_select = 1;
                 break;
             }
         }
-
+    
         TopicList list(nh, private_nh,
                        base_link_pose_topic, estimate_twist_topic, localizer_pose_topic,
                        alignment_mechanism, ndt_status_topic, gnss_deviation_topic);
@@ -369,7 +456,7 @@ int main(int argc, char** argv)
     }
 
 
-    LocalizerSwitch localizer_switch(nh, private_nh, topicListArray);
+    LocalizerSwitch localizer_switch(nh, private_nh, topicListArray, localizer_select);
 	ros::Rate rate(100);
     while(ros::ok())
     {

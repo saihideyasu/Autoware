@@ -104,7 +104,7 @@ public:
 		pub_voxelGridFilter_ = nh.advertise<autoware_config_msgs::ConfigVoxelGridFilter>("/config/voxel_grid_filter",10);
 		pub_roi_signal_ = nh.advertise<autoware_msgs::Signals>("/loader_roi_signal",10);
 		pub_waypoint_param_ = nh_.advertise<autoware_msgs::WaypointParam>("/waypoint_param", 1);
-		pub_fusion_select_ = nh_.advertise<autoware_config_msgs::ConfigLocalizerSwitchFusion>("/config/fusion_select", 1);
+		pub_fusion_select_ = nh_.advertise<autoware_config_msgs::ConfigLocalizerSwitchFusion>("/config/localizer_switch", 1);
 		pub_look_ahead_ = nh_.advertise<autoware_config_msgs::ConfigLookAhead>("/config/look_ahead", 1);
 		pub_look_ahead_ratio_magn_ = nh_.advertise<std_msgs::Float64>("/lookahead_ratio_magn", 1);
 		sub_local_waypoint_ = nh_.subscribe("/final_waypoints", 10, &WaypointMaker::callback_local_waypoints, this);

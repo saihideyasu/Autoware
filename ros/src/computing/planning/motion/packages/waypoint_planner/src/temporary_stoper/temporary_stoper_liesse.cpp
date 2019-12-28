@@ -154,9 +154,9 @@ private:
 		if(distance_ >= 0)
 		{
 			if(distance_ <= 1) l.waypoints[0].twist.twist.linear.x = 0;
-			else if(distance_ <= 20.0)
+			else if(distance_ <= 40.0)
 			{
-				for(int i=0; i<stop_index-1; i++)
+				for(int i=0; i<stop_index/*-1*/; i++)
 				{
 					int ind = i + (int)front_bumper_to_baselink_;
 					if(ind >= l.waypoints.size()) break;

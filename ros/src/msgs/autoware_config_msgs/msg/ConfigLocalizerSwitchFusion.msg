@@ -1,2 +1,3 @@
 Header header
 uint8 fusion_select
+float64 localizer_distance_th

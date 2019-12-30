@@ -78,6 +78,10 @@ add_executable(ndt_matching nodes/ndt_matching/ndt_matching.cpp)
 target_link_libraries(ndt_matching ${catkin_LIBRARIES})
 add_dependencies(ndt_matching ${catkin_EXPORTED_TARGETS})
 
+add_executable(ndt_matching12 nodes/ndt_matching/ndt_matching12.cpp)
+target_link_libraries(ndt_matching12 ${catkin_LIBRARIES})
+add_dependencies(ndt_matching12 ${catkin_EXPORTED_TARGETS})
+
 add_executable(ndt_matching_gnss_subscribe nodes/ndt_matching/ndt_matching_gnss_subscribe.cpp)
 target_link_libraries(ndt_matching_gnss_subscribe ${catkin_LIBRARIES})
 add_dependencies(ndt_matching_gnss_subscribe ${catkin_EXPORTED_TARGETS})
@@ -88,6 +92,7 @@ add_dependencies(ndt_mapping ${catkin_EXPORTED_TARGETS})
 
 if (CUDA_FOUND)
     target_include_directories(ndt_matching PRIVATE ${CUDA_INCLUDE_DIRS})
+    target_include_directories(ndt_matching12 PRIVATE ${CUDA_INCLUDE_DIRS})
     target_include_directories(ndt_matching_gnss_subscribe PRIVATE ${CUDA_INCLUDE_DIRS})
     target_include_directories(ndt_mapping PRIVATE ${CUDA_INCLUDE_DIRS})
 endif ()
@@ -149,6 +154,7 @@ add_dependencies(imu_tidy ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS
             ndt_matching
+			ndt_matching12
             ndt_matching_gnss_subscribe
             ndt_mapping
             approximate_ndt_mapping

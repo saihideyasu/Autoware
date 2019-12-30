@@ -148,7 +148,7 @@ private:
   ros::NodeHandle private_nh_;
 
   // publisher
-  ros::Publisher pub1_;
+  ros::Publisher pub1_, pub_can_velocity_;
 
   // subscriber
   ros::Subscriber sub1_;

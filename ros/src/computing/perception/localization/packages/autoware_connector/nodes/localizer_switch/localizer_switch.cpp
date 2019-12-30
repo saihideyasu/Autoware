@@ -305,7 +305,7 @@ private:
                 }
                 localizer_select_num_ = 0;
                 std_msgs::Int32 lsn;
-                lsn.data = localizer_select_num_;
+                lsn.data = 0;
                 pub_localizer_select_num_.publish(lsn);
                 break;
             }
@@ -318,7 +318,7 @@ private:
                 }
                 localizer_select_num_ = 1;
                 std_msgs::Int32 lsn;
-                lsn.data = localizer_select_num_;
+                lsn.data = 1;
                 pub_localizer_select_num_.publish(lsn);
                 break;
             }
@@ -333,10 +333,10 @@ private:
                     }
                     localizer_select_num_ = 0;
                     std_msgs::Int32 lsn;
-                    lsn.data = localizer_select_num_;
+                    lsn.data = 10;
                     pub_localizer_select_num_.publish(lsn);
-                    break;
                 }
+                break;
             }
         case 11:
             {
@@ -349,10 +349,30 @@ private:
                     }
                     localizer_select_num_ = 1;
                     std_msgs::Int32 lsn;
-                    lsn.data = localizer_select_num_;
+                    lsn.data = 11;
                     pub_localizer_select_num_.publish(lsn);
-                    break;
                 }
+                break;
+            }
+        case 20:
+            {
+                if(localizer_select_num_ != 0)
+                {
+                    std_msgs::Int32 lsn;
+                    lsn.data = -1;
+                    pub_localizer_select_num_.publish(lsn);
+                }
+                break;
+            }
+        case 21:
+            {
+                if(localizer_select_num_ != 1)
+                {
+                    std_msgs::Int32 lsn;
+                    lsn.data = -1;
+                    pub_localizer_select_num_.publish(lsn);
+                }
+                break;
             }
         }
     }

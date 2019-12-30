@@ -6,10 +6,12 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
+#include <std_msgs/Int32.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <autoware_can_msgs/MicroBusCan503.h>
+#include <autoware_msgs/LocalizerMatchStat.h>
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
 #include <autoware_config_msgs/ConfigMicrobusInterface.h>
@@ -43,6 +45,8 @@ private:
     ros::Subscriber sub_can_status_;//canステータス情報
     ros::Subscriber sub_distance_angular_check_;//経路と自車位置のチェック用
     ros::Subscriber sub_config_;
+    ros::Subscriber sub_localizer_select_;//localizerの遷移状態 
+    ros::Subscriber sub_localizer_match_stat_;
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
@@ -50,6 +54,8 @@ private:
     void callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg);//canステータス
     void callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg);
+    void callbackLocalizerSelect(const std_msgs::Int32 &msg);//localizerの遷移状態 
+    void callbackLocalizerMatchStat(const autoware_msgs::LocalizerMatchStat &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
@@ -58,6 +64,8 @@ private:
     autoware_msgs::DifferenceToWaypointDistance distance_angular_check_;
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
     autoware_config_msgs::ConfigMicrobusInterface config_;
+    int localizer_select_;
+    autoware_msgs::LocalizerMatchStat localizer_match_stat_;
 
     bool error_text_lock_;
 
@@ -67,7 +75,9 @@ private:
     QPalette palette_angle_limit_over_ok_, palette_angle_limit_over_error_;//ハンドル回転司令チェック用テキストボックスのパレット
     QPalette palette_drive_clutch_connect_, palette_drive_clutch_cut_;//ドライブクラッチのテキストボックスパレット
     QPalette palette_steer_clutch_connect_, palette_steer_clutch_cut_;//ハンドルクラッチのテキストボックスパレット
-    QPalette palette_distance_angular_ok_, palette_distance_angular_error_;
+    QPalette palette_distance_angular_ok_, palette_distance_angular_error_;//経路との距離と角度チェックのテキストボックスパレット
+    QPalette palette_localizer_select_ok_, palette_localizer_select_error_;//localizerの遷移状態のテキストボックスパレット
+
 private slots:
     void publish_emergency_clear();
     void publish_Dmode_manual();

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1066</width>
-    <height>716</height>
+    <height>738</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>10</x>
       <y>30</y>
       <width>691</width>
-      <height>631</height>
+      <height>641</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -321,7 +321,7 @@
       </widget>
       <widget class="QGroupBox" name="gb_velocity">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -792,6 +792,9 @@
         <bool>false</bool>
        </property>
        <widget class="QSpinBox" name="spin_velocity_input">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>60</x>
@@ -802,6 +805,9 @@
         </property>
        </widget>
        <widget class="QSlider" name="hS_velocity_input">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -893,7 +899,7 @@
       </widget>
       <widget class="QGroupBox" name="gb_stroke">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1364,6 +1370,9 @@
         <bool>false</bool>
        </property>
        <widget class="QSpinBox" name="spin_stroke_input">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>60</x>
@@ -1374,6 +1383,9 @@
         </property>
        </widget>
        <widget class="QSlider" name="hS_stroke_input">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -2342,7 +2354,7 @@
       </widget>
       <widget class="QGroupBox" name="gb_angle">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -2813,6 +2825,9 @@
         <bool>false</bool>
        </property>
        <widget class="QSpinBox" name="spin_angle_input">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>60</x>
@@ -2823,6 +2838,9 @@
         </property>
        </widget>
        <widget class="QSlider" name="hS_angle_input">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -3365,7 +3383,7 @@
        </property>
       </widget>
      </widget>
-     <widget class="QLabel" name="lb_waypoint_num">
+     <widget class="QLabel" name="lb_localizer_select">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -3375,16 +3393,16 @@
        </rect>
       </property>
       <property name="text">
-       <string>input mode</string>
+       <string>localizer</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="tx_waypoint_num">
+     <widget class="QTextEdit" name="tx_localizer_select">
       <property name="geometry">
        <rect>
-        <x>100</x>
+        <x>90</x>
         <y>550</y>
-        <width>121</width>
-        <height>41</height>
+        <width>251</width>
+        <height>31</height>
        </rect>
       </property>
       <property name="autoFillBackground">
@@ -3404,6 +3422,47 @@
       </property>
       <property name="textInteractionFlags">
        <set>Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="tx_localizer_match_stat">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>580</y>
+        <width>251</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="lineWidth">
+       <number>0</number>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lb_localizer_match_stat">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>590</y>
+        <width>101</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>match stat</string>
       </property>
      </widget>
     </widget>

@@ -123,6 +123,7 @@ private:
 		ros::Time now_time = ros::Time::now();
 		if(timer_ < now_time)
 		{
+//			std::cout << "distance_1 : " << distance_ << std::endl;
 			if(stop_waypoint_id_ == lane.waypoints[stop_index].waypoint_param.id)
 			{
 				flag.data = 2;
@@ -132,20 +133,86 @@ private:
 			else
 			{
 				stop_waypoint_id_ = 0;
-				//if(can_.velocity_actual <= config_.stop_speed_threshold)
+				//if(can_.velocity_actual <= config_.stop_speed_threshold)   //幅を持たせなくてよいか？
 				if(current_velocity_.twist.linear.x <= config_.stop_speed_threshold
-				        && distance_ <= 2.5)
+				        && distance_ <= 0.5 && distance_ >=0)
 				{
 					stop_waypoint_id_ = lane.waypoints[stop_index].waypoint_param.id;
 					timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
+//					std::cout << "distance_0 : " << distance_ << std::endl;
 					std::cout << "time : " << timer_.sec << "," << now_time.sec << std::endl;
 				}
 				flag.data = 1;//停止判定あり
 				pub_temporari_flag_.publish(flag);
 			}
 		}
+		// front バンパーが一時停止線にあるときに、ベースリンクに一番近い2個のwaypointのうち前のもの。
+		// ≒ stop_index - 5
+		double stop_line_to_baselink = 0;
+		int stop_line_to_baselink_index;
+		for(int cou=stop_index; cou>=1; cou--)
+		{
+			double x1 = lane.waypoints[cou].pose.pose.position.x;
+			double y1 = lane.waypoints[cou].pose.pose.position.y;
+			double x2 = lane.waypoints[cou-1].pose.pose.position.x;
+			double y2 = lane.waypoints[cou-1].pose.pose.position.y;
+			double sx = x1-x2,  sy = y1-y2;
+			stop_line_to_baselink += sqrt(sx*sx + sy*sy);
+			if(stop_line_to_baselink >= front_bumper_to_baselink_)
+			{
+				stop_line_to_baselink_index = cou;//+1;
+				break;
+			}
+		}
+		if(stop_line_to_baselink < front_bumper_to_baselink_)
+		{
+			autoware_msgs::Lane l = lane;
+			l.waypoints[0].twist.twist.linear.x = 0;
+			return l;
+		}
+		
+		autoware_msgs::Lane l;
+		l = apply_acceleration(lane, acceleration, stop_line_to_baselink_index /*stop_index*/, behind_cnt + 1, 0);
+		std::reverse(l.waypoints.begin(), l.waypoints.end());
+		int reverse_stop_index = l.waypoints.size() - stop_line_to_baselink_index - 1;
+		l = apply_acceleration(l, acceleration, reverse_stop_index, ahead_cnt + 1, 0);
+		std::reverse(l.waypoints.begin(), l.waypoints.end());
+		
+		/*double front_bumper_euc = 0;
+		int front_bumper_point;
+		for(int cou=0; cou<lane.waypoints.size(); cou++)
+		{
+			double x1 = lane.waypoints[cou].pose.pose.position.x;
+			double y1 = lane.waypoints[cou].pose.pose.position.y;
+			double x2 = lane.waypoints[cou+1].pose.pose.position.x;
+			double y2 = lane.waypoints[cou+1].pose.pose.position.y;
+			double sx = x1-x2,  sy = y1-y2;
+			front_bumper_euc += sqrt(sx*sx + sy*sy);
+			if(front_bumper_euc >= front_bumper_to_baselink_)
+			{
+				front_bumper_point = cou;//+1;
+				break;
+			}
+		}
+		if(front_bumper_euc < front_bumper_to_baselink_)
+		{
+			autoware_msgs::Lane l = lane;
+			l.waypoints[0].twist.twist.linear.x = 0;
+			return l;
+		}
 
-		autoware_msgs::Lane l = apply_acceleration(lane, acceleration, stop_index, behind_cnt + 1, 0);
+		double front_bumper_to_stop_euc = 0;
+		for(int cou=front_bumper_point; cou<stop_index; cou++)
+		{
+			double x1 = lane.waypoints[cou].pose.pose.position.x;
+			double y1 = lane.waypoints[cou].pose.pose.position.y;
+			double x2 = lane.waypoints[cou+1].pose.pose.position.x;
+			double y2 = lane.waypoints[cou+1].pose.pose.position.y;
+			double sx = x1-x2,  sy = y1-y2;
+			front_bumper_to_stop_euc += sqrt(sx*sx + sy*sy);
+		}*/
+
+		/*autoware_msgs::Lane l = apply_acceleration(lane, acceleration, stop_index -5, behind_cnt + 1, 0);
 		std::reverse(l.waypoints.begin(), l.waypoints.end());
 		int reverse_stop_index = l.waypoints.size() - stop_index - 1;
 		l = apply_acceleration(l, acceleration, reverse_stop_index, ahead_cnt + 1, 0);
@@ -156,14 +223,14 @@ private:
 			if(distance_ <= 1) l.waypoints[0].twist.twist.linear.x = 0;
 			else if(distance_ <= 40.0)
 			{
-				for(int i=0; i<stop_index/*-1*/; i++)
+				for(int i=0; i<stop_index; i++)
 				{
 					int ind = i + (int)front_bumper_to_baselink_;
 					if(ind >= l.waypoints.size()) break;
 					l.waypoints[i].twist.twist.linear.x = l.waypoints[ind].twist.twist.linear.x;
 				}
 			}
-		}
+		}*/
 		return l;
 	}
 
@@ -195,9 +262,9 @@ private:
 	}
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
-	    : stop_waypoint_id_(0)
+	    : stop_waypoint_id_(100)//0
 	    , stop_time_(5.0)
-	    , distance_(0.0)
+	    , distance_(1000.0)//0.0
 	{
 		nh_ = nh;  private_nh_ = p_nh;
 

@@ -3,7 +3,8 @@
 
 MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    localizer_select_(-1)
 {
     ui->setupUi(this);
 
@@ -14,6 +15,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_drive_clutch_connect_ = ui->tx_drive_clutch->palette();
     palette_steer_clutch_connect_ = ui->tx_steer_clutch->palette();
     palette_distance_angular_ok_ = ui->tx_distance_check->palette();
+    palette_localizer_select_ok_ = ui->tx_localizer_select->palette();
     palette_drive_mode_error_ = palette_drive_mode_ok_;
     palette_steer_mode_error_ = palette_steer_mode_ok_;
     palette_position_check_error_ = palette_position_check_ok_;
@@ -21,6 +23,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_drive_clutch_cut_ = palette_drive_clutch_connect_;
     palette_steer_clutch_cut_ = palette_steer_clutch_connect_;
     palette_distance_angular_error_ = palette_distance_angular_ok_;
+    palette_localizer_select_error_ = palette_localizer_select_ok_;
     palette_drive_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_position_check_error_.setColor(QPalette::Base, QColor("#FF0000"));
@@ -29,6 +32,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_steer_clutch_cut_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_distance_angular_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_distance_angular_ok_.setColor(QPalette::Base, QColor("#0000FF"));
+    palette_localizer_select_error_.setColor(QPalette::Base, QColor("#FF0000"));
 
     connect(ui->bt_emergency_clear, SIGNAL(clicked()), this, SLOT(publish_emergency_clear()));
     connect(ui->bt_drive_mode_manual, SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
@@ -64,6 +68,9 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can_status_ = nh_.subscribe("/microbus/can_sender_status", 10, &MainWindow::callbackCanStatus, this);
     sub_distance_angular_check_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &MainWindow::callbackDistanceAngularCheck, this);
     sub_config_ = nh_.subscribe("/config/microbus_interface", 10, &MainWindow::callbackConfig, this);
+    sub_localizer_select_ = nh_.subscribe("/localizer_select_num", 10, &MainWindow::callbackLocalizerSelect, this);
+    sub_localizer_match_stat_ = nh_.subscribe("/microbus/localizer_match_stat", 10, &MainWindow::callbackLocalizerMatchStat, this);
+ 
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.baselink_distance = 10000;
@@ -95,6 +102,19 @@ void MainWindow::window_updata()
     if(unlock_flag)
     {
         //driveモードの状態
+        std::stringstream str_drive_target;
+        str_drive_target << can501_.velocity;
+        ui->tx_stroke_target->setText(str_drive_target.str().c_str());
+
+        double stroke = PEDAL_VOLTAGE_CENTER_ - can503_.pedal_voltage;
+        std::stringstream str_drive_actual;
+        str_drive_actual << stroke;
+        ui->tx_stroke_actual->setText(str_drive_actual.str().c_str());
+
+        std::stringstream str_velocity;
+        str_velocity << can502_.velocity_actual / 100;
+        ui->tx_velocity_actual->setText(str_velocity.str().c_str());
+
         if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
         {
             ui->tx_drive_mode->setPalette(palette_drive_mode_ok_);
@@ -106,29 +126,29 @@ void MainWindow::window_updata()
 
             if(can501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
             {
-                ui->gb_velocity->setEnabled(true);
-                ui->gb_stroke->setEnabled(false);
+                //ui->gb_velocity->setEnabled(true);
+                //ui->gb_stroke->setEnabled(false);
                 ui->tx_drive_control_mode->setText("velocity");
             }
             else if(can501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_STROKE)
             {
-                ui->gb_velocity->setEnabled(false);
-                ui->gb_stroke->setEnabled(true);
+                //ui->gb_velocity->setEnabled(false);
+                //ui->gb_stroke->setEnabled(true);
                 ui->tx_drive_control_mode->setText("stroke");
 
-                std::stringstream str_target;
+                /*std::stringstream str_target;
                 str_target << can501_.velocity;
                 ui->tx_stroke_target->setText(str_target.str().c_str());
 
                 double stroke = PEDAL_VOLTAGE_CENTER_ - can503_.pedal_voltage;
                 std::stringstream str_actual;
                 str_actual << stroke;
-                ui->tx_stroke_actual->setText(str_actual.str().c_str());
+                ui->tx_stroke_actual->setText(str_actual.str().c_str());*/
             }
             else
             {
-                ui->gb_velocity->setEnabled(false);
-                ui->gb_stroke->setEnabled(false);
+                //ui->gb_velocity->setEnabled(false);
+                //ui->gb_stroke->setEnabled(false);
                 ui->tx_drive_control_mode->setText("undefined");
             }
         }
@@ -141,8 +161,8 @@ void MainWindow::window_updata()
             ui->bt_drive_input_mode_direct->setEnabled(false);
             ui->bt_drive_input_mode_autoware->setEnabled(false);
             ui->tx_drive_input_mode->setText("");
-            ui->gb_velocity->setEnabled(false);
-            ui->gb_stroke->setEnabled(false);
+            //ui->gb_velocity->setEnabled(false);
+            //ui->gb_stroke->setEnabled(false);
 
             if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_V0)
             {
@@ -169,30 +189,37 @@ void MainWindow::window_updata()
             }
         }
 
-
         //steerモードの状態
+        std::stringstream str_steer_target;
+        str_steer_target << can501_.steering_angle;
+        ui->tx_angle_target->setText(str_steer_target.str().c_str());
+
+        std::stringstream str_steer_actual;
+        str_steer_actual << can502_.angle_actual;
+        ui->tx_angle_actual->setText(str_steer_actual.str().c_str());
+        
         if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
         {
             ui->tx_steer_mode->setPalette(palette_steer_mode_ok_);
             ui->tx_steer_mode->setText("auto");
             ui->bt_steer_input_mode_direct->setEnabled(true);
             ui->bt_steer_input_mode_autoware->setEnabled(true);
-            ui->gb_angle->setEnabled(true);
+            //ui->gb_angle->setEnabled(true);
 
-            std::stringstream str_target;
+            /*std::stringstream str_target;
             str_target << can501_.steering_angle;
             ui->tx_angle_target->setText(str_target.str().c_str());
 
             std::stringstream str_actual;
             str_actual << can502_.angle_actual;
-            ui->tx_angle_actual->setText(str_actual.str().c_str());
+            ui->tx_angle_actual->setText(str_actual.str().c_str());*/
         }
         else
         {
             ui->bt_steer_input_mode_direct->setEnabled(false);
             ui->bt_steer_input_mode_autoware->setEnabled(false);
             ui->tx_steer_input_mode->setText("");
-            ui->gb_angle->setEnabled(false);
+            //ui->gb_angle->setEnabled(false);
 
             if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_V0)
             {
@@ -327,11 +354,55 @@ void MainWindow::window_updata()
         ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_error_);
     }
+
+    {
+        std::stringstream str;
+        switch(localizer_select_)
+        {
+            case 0:
+                ui->tx_localizer_select->setText("NDT+ODOM");
+                ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                break;
+            case 10:
+                ui->tx_localizer_select->setText("GNSS+GYLO->NDT+ODOM");
+                ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                break;
+            case 1:
+                ui->tx_localizer_select->setText("GNSS+GYLO");
+                ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                break;
+            case 11:
+                ui->tx_localizer_select->setText("NDT+ODOM->GNSS+GYLO");
+                ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                break;
+            default:
+                ui->tx_localizer_select->setText("distance too large");
+                ui->tx_localizer_select->setPalette(palette_localizer_select_error_);
+        }
+        
+    }
+
+    {
+        std::stringstream str;
+        std::string stat = (localizer_match_stat_.localizer_stat == true) ? "true" : "false";
+        str << stat << "," << localizer_match_stat_.localizer_distance;
+        ui->tx_localizer_match_stat->setText(str.str().c_str());
+    }
 }
 
 void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg)
 {
     config_ = msg;
+}
+
+void MainWindow::callbackLocalizerSelect(const std_msgs::Int32 &msg)
+{
+    localizer_select_ = msg.data;
+}
+
+void MainWindow::callbackLocalizerMatchStat(const autoware_msgs::LocalizerMatchStat &msg)
+{
+    localizer_match_stat_ = msg;
 }
 
 void MainWindow::callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg)

@@ -273,7 +273,7 @@ private:
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_, pub_estimate_stopper_distance_;
-	ros::Publisher pub_localizer_match_stat_;
+	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -342,6 +342,22 @@ private:
 	void callbackLocalizerSelectNum(const std_msgs::Int32::ConstPtr msg)
 	{
 		localizer_select_num_ = msg->data;
+
+		if(localizer_select_num_ < 0)
+		{
+			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+				drive_clutch_ = false;
+			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+				steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
+			std::cout << "Denger! localizer change error" << std::endl;
+			std::stringstream safety_error_message;
+			safety_error_message << "localizer change error";
+			publisStatus(safety_error_message.str());
+			can_send();
+		}
 	}
 
 	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
@@ -663,6 +679,7 @@ private:
 
 		autoware_msgs::LocalizerMatchStat lms;
 		lms.header.stamp = ros::Time::now();
+		std::cout << "stat : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
 		if(ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK")
 		{
 			lms.localizer_stat = true;
@@ -1144,8 +1161,8 @@ private:
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 
-//		if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
-//			current_velocity >= 10.0 && ret > 0) ret = 0;
+		//if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
+		//	current_velocity >= 10.0 && ret > 0) ret = 0;
 
 		if(pid_params.get_stroke_prev() < 0 && ret >= 0)
 		{
@@ -1254,13 +1271,14 @@ private:
 			pid_params.clear_diff_distance();
 		}
 */
-/*
 
+		const double stop_stroke = 330.0;
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
 			std::cout << "tbs," << target_brake_stroke;
-			double d = 500 - target_brake_stroke;
-			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
+			double d = stop_stroke - target_brake_stroke;
+			if(d < 0) d = 0;
+ 			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
 		}
 		else if(stopper_distance_ >= 2 && stopper_distance_ <= 8)
@@ -1268,7 +1286,8 @@ private:
 			if(current_velocity > 5.0)
 			{
 				std::cout << "tbs," << target_brake_stroke;
-				double d = 500 - target_brake_stroke;
+				double d = stop_stroke - target_brake_stroke;
+				if(d < 0) d = 0;
 				target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
 			}
@@ -1276,11 +1295,24 @@ private:
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 			}
 		}
-		else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
+		else
+		 if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
 		{
 			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 			step = 0.5;
-			target_brake_stroke = 0.0 + 500 * (2.0 - stopper_distance_)/2.0;
+			target_brake_stroke = 0.0 + stop_stroke * (2.0 - stopper_distance_)/2.0;
+		}
+/*
+		if(stopper_distance_ >= 0.5 && stopper_distance_ <= 3 && current_velocity >= 0.1 && target_brake_stroke < 330)
+		{
+			double d = 400 - target_brake_stroke;
+			if(d < 0) d = 0;
+ 			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
+		}
+
+		if(stopper_distance_ >= 0 && stopper_distance_ <= 0.5 && current_velocity < 0.1 && target_brake_stroke > 330)
+		{
+			target_brake_stroke = 500;
 		}
 */
 /*
@@ -1304,18 +1336,28 @@ private:
 						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
 			}
 		}
+		*/
+/*
+		bool lessthan2 = false;
+		static double target_brake_stroke_old=0;
+		if(stopper_distance_ <= 30 && stopper_distance_ >0)
+		{		
+				double d = ( 300 > target_brake_stroke) ? 300 - target_brake_stroke:300;
+				target_brake_stroke  += d * (1 - stopper_distance_/ 30.0 );
+		}
 */
+/*
+		bool lessthan2 = false;
+		static double target_brake_stroke_old=0;
 		if(stopper_distance_ <= 30 && stopper_distance_ >0)
 		{
 			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
 			{
-				std::cout << "tbs," << target_brake_stroke;
-				double d = 500 - target_brake_stroke;
+
+				double d = 300 - target_brake_stroke;
 				target_brake_stroke  += d * (1 - stopper_distance_/ 30.0 );
-				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
-				pid_params.set_stop_stroke_prev(target_brake_stroke);// .set_stroke_prev(target_brake_stroke);
 			}
-			else if(stopper_distance_ >= 2  && fabs(jurk2_twist_) < 10)
+			else if(stopper_distance_ >= 2 && fabs(jurk2_twist_) < 10)
 			{
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 				double mps = current_velocity /3.6;
@@ -1330,15 +1372,21 @@ private:
 				double P_d = -13;
 				double e_d = stopper_distance_ - estimated_stopping_distance; 
 			//	target_brake_stroke += e_d * P_d;
-
 			}
-			else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
+			else if(stopper_distance_ >= 0 && stopper_distance_ < 2 )
 			{
-						step = 0.5;
-						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
+					if(!lessthan2)
+					{
+						target_brake_stroke_old = pid_params.get_stop_stroke_prev();
+						lessthan2 = true;
+					}
+					step = 0.5;
+					//double d = (300 > target_brake_stroke_old) ? 300- target_brake_stroke_old:300;
+					//target_brake_stroke = target_brake_stroke_old +  d * (2.0 - stopper_distance_)/2.0;
+					target_brake_stroke = target_brake_stroke_old +  500 * (2.0 - stopper_distance_)/2.0;
 			}
 		}
-
+*/
 
 
 /*
@@ -1551,11 +1599,10 @@ std::cout << "auto_mode" << std::endl;
 			//加速判定
 			double accel_mode_avoidance_distance_ = (current_velocity > 30) ? current_velocity:30;
 			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
-			        && fabs(cmd_velocity) > 0.0
 			        && current_velocity < setting_.velocity_limit
 			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance_))
 			{
-				std::cout << "yosou stroke drive" << std::endl;
+				std::cout << " stroke drive" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
 			}
 			//減速判定
@@ -1595,16 +1642,21 @@ std::cout << "auto_mode" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_KEEP_);
 			}
 
+			std_msgs::String routine;
 			switch(pid_params.get_stroke_state_mode_())
 			{
 			case PID_params::STROKE_STATE_MODE_ACCEL_:
 				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);//, &stroke_speed);
+								routine.data = "accel";
+				pub_stroke_routine_.publish(routine);
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
 				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);//, &stroke_speed);
 				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
 					new_stroke > pid_params.get_stroke_prev())
 						new_stroke = pid_params.get_stroke_prev();*/
+				routine.data = "brake";
+				pub_stroke_routine_.publish(routine);
 				break;
 			case PID_params::STROKE_STATE_MODE_STOP_:
 				new_stroke = _stopping_control(current_velocity);
@@ -1732,6 +1784,7 @@ public:
 	    , jurk2_twist_(0)
 	    , angle_limit_over_(false)
 	    , steer_correction_(0)
+		, localizer_select_num_(1)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -1769,7 +1822,8 @@ public:
 		pub_acceleration_write_ = nh_.advertise<std_msgs::String>("/microbus/acceleration_write", 1);
 		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
 		pub_localizer_match_stat_ = nh_.advertise<autoware_msgs::LocalizerMatchStat>("/microbus/localizer_match_stat", 1);
-	
+		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);
+
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
 		sub_microbus_steer_mode_ = nh_.subscribe("/microbus/steer_mode_send", 10, &kvaser_can_sender::callbackSModeSend, this);
 		sub_twist_cmd_ = nh_.subscribe("/vehicle_cmd", 10, &kvaser_can_sender::callbackTwistCmd, this);

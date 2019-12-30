@@ -57,6 +57,7 @@ void CanOdometryNode::initForROS()
   sub_bus_ = nh_.subscribe("/microbus/can_receive502", 10, &CanOdometryNode::callbackFromVehicleStatus_microbus, this);
   // setup publisher
   pub1_ = nh_.advertise<nav_msgs::Odometry>("/vehicle/odom", 10);
+  pub_can_velocity_ = nh_.advertise<geometry_msgs::TwistStamped>("/can_velocity", 10);
 }
 
 void CanOdometryNode::run()
@@ -138,6 +139,17 @@ void CanOdometryNode::callbackFromVehicleStatus_microbus(const autoware_can_msgs
 
 	// publish the message
 	pub1_.publish(odom);
+
+  geometry_msgs::TwistStamped twist;
+  twist.header.frame_id = "can";
+  twist.header.stamp = msg->header.stamp;
+  twist.twist.linear.x = vx;
+  twist.twist.linear.y = 0;
+  twist.twist.linear.z = 0;
+  twist.twist.angular.x = 0;
+  twist.twist.angular.y = 0;
+  twist.twist.angular.z = vth;
+  pub_can_velocity_.publish(twist);
 }
 
 }  // autoware_connector

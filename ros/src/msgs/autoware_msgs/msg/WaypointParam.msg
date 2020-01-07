@@ -23,10 +23,11 @@ int16 microbus_pedal
 int16 microbus_angle
 int8 automatic_door
 int8 signal_stop_line
-int8 temporary_stop_line
+float64 temporary_stop_line
 int8 fusion_select
 float64 steer_correction
 float32 lookahead_ratio
 float32 minimum_lookahead_distance
 float32 lookahead_ratio_magn
+int8 steer_pid_on
 LiesseXZB70MParam liesse

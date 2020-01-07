@@ -89,6 +89,10 @@ subs :
           dialog_height : 350
           flags: [ SIGTERM, kill_children ]
 
+      - name : Mobileye
+        desc : Mobileye
+        run  : roslaunch runtime_manager mobileye.launch
+        param : mobileye
   - name : GNSS
     desc : GNSS desc sample
     subs :
@@ -1907,3 +1911,32 @@ params :
       cmd_param :
         dash      : ''
         delim     : ':='
+
+  - name : mobileye
+    vars :
+    - name  : kvaser_channel
+      desc  : kvaser_channel desc sample
+      label : kvaser_channel
+      kind    : menu
+      choices : [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10' ]
+      choices_type : str
+      v       : '0'
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : can_circuit_i
+      label : can_circuit_i
+      desc  : can_circuit_i
+      kind  : str
+      v     : '59879'
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : can_bit_rate
+      label : can_bit_rate
+      desc  : can_bit_rate
+      kind  : str
+      v     : '50000'
+      cmd_param :
+        dash        : ''
+        delim       : ':='

@@ -281,7 +281,7 @@ private:
 
     void localizer_match_stat_callback(const autoware_msgs::LocalizerMatchStatConstPtr &msg)
     {
-        if(msg->localizer_stat == true && msg->localizer_distance <= config_.localizer_distance_th)
+        if(msg->localizer_stat == true)
         {
             localizer_match_flag = true;
         }

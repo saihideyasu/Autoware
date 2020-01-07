@@ -31,6 +31,8 @@
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
 #include <autoware_msgs/NDTStat.h>
 #include <autoware_msgs/LocalizerMatchStat.h>
+#include <autoware_msgs/VehicleStatus.h>
+#include <tf/tf.h>
 #include "kvaser_can.h"
 #include <time.h>
 
@@ -273,7 +275,7 @@ private:
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_, pub_estimate_stopper_distance_;
-	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_;
+	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_, pub_vehicle_status_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -336,7 +338,10 @@ private:
 	int localizer_select_num_;
 	ros::Time automatic_door_time_;
 	ros::Time blinker_right_time_, blinker_left_time_, blinker_stop_time_;
-
+	double waypoint_id_ = -1;
+	tf::Quaternion waypoint_orientation_;
+	double ndt_gnss_angle_, waypoint_angle_;
+	tf::Quaternion waypoint_localizer_angle_;
 	waypoint_param_geter wpg_;
 
 	void callbackLocalizerSelectNum(const std_msgs::Int32::ConstPtr msg)
@@ -362,7 +367,8 @@ private:
 
 	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
-		if(fabs(msg->baselink_distance) > 2.0 || fabs(msg->baselink_angular) > 30.0)
+		if(fabs(msg->baselink_distance) > setting_.difference_to_waypoint_distance || 
+		    fabs(msg->baselink_angular) > setting_.difference_to_waypoint_angular)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -381,6 +387,7 @@ private:
 		difference_toWaypoint_distance_ = *msg;
 	}
 
+
 	void NdtGnssCheck()
 	{
 		bool flag = true;
@@ -390,10 +397,54 @@ private:
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
 		double gnssx = gnss_pose_.pose.position.x;
-		double gnssy = gnss_pose_.pose.position.y;
-		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
+		double gnssy = gnss_pose_.pose.position.y; 
+		double diff_x = ndtx - gnssx;
+		double diff_y = ndty - gnssy;	
+		double distance = sqrt(diff_x * diff_x + diff_y* diff_y);
+		diff_x /= distance;
+		diff_y /= distance;
+		ndt_gnss_angle_ = atan2(diff_x,diff_y);//map座標系はｘが上
+		tf::Quaternion localize_qua;
+		localize_qua.setRPY(0,0,ndt_gnss_angle_);
+		waypoint_localizer_angle_ = waypoint_orientation_ * localize_qua.inverse();
 		//if(distance >= 0.5) flag = false;//0.5
+		double wla_roll, wla_pitch, wla_yaw;
+		tf::Matrix3x3 mat_waypoint_localizer_angle_(waypoint_localizer_angle_);
+		mat_waypoint_localizer_angle_.getRPY(wla_roll, wla_pitch, wla_yaw);
+		double waypoint_localizer_angle_deg = wla_yaw * 180.0 / M_PI;
 
+		autoware_msgs::LocalizerMatchStat lms;
+		lms.header.stamp = ros::Time::now();
+
+		std::string gnss_stat_string = (gnss_stat_ & 0x3) ? "GNSS_OK" : "GNSS_ERROR";
+		std::cout << "stat : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
+
+		bool ndt_gnss_difference_stat = false;
+		if(setting_.ndt_gnss_min_distance_limit <= distance)
+		{
+			ndt_gnss_difference_stat = true;
+		}
+		else if(setting_.ndt_gnss_max_distance_limit <= distance)
+		{
+			if( waypoint_localizer_angle_deg > 180 - setting_.ndt_gnss_angle_limit 
+			   || waypoint_localizer_angle_deg < -180 +  setting_.ndt_gnss_angle_limit)
+			   {
+					ndt_gnss_difference_stat = true;
+			   }
+		}
+
+		if(ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK" && ndt_gnss_difference_stat)
+		{
+			lms.localizer_stat = true;
+			//lms.localizer_distance = distance;
+		}
+		else
+		{
+			lms.localizer_stat = false;
+			//lms.localizer_distance = distance;
+		}
+
+		pub_localizer_match_stat_.publish(lms);
 
 		if(flag == false)
 		{
@@ -610,7 +661,7 @@ private:
 	                       const geometry_msgs::PoseStampedConstPtr &pose_msg)
 	{
 		std::cout << "current velocity : " << twist_msg->twist.linear.x << std::endl;
-		std::cout << "current pose : " << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << std::endl;
+		std::cout << "current pose : "     << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << std::endl;
 
 		ros::Duration rostime = twist_msg->header.stamp - current_velocity_.header.stamp;
 		double td = rostime.sec + rostime.nsec * 1E-9;
@@ -676,22 +727,10 @@ private:
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
 		str <<","<<ndtx <<"," <<ndty <<"," << gnssx<<"," << gnssy <<"," << distance;
 
-
-		autoware_msgs::LocalizerMatchStat lms;
-		lms.header.stamp = ros::Time::now();
-		std::cout << "stat : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
-		if(ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK")
-		{
-			lms.localizer_stat = true;
-			lms.localizer_distance = distance;
-		}
-		else
-		{
-			lms.localizer_stat = false;
-			lms.localizer_distance = distance;
-		}
-		pub_localizer_match_stat_.publish(lms);
-
+		double roll, pitch, yaw;
+		tf::Matrix3x3 wla(waypoint_localizer_angle_);
+		wla.getRPY(roll, pitch, yaw);
+		str << "," <<  waypoint_angle_ <<"," << ndt_gnss_angle_ << "," << yaw;
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
 		pub_acceleration_write_.publish(aw_msg);
@@ -722,8 +761,8 @@ private:
 		//double targetAngleTimeVal = fabs(deg - front_deg_)/time_sa;
 		std::cout << "time_sa," << time_sa << ",targetAngleTimeVal," << deg << std::endl;
 		double deg_th;
-		if(zisoku <= 20) deg_th = 100;
-		else deg_th = 60;
+		if(zisoku <= 20) deg_th = setting_.steer_speed_limit1;//100;
+		else deg_th = setting_.steer_speed_limit2;
 		if(deg > deg_th)// && strinf.mode == MODE_PROGRAM)
 		{
 			if(msg->ctrl_cmd.steering_angle != 0)
@@ -874,10 +913,19 @@ private:
 		waypoint_param_ = *msg;
 	}
 
-	double waypoint_id_ = 0;
 	void callbackWaypoints(const autoware_msgs::Lane::ConstPtr &msg)
 	{
+		if(msg->waypoints.size() < 1)
+		{
+			waypoint_id_ = -1;
+		}
+
 		waypoint_id_ = msg->waypoints[1].waypoint_param.id;
+		tf::quaternionMsgToTF(msg->waypoints[1].pose.pose.orientation, waypoint_orientation_);
+		double roll, pitch, yaw;
+		tf::Matrix3x3 mat(waypoint_orientation_);
+		mat.getRPY(roll, pitch, yaw);
+		waypoint_angle_ = yaw;
 	}
 
 	void callbackPositionChecker(const autoware_msgs::PositionChecker::ConstPtr &msg)
@@ -1066,7 +1114,8 @@ private:
 		double wheel_base = 3.935;
 //		steer_val += _steer_pid_control(difference_toWaypoint_distance_.base_linkdistance);
 //		steer_val += _steer_pid_control(wheel_base * tan(difference_toWaypoint_distance_.baselink_angular) + difference_toWaypoint_distance_.baselink_distance);
-		steer_val += _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance);
+		//if(waypoint_param_.steer_pid_on > 0)
+				steer_val += _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance);
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
 
 		unsigned char *steer_pointer = (unsigned char*)&steer_val;
@@ -1275,15 +1324,15 @@ private:
 		const double stop_stroke = 330.0;
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
-			std::cout << "tbs," << target_brake_stroke;
+			/*std::cout << "tbs," << target_brake_stroke;
 			double d = stop_stroke - target_brake_stroke;
 			if(d < 0) d = 0;
  			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
-			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;*/
 		}
 		else if(stopper_distance_ >= 2 && stopper_distance_ <= 8)
 		{
-			if(current_velocity > 5.0)
+			/*if(current_velocity > 5.0)
 			{
 				std::cout << "tbs," << target_brake_stroke;
 				double d = stop_stroke - target_brake_stroke;
@@ -1291,7 +1340,7 @@ private:
 				target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
 			}
-			else {
+			else*/ {
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 			}
 		}
@@ -1301,6 +1350,8 @@ private:
 			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 			step = 0.5;
 			target_brake_stroke = 0.0 + stop_stroke * (2.0 - stopper_distance_)/2.0;
+			if(target_brake_stroke < pid_params.get_stop_stroke_prev())
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
 		}
 /*
 		if(stopper_distance_ >= 0.5 && stopper_distance_ <= 3 && current_velocity >= 0.1 && target_brake_stroke < 330)
@@ -1823,6 +1874,7 @@ public:
 		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
 		pub_localizer_match_stat_ = nh_.advertise<autoware_msgs::LocalizerMatchStat>("/microbus/localizer_match_stat", 1);
 		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);
+		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
 
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
 		sub_microbus_steer_mode_ = nh_.subscribe("/microbus/steer_mode_send", 10, &kvaser_can_sender::callbackSModeSend, this);
@@ -1870,6 +1922,7 @@ public:
 		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
 		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);
 		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);
+		
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);
 		sync_twist_pose_ = new message_filters::Synchronizer<TwistPoseSync>(TwistPoseSync(SYNC_FRAMES), *sub_current_velocity_, *sub_current_pose_);
@@ -1939,6 +1992,19 @@ public:
 			bufset_steer(buf);
 			bufset_drive(buf, current_velocity, acceleration, 2.0);
 			bufset_car_control(buf, current_velocity);
+
+			autoware_msgs::VehicleStatus status;
+			status.header.stamp = ros::Time::now();
+			status.drivemode = (buf[0] & 0x0B != 0x0B) ? autoware_msgs::VehicleStatus::MODE_AUTO : autoware_msgs::VehicleStatus::MODE_MANUAL;
+			status.steeringmode = (buf[0] & 0xA0 != 0xA0) ? autoware_msgs::VehicleStatus::MODE_AUTO : autoware_msgs::VehicleStatus::MODE_MANUAL;
+			status.gearshift = 0;
+			status.lamp = 0;
+			status.light = 0;
+			status.speed = current_velocity_.twist.linear.x;
+			if(can_receive_502_.angle_actual > 0) status.angle = can_receive_502_.angle_actual / wheelrad_to_steering_can_value_left;
+			else status.angle = can_receive_502_.angle_actual / wheelrad_to_steering_can_value_right;
+			pub_vehicle_status_.publish(status);
+			
 			kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
 		}
 	}

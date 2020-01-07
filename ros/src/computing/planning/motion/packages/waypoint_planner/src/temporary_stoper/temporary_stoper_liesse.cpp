@@ -69,7 +69,7 @@ private:
 		for(int i=0; i<way.waypoints.size() || i<config_.search_distance; i++)
 		{
 			//std::cout << "i," << (int)way.waypoints[i].waypoint_param.temporary_stop_line << std::endl;
-			if(way.waypoints[i].waypoint_param.temporary_stop_line > 2)
+			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
 			{
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;
 
@@ -90,6 +90,7 @@ private:
 				marker.color.a = 0.3;
 				marker.frame_locked = true;
 				marker.mesh_use_embedded_materials = false;
+				marker.lifetime = ros::Duration(1.0);
 				visualization_msgs::MarkerArray array;
 				array.markers.push_back(marker);
 				pub_temporary_line_.publish(array);
@@ -138,8 +139,10 @@ private:
 				        && distance_ <= 0.5 && distance_ >=0)
 				{
 					stop_waypoint_id_ = lane.waypoints[stop_index].waypoint_param.id;
-					timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
-//					std::cout << "distance_0 : " << distance_ << std::endl;
+					//timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
+					ros::Duration ros_stop_time(stop_time_);
+					timer_ = now_time + ros_stop_time;
+					//std::cout << "distance_0 : " << distance_ << std::endl;
 					std::cout << "time : " << timer_.sec << "," << now_time.sec << std::endl;
 				}
 				flag.data = 1;//停止判定あり

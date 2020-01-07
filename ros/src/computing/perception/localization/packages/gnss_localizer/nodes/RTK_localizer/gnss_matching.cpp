@@ -160,7 +160,7 @@ private:
         estimate_twist_msg.twist.angular.y = 0.0;
         estimate_twist_msg.twist.angular.z = angular_velocity;
         std::cout<<std::setprecision(16)<<"diff : "<<diff<<std::endl;
-	std::cout<<std::setprecision(16)<<"gnss : "<<gnss_speed/3.6<<std::endl;
+	      std::cout<<std::setprecision(16)<<"gnss : "<<gnss_speed/3.6<<std::endl;
         estimate_twist_pub.publish(estimate_twist_msg);
     }
 

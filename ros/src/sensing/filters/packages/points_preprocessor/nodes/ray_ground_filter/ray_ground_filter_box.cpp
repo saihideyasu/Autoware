@@ -264,7 +264,7 @@ void RayGroundFilterBox::RemovePointsUpTo(const pcl::PointCloud<pcl::PointXYZI>:
 {
   tf::StampedTransform velodyne_to_baselink_tf;
   try{
-    listener->lookupTransform("/velodyne", "/base_link", 
+    listener->lookupTransform("/base_link", "/velodyne", 
       ros::Time(0), velodyne_to_baselink_tf);
   }
   catch (tf::TransformException ex){

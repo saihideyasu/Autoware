@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
         autoware_config_msgs
         tablet_socket_msgs
         autoware_health_checker
+        amathutils_lib
         rostest
         rosunit
         )
@@ -46,6 +47,7 @@ catkin_package(
         sensor_msgs
         tablet_socket_msgs
         autoware_health_checker
+        amathutils_lib
 )
 
 ###########
@@ -102,8 +104,29 @@ target_link_libraries(lookahead_ratio_magn ${catkin_LIBRARIES})
 add_dependencies(lookahead_ratio_magn
         ${catkin_EXPORTED_TARGETS})
 
+set(MPC_FOLLOWER_SRC
+        nodes/mpc_follower/mpc_utils.cpp
+        nodes/mpc_follower/mpc_trajectory.cpp
+        nodes/mpc_follower/lowpass_filter.cpp
+        nodes/mpc_follower/vehicle_model/vehicle_model_interface.cpp
+        nodes/mpc_follower/vehicle_model/vehicle_model_bicycle_kinematics.cpp
+        nodes/mpc_follower/vehicle_model/vehicle_model_bicycle_dynamics.cpp
+        nodes/mpc_follower/vehicle_model/vehicle_model_bicycle_kinematics_no_delay.cpp
+        nodes/mpc_follower/qp_solver/qp_solver_unconstr.cpp
+        nodes/mpc_follower/qp_solver/qp_solver_unconstr_fast.cpp
+)
+
+add_executable(mpc_follower nodes/mpc_follower/mpc_follower_node.cpp nodes/mpc_follower/mpc_follower_core.cpp ${MPC_FOLLOWER_SRC})
+add_dependencies(mpc_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(mpc_follower ${catkin_LIBRARIES})
+
+add_executable(mpc_waypoints_converter nodes/mpc_follower/mpc_waypoints_converter.cpp)
+add_dependencies(mpc_waypoints_converter ${catkin_EXPORTED_TARGETS})
+target_link_libraries(mpc_waypoints_converter ${catkin_LIBRARIES})
+
 ## Install executables and/or libraries
-install(TARGETS libwaypoint_follower pure_pursuit wf_simulator twist_filter twist_gate position_checker lookahead_ratio_magn
+install(TARGETS libwaypoint_follower pure_pursuit wf_simulator twist_filter twist_gate position_checker
+                lookahead_ratio_magn mpc_follower mpc_waypoints_converter
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

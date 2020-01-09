@@ -1,5 +1,0 @@
-/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/lib/pkgconfig/autoware_build_flags.pc
-/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/cmake/autoware_build_flags-extras.cmake
-/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/cmake/autoware_build_flagsConfig.cmake
-/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/cmake/autoware_build_flagsConfig-version.cmake
-/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/share/autoware_build_flags/package.xml

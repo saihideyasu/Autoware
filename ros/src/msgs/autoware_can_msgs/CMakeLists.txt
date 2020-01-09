@@ -15,6 +15,7 @@ add_message_files(
 	MicroBusCan502.msg
 	MicroBusCan503.msg
 	MicroBusCanSenderStatus.msg
+    MicroBusCanVelocityParam.msg
     CANInfo.msg
     CANData.msg
     CANPacket.msg

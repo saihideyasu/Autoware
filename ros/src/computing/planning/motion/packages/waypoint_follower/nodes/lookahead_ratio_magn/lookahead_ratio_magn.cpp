@@ -144,17 +144,23 @@ public:
 
 	void run()
 	{
-		tf::StampedTransform frontbaselink_to_map;
-		try{
-			listener_->lookupTransform("/map", "/front_base_link", 
-			ros::Time(0), frontbaselink_to_map);
+		tf::Vector3 front_baselink_point;
+		tf::Quaternion front_baselink_quat;
+		if(sub_current_pose_->getTopic() == "/current_pose")
+		{
+			tf::StampedTransform frontbaselink_to_map;
+			try{
+				listener_->lookupTransform("/map", "/front_base_link", 
+				ros::Time(0), frontbaselink_to_map);
+			}
+			catch (tf::TransformException ex){
+				ROS_ERROR("%s",ex.what());
+				return;
+			}
+		
+			tf::Vector3 front_baselink_point = frontbaselink_to_map.getOrigin();
+			tf::Quaternion front_baselink_quat = frontbaselink_to_map.getRotation();
 		}
-		catch (tf::TransformException ex){
-			ROS_ERROR("%s",ex.what());
-			return;
-		}
-		tf::Vector3 front_baselink_point = frontbaselink_to_map.getOrigin();
-		tf::Quaternion front_baselink_quat = frontbaselink_to_map.getRotation();
 		//std::cout << "front : " << front_baselink_point.getX() << "," << front_baselink_point.getY() << "," << front_baselink_point.getZ() << std::endl; 
 		///////////////////////////////
 
@@ -211,44 +217,62 @@ public:
 
 		//////////////////////////////////////
 
-		const double search_dist = 10;
-		const double min_fd_init = 10000000000;
-		double min_dist=0;
-		double min_fd = min_fd_init, search_dist_sum = 0;
-		tf::Matrix3x3 min_angular;
-		int cou = 1;
-		for(cou=1; cou<waypose_.size()-1; cou++)
+		if(sub_current_pose_->getTopic() == "/current_pose")
 		{
-			double fd = euclid(waypose_[cou].position.x, waypose_[cou].position.y,
-				front_baselink_point.getX(), front_baselink_point.getY());
-			if(fabs(fd) < fabs(min_fd))
+			const double search_dist = 10;
+			const double min_fd_init = 10000000000;
+			double min_dist=0;
+			double min_fd = min_fd_init, search_dist_sum = 0;
+			tf::Matrix3x3 min_angular;
+			int cou = 1;
+			for(cou=1; cou<waypose_.size()-1; cou++)
 			{
-				min_fd = fd;
-				min_dist = math_distance(waypose_[cou], waypose_[cou+1], front_baselink_point);
-				min_angular = math_angular(waypose_[cou]);
+				double fd = euclid(waypose_[cou].position.x, waypose_[cou].position.y,
+					front_baselink_point.getX(), front_baselink_point.getY());
+				if(fabs(fd) < fabs(min_fd))
+				{
+					min_fd = fd;
+					min_dist = math_distance(waypose_[cou], waypose_[cou+1], front_baselink_point);
+					min_angular = math_angular(waypose_[cou]);
+				}
+				//std::cout << "cou : " << cou << "  min_fd : " << min_fd << "  fd," << fd << "  min_fd," << min_fd << std::endl;
+				if(cou != 1)
+				{
+					/*double x1 = waypose_[cou].position.x, x2 = waypose_[cou-1].position.x;
+					double y1 = waypose_[cou].position.y, y2 = waypose_[cou-1].position.y;
+					double x = x1 - x2;
+					double y = y1 - y2;
+					search_dist_sum += sqrt(x*x + y*y);*/
+					search_dist_sum += euclid(waypose_[cou].position.x, waypose_[cou].position.y, waypose_[cou-1].position.x, waypose_[cou-1].position.y);
+					if(search_dist_sum >= search_dist) break;
+				}
 			}
-			//std::cout << "cou : " << cou << "  min_fd : " << min_fd << "  fd," << fd << "  min_fd," << min_fd << std::endl;
-			if(cou != 1)
+			if(min_fd == min_fd_init || cou == 1 || waypose_.size() < 2)
 			{
-				/*double x1 = waypose_[cou].position.x, x2 = waypose_[cou-1].position.x;
-				double y1 = waypose_[cou].position.y, y2 = waypose_[cou-1].position.y;
-				double x = x1 - x2;
-				double y = y1 - y2;
-				search_dist_sum += sqrt(x*x + y*y);*/
-				search_dist_sum += euclid(waypose_[cou].position.x, waypose_[cou].position.y, waypose_[cou-1].position.x, waypose_[cou-1].position.y);
-				if(search_dist_sum >= search_dist) break;
+				autoware_msgs::DifferenceToWaypointDistance dist;
+				dist.header.stamp = ros::Time::now();
+				dist.baselink_distance = 0;
+				dist.baselink_angular = 0;
+				dist.front_baselink_distance = 0;
+				dist.front_baselink_angular = 0;
+				pub_difference_to_waypoint_distance_.publish(dist);
+				return;
 			}
-		}
-		if(min_fd == min_fd_init || cou == 1 || waypose_.size() < 2)
-		{
-			autoware_msgs::DifferenceToWaypointDistance dist;
-			dist.header.stamp = ros::Time::now();
-			dist.baselink_distance = 0;
-			dist.baselink_angular = 0;
-			dist.front_baselink_distance = 0;
-			dist.front_baselink_angular = 0;
-			pub_difference_to_waypoint_distance_.publish(dist);
-			return;
+			else
+			{
+				autoware_msgs::DifferenceToWaypointDistance dist;
+				dist.header.stamp = ros::Time::now();
+				tf::Matrix3x3 sa_m = math_angular(waypose_[1]);
+				double sa_yaw, sa_roll, sa_pitch;
+				sa_m.getRPY(sa_roll, sa_pitch, sa_yaw);
+				dist.baselink_distance = d;
+				dist.baselink_angular = sa_yaw;
+				dist.front_baselink_distance = min_dist;
+				double fsa_yaw, fsa_roll, fsa_pitch;
+				min_angular.getRPY(fsa_roll, fsa_pitch, fsa_yaw);
+				dist.front_baselink_angular = fsa_yaw;
+				pub_difference_to_waypoint_distance_.publish(dist);
+			}
 		}
 		else
 		{
@@ -259,13 +283,10 @@ public:
 			sa_m.getRPY(sa_roll, sa_pitch, sa_yaw);
 			dist.baselink_distance = d;
 			dist.baselink_angular = sa_yaw;
-			dist.front_baselink_distance = min_dist;
-			double fsa_yaw, fsa_roll, fsa_pitch;
-			min_angular.getRPY(fsa_roll, fsa_pitch, fsa_yaw);
-			dist.front_baselink_angular = fsa_yaw;
+			dist.front_baselink_distance = 0;
+			dist.front_baselink_angular = 0;
 			pub_difference_to_waypoint_distance_.publish(dist);
 		}
-		
 		//////////////////////////////////////
 		double magn = 1.0;
 		if(fabs(d) > config_.max_distance)

@@ -7,6 +7,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -15,6 +16,8 @@
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
 #include <autoware_config_msgs/ConfigMicrobusInterface.h>
+#include <autoware_can_msgs/MicroBusCanVelocityParam.h>
+#include <autoware_msgs/WaypointParam.h>
 
 namespace Ui {
 class MainWindow;
@@ -41,34 +44,45 @@ private:
     ros::Publisher pub_drive_control_;//driveのコントロールモード(velocity操作とstroke操作の切り替え)
     ros::Publisher pub_drive_input_, pub_steer_input_;//programモード時の自動入力と手動入力の切り替え
     ros::Publisher pub_drive_clutch_, pub_steer_clutch_;//クラッチの状態変更フラグ
+
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
-    ros::Subscriber sub_distance_angular_check_;//経路と自車位置のチェック用
+    ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
     ros::Subscriber sub_config_;
     ros::Subscriber sub_localizer_select_;//localizerの遷移状態 
     ros::Subscriber sub_localizer_match_stat_;
+    ros::Subscriber sub_can_velocity_param_;
+    ros::Subscriber sub_stopper_distance_;
+    ros::Subscriber sub_waypoint_param_;
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
     void callbackCan503(const autoware_can_msgs::MicroBusCan503 &msg);//マイコン応答ID502
     void callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg);//canステータス
     void callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg);
+    void callbackDistanceAngularCheckNdt(const autoware_msgs::DifferenceToWaypointDistance &msg);
+    void callbackDistanceAngularCheckGnss(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg);
     void callbackLocalizerSelect(const std_msgs::Int32 &msg);//localizerの遷移状態 
     void callbackLocalizerMatchStat(const autoware_msgs::LocalizerMatchStat &msg);
+    void callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVelocityParam &msg);
+    void callbackStopperDistance(const std_msgs::Float64 &msg);
+    void callbackWaypointParam(const autoware_msgs::WaypointParam &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
     autoware_can_msgs::MicroBusCan503 can503_;//マイコン応答ID503
     autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
-    autoware_msgs::DifferenceToWaypointDistance distance_angular_check_;
+    autoware_msgs::DifferenceToWaypointDistance distance_angular_check_, distance_angular_check_ndt_, distance_angular_check_gnss_;
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
     autoware_config_msgs::ConfigMicrobusInterface config_;
     int localizer_select_;
     autoware_msgs::LocalizerMatchStat localizer_match_stat_;
-
+    autoware_can_msgs::MicroBusCanVelocityParam can_velocity_param_;
     bool error_text_lock_;
-
+    double stopper_distance_;
+    autoware_msgs::WaypointParam waypoint_param_;
+    
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror
     QPalette palette_position_check_ok_, palette_position_check_error_;//canステータス(正確にはposition_chekerのフラグ)の自動走行OKフラグ用パレット

@@ -81,11 +81,6 @@ target_link_libraries(waypoint_saver_RTKplus ${catkin_LIBRARIES})
 add_dependencies(waypoint_saver_RTKplus
         ${catkin_EXPORTED_TARGETS})
 
-add_executable(waypoint_saver_signal_plus nodes/waypoint_saver/waypoint_saver_signal_plus.cpp)
-target_link_libraries(waypoint_saver_signal_plus ${catkin_LIBRARIES})
-add_dependencies(waypoint_saver_signal_plus
-        ${catkin_EXPORTED_TARGETS})
-
 add_executable(waypoint_extractor nodes/waypoint_extractor/waypoint_extractor.cpp)
 target_link_libraries(waypoint_extractor ${catkin_LIBRARIES})
 add_dependencies(waypoint_extractor
@@ -125,7 +120,6 @@ install(TARGETS
         waypoint_saver_stroke_plus
         waypoint_saver_microbus_stroke_plus
         waypoint_saver_RTKplus
-        waypoint_saver_signal_plus
         waypoint_clicker
         waypoint_marker_publisher
         waypoint_marker_publisher_show_id

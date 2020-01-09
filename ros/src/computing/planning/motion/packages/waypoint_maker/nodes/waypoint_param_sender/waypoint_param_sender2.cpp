@@ -43,7 +43,7 @@ private:
 			pub_voxelGridFilter_.publish(cvgf);
 		}
 
-		if(param.signals.size() == 3)
+		/*if(param.signals.size() == 3)
 		{
 			autoware_msgs::Signals sig_msg;
 			sig_msg.header.frame_id = "";
@@ -66,7 +66,7 @@ private:
 				sig_msg.Signals.push_back(ep);
 			}
 			pub_roi_signal_.publish(sig_msg);
-		}
+		}*/
 
 		if(param.fusion_select >= 0)
 		{

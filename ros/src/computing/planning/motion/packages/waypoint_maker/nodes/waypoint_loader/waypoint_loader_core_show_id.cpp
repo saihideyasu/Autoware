@@ -249,14 +249,14 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.lookahead_ratio_magn = ((map.find("lookahead_ratio_magn") != map.end()) ? std::stod(map["lookahead_ratio_magn"]) : -1.0);
   wp->waypoint_param.steer_pid_on = ((map.find("steer_pid_on") != map.end()) ? std::stoi(map["steer_pid_on"]) : 1);
 
-  if(wp->waypoint_param.signal_stop_line != 0)
+  /*if(wp->waypoint_param.signal_stop_line != 0)
   {
 	geometry_msgs::Vector3 signal_stop_line;
 	signal_stop_line.x = wp->pose.pose.position.x;
 	signal_stop_line.y = wp->pose.pose.position.y;
 	signal_stop_line.z = wp->pose.pose.position.z;
 	signal_stop_line_points_.linears.push_back(signal_stop_line);
-  }
+  }*/
   if(wp->waypoint_param.temporary_stop_line != 0)
   {
 	  geometry_msgs::Vector3 temporary_stop_line;

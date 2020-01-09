@@ -8,6 +8,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
 {
     ui->setupUi(this);
 
+    ui->gb_shift->setVisible(false);
+
     palette_drive_mode_ok_ = ui->tx_drive_mode->palette();
     palette_steer_mode_ok_ = ui->tx_steer_mode->palette();
     palette_position_check_ok_ = ui->tx_position_check->palette();
@@ -67,14 +69,24 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can503_ = nh_.subscribe("/microbus/can_receive503", 10, &MainWindow::callbackCan503, this);
     sub_can_status_ = nh_.subscribe("/microbus/can_sender_status", 10, &MainWindow::callbackCanStatus, this);
     sub_distance_angular_check_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &MainWindow::callbackDistanceAngularCheck, this);
+    sub_distance_angular_check_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &MainWindow::callbackDistanceAngularCheckNdt, this);
+    sub_distance_angular_check_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &MainWindow::callbackDistanceAngularCheckGnss, this);
     sub_config_ = nh_.subscribe("/config/microbus_interface", 10, &MainWindow::callbackConfig, this);
     sub_localizer_select_ = nh_.subscribe("/localizer_select_num", 10, &MainWindow::callbackLocalizerSelect, this);
     sub_localizer_match_stat_ = nh_.subscribe("/microbus/localizer_match_stat", 10, &MainWindow::callbackLocalizerMatchStat, this);
- 
+    sub_can_velocity_param_ = nh_.subscribe("/microbus/velocity_param", 10, &MainWindow::callbackCanVelocityParam, this);
+    sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &MainWindow::callbackStopperDistance, this);
+    sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 10, &MainWindow::callbackWaypointParam, this);
+
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.baselink_distance = 10000;
     distance_angular_check_.baselink_angular = 180;
+    distance_angular_check_ndt_.baselink_distance = 10000;
+    distance_angular_check_ndt_.baselink_angular = 180;
+    distance_angular_check_gnss_.baselink_distance = 10000;
+    distance_angular_check_gnss_.baselink_angular = 180;
+    stopper_distance_ = -1;
 }
 
 MainWindow::~MainWindow()
@@ -339,20 +351,82 @@ void MainWindow::window_updata()
         ui->tx_distance_check->setPalette(palette_distance_angular_error_);
     }
 
-    double angular_deg= distance_angular_check_.baselink_angular * 180.0 / M_PI;
+    if(fabs(distance_angular_check_ndt_.baselink_distance) <= config_.check_distance_th)
+    {
+        std::stringstream str;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
+        ui->tx_ndt_distance_check->setText(str.str().c_str());
+        ui->tx_ndt_distance_check->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        std::stringstream str;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
+        ui->tx_ndt_distance_check->setText(str.str().c_str());
+        ui->tx_ndt_distance_check->setPalette(palette_distance_angular_error_);
+    }
+
+    if(fabs(distance_angular_check_gnss_.baselink_distance) <= config_.check_distance_th)
+    {
+        std::stringstream str;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
+        ui->tx_gnss_distance_check->setText(str.str().c_str());
+        ui->tx_gnss_distance_check->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        std::stringstream str;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
+        ui->tx_gnss_distance_check->setText(str.str().c_str());
+        ui->tx_gnss_distance_check->setPalette(palette_distance_angular_error_);
+    }
+
+    double angular_deg = distance_angular_check_.baselink_angular * 180.0 / M_PI;
+    double angular_deg_ndt = distance_angular_check_ndt_.baselink_angular * 180.0 / M_PI;
+    double angular_deg_gnss = distance_angular_check_gnss_.baselink_angular * 180.0 / M_PI;
     if(fabs(angular_deg) <= config_.check_angular_th)
     {
         std::stringstream str;
-        str << "distance OK," << config_.check_angular_th << "," << angular_deg;
+        str << "angular OK," << config_.check_angular_th << "," << angular_deg;
         ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << "distance NG," << config_.check_angular_th << "," << angular_deg;
+        str << "angular NG," << config_.check_angular_th << "," << angular_deg;
         ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_error_);
+    }
+
+    if(fabs(angular_deg_ndt) <= config_.check_angular_th)
+    {
+        std::stringstream str;
+        str << "angular OK," << config_.check_angular_th << "," << angular_deg_ndt;
+        ui->tx_ndt_angular_check->setText(str.str().c_str());
+        ui->tx_ndt_angular_check->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        std::stringstream str;
+        str << "angular NG," << config_.check_angular_th << "," << angular_deg_ndt;
+        ui->tx_ndt_angular_check->setText(str.str().c_str());
+        ui->tx_ndt_angular_check->setPalette(palette_distance_angular_error_);
+    }
+
+    if(fabs(angular_deg_gnss) <= config_.check_angular_th)
+    {
+        std::stringstream str;
+        str << "angular OK," << config_.check_angular_th << "," << angular_deg_gnss;
+        ui->tx_gnss_angular_check->setText(str.str().c_str());
+        ui->tx_gnss_angular_check->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        std::stringstream str;
+        str << "angular NG," << config_.check_angular_th << "," << angular_deg_gnss;
+        ui->tx_gnss_angular_check->setText(str.str().c_str());
+        ui->tx_gnss_angular_check->setPalette(palette_distance_angular_error_);
     }
 
     {
@@ -387,6 +461,28 @@ void MainWindow::window_updata()
         std::string stat = (localizer_match_stat_.localizer_stat == true) ? "true" : "false";
         str << stat << "," << localizer_match_stat_.localizer_distance;
         ui->tx_localizer_match_stat->setText(str.str().c_str());
+    }
+
+    {
+        std::stringstream str_vel;
+        str_vel << can_velocity_param_.velocity;
+        ui->tx_can_velocity->setText(str_vel.str().c_str());
+
+        std::stringstream str_acc;
+        str_acc << can_velocity_param_.acceleration;
+        ui->tx_can_accel->setText(str_acc.str().c_str());
+
+        std::stringstream str_jurk;
+        str_jurk << can_velocity_param_.jurk;
+        ui->tx_can_jurk->setText(str_jurk.str().c_str());
+
+        std::stringstream str_stop_dis;
+        str_stop_dis << stopper_distance_;
+        ui->tx_stopper_distance->setText(str_stop_dis.str().c_str());
+
+        std::stringstream str_way_num;
+        str_way_num << waypoint_param_.id;
+        ui->tx_waypoint_num->setText(str_way_num.str().c_str());
     }
 }
 
@@ -428,6 +524,31 @@ void MainWindow::callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderSta
 void MainWindow::callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg)
 {
     distance_angular_check_ = msg;
+}
+
+void MainWindow::callbackDistanceAngularCheckNdt(const autoware_msgs::DifferenceToWaypointDistance &msg)
+{
+    distance_angular_check_ndt_ = msg;
+}
+
+void MainWindow::callbackDistanceAngularCheckGnss(const autoware_msgs::DifferenceToWaypointDistance &msg)
+{
+    distance_angular_check_gnss_ = msg;
+}
+
+void MainWindow::callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVelocityParam &msg)
+{
+    can_velocity_param_ = msg;
+}
+
+void MainWindow::callbackStopperDistance(const std_msgs::Float64 &msg)
+{
+    stopper_distance_ = msg.data;
+}
+
+void MainWindow::callbackWaypointParam(const autoware_msgs::WaypointParam &msg)
+{
+    waypoint_param_ = msg;
 }
 
 void MainWindow::publish_emergency_clear()

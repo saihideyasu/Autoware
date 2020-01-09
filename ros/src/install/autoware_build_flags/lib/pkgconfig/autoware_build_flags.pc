@@ -1,8 +1,0 @@
-prefix=/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags
-
-Name: autoware_build_flags
-Description: Description of autoware_build_flags
-Version: 1.10.0
-Cflags: 
-Libs: -L/home/autoware/Autoware_1.11.0_sai_edit/ros/src/install/autoware_build_flags/lib 
-Requires: 

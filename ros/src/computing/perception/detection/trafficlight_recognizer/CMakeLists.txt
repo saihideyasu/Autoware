@@ -148,22 +148,6 @@ target_link_libraries(feat_proj
         ${OpenCV_LIBS}
         )
 
-add_dependencies(feat_proj
-        ${catkin_EXPORTED_TARGETS}
-        )
-
-add_executable(feat_proj_loaderGet
-        nodes/feat_proj/feat_proj_loaderGet.cpp
-        )
-
-target_link_libraries(feat_proj_loaderGet
-        ${catkin_LIBRARIES}
-        ${OpenCV_LIBS}
-        )
-
-add_dependencies(feat_proj_loaderGet
-        ${catkin_EXPORTED_TARGETS}
-        )
 
 ### tlr_tuner ###
 EXECUTE_PROCESS(
@@ -288,7 +272,7 @@ target_link_libraries(label_maker
         )
 
 
-install(TARGETS region_tlr feat_proj feat_proj_loaderGet tlr_tuner roi_extractor roi_pub label_maker libcontext tl_switch
+install(TARGETS region_tlr feat_proj tlr_tuner roi_extractor roi_pub label_maker libcontext tl_switch
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

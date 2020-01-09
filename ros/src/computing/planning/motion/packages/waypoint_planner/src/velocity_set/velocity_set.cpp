@@ -275,7 +275,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
   bool check_point = false, check_pillar = false, check_mobileye = false;
 
   tf::StampedTransform mobileye_transform;
-  listener->lookupTransform("map", "me_viz", ros::Time(0), mobileye_transform);
+  listener->lookupTransform("me_viz", "map", ros::Time(0), mobileye_transform);
 
   // start search from the closest waypoint
   for (int i = closest_waypoint; i < closest_waypoint + STOP_SEARCH_DISTANCE; i++)
@@ -401,6 +401,11 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
 
     if(!check_mobileye)
     {
+      double x = lane.waypoints[i].pose.pose.position.x + mobileye_transform.getOrigin().getX();
+      double y = lane.waypoints[i].pose.pose.position.y + mobileye_transform.getOrigin().getY();
+      double z = lane.waypoints[i].pose.pose.position.z + mobileye_transform.getOrigin().getZ();
+      tf::Vector3 tf_waypoint_mobileye(x,y,z);
+
       for(int obj_i=0; obj_i<mobileye_obstacle.size(); obj_i++)
       {
         mobileye_560_660_msgs::ObstacleData mobileye_obj = mobileye_obstacle[obj_i];
@@ -409,7 +414,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
         {
           tf::Vector3 mobileye_vector(mobileye_obj.obstacle_pos_x+wid , mobileye_obj.obstacle_pos_y, 0);
 
-          double dt = tf::tfDistance(mobileye_vector, tf_waypoint);
+          double dt = tf::tfDistance(mobileye_vector, tf_waypoint_mobileye);
           if (dt < stop_range)
           {
             detection_moblieye_pub.publish(mobileye_obj);

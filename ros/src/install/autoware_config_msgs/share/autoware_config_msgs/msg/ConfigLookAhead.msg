@@ -1,3 +1,0 @@
-Header header
-float32 lookahead_ratio
-float32 minimum_lookahead_distance

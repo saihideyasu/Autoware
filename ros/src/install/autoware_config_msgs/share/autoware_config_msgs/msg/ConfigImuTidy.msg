@@ -1,2 +1,0 @@
-Header header
-float64 lowpass_filter_weight

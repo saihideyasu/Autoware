@@ -1,2 +1,0 @@
-Invoking command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/vehicle_socket': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/vehicle_socket -- -j8 -l8
-Invoked command in '/home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/vehicle_socket' returned '2': /usr/bin/cmake --build /home/autoware/Autoware_1.11.0_sai_edit/ros/src/build/vehicle_socket -- -j8 -l8

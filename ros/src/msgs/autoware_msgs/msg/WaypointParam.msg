@@ -17,7 +17,7 @@ int32 pause
 int32 pauseGroup
 float32 vgf_leafsize
 float32 vgf_measurement_range
-ExtractedPosition[] signals
+# ExtractedPosition[] signals
 int32 curve_flag
 int16 microbus_pedal
 int16 microbus_angle

@@ -55,6 +55,42 @@ private:
 	  return l;
 	}
 
+	autoware_msgs::Lane apply_decceleration(const autoware_msgs::Lane& lane, double decceleration, int start_index,
+	                                       size_t fixed_cnt, double fixed_vel)
+	{
+	  autoware_msgs::Lane l = lane;
+	  if(decceleration > 0) 
+	    return l;
+	  if (fixed_cnt == 0)
+		return l;
+
+	  double square_vel = fixed_vel * fixed_vel;
+	  double distance = 0;
+	  for (int i = start_index; i > 0; --i)
+	  {
+		if (i > start_index -fixed_cnt)
+		{
+			l.waypoints[i].twist.twist.linear.x = fixed_vel;
+			continue;
+		}
+
+		geometry_msgs::Point a = l.waypoints[i - 1].pose.pose.position;
+		geometry_msgs::Point b = l.waypoints[i].pose.pose.position;
+		distance += hypot(b.x - a.x, b.y - a.y);
+	
+		double v = sqrt(square_vel - 2 * decceleration * distance);
+		std::cout << v << std::endl;
+		if (v < l.waypoints[i].twist.twist.linear.x)
+			l.waypoints[i].twist.twist.linear.x = v;
+		else
+			break;
+	  }
+
+	  return l;
+	}
+
+
+
 	int stop_line_search(const autoware_msgs::Lane& way)
 	{
 		std_msgs::Int32 dis;
@@ -181,6 +217,8 @@ private:
 		l = apply_acceleration(l, acceleration, reverse_stop_index, ahead_cnt + 1, 0);
 		std::reverse(l.waypoints.begin(), l.waypoints.end());
 		
+		//l = apply_decceleration(lane, -acceleration, stop_line_to_baselink_index /*stop_index*/, behind_cnt + 1, 0);
+
 		/*double front_bumper_euc = 0;
 		int front_bumper_point;
 		for(int cou=0; cou<lane.waypoints.size(); cou++)

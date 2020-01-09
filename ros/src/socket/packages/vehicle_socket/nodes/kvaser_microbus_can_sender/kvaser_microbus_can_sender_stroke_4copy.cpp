@@ -1172,13 +1172,6 @@ private:
 		std::cout << "brake offset   : " << setting_.brake_stroke_offset << std::endl;
 
 		//std::cout << "if accel : " << stroke << " < " << setting_.brake_stroke_offset << std::endl;
-		/*if(stroke < setting_.brake_stroke_offset)
-		{
-			pid_params.set_accel_e_prev_velocity(0);
-			pid_params.set_accel_e_prev_acceleration(0);
-			pid_params.set_stop_stroke_prev(0);
-			return 0;
-		}*/
 		if(pid_params.get_stop_stroke_prev() > 0)
 		{
 			double ret = pid_params.get_stop_stroke_prev();
@@ -1189,6 +1182,14 @@ private:
 		}
 		pid_params.set_accel_e_prev_velocity(0);
 		pid_params.set_accel_e_prev_acceleration(0);
+			
+		/*if(stroke < setting_.brake_stroke_offset)
+		{
+			pid_params.set_accel_e_prev_velocity(0);
+			pid_params.set_accel_e_prev_acceleration(0);
+			pid_params.set_stop_stroke_prev(0);
+			return 0;
+		}*/
 
 		//P
 		double e = cmd_velocity - current_velocity;
@@ -1263,23 +1264,6 @@ private:
 		//velocity PID
 		//P
 		double e = -1 * (cmd_velocity - current_velocity);
-		std::cout << "if : " << cmd_velocity << "," << current_velocity << "," << e << std::endl;
-		// since this is braking, multiply -1.
-		if (e > 0 && e <= 1) { // added @ 2016/Aug/29
-			e = 0;
-			pid_params.clear_diff_velocity();
-		}
-		std::cout << "e " << e << std::endl;
-		//I
-		double e_i;
-		pid_params.plus_brake_diff_sum_velocity(e);
-		if (pid_params.get_brake_diff_sum_velocity() > setting_.brake_max_i)
-			e_i = setting_.brake_max_i;
-		else
-			e_i = pid_params.get_brake_diff_sum_velocity();
-
-		//D
-		double e_d = e - pid_params.get_brake_e_prev_velocity();
 
 		double target_brake_stroke = setting_.k_brake_p_velocity * e +
 		        setting_.k_brake_i_velocity * e_i +
@@ -1297,6 +1281,8 @@ private:
 			//x = current_velocity*current_velocity / (2.0*acc);
 			double cmd_distance = stopper_distance_;
 			double current_distance = estimated_stopping_distance;
+
+
 			//P
 			double e_dist = -1 * (cmd_distance - current_distance);
 			std::cout << "if : " << cmd_distance << "," << current_distance << "," << e_dist << std::endl;
@@ -1313,12 +1299,14 @@ private:
 				e_dist_i = setting_.brake_max_i;
 			else
 				e_dist_i = pid_params.get_brake_diff_sum_distance();
+
 			double val_plus = setting_.k_brake_p_distance * e_dist +
 			        setting_.k_brake_i_distance * e_dist_i;
 			std::cout << "stopper_distance plus : " << val_plus << "," << stopper_distance_ << "," << estimated_stopping_distance<< std::endl;
 	//		target_brake_stroke += val_plus;
     //
 			//      if(val_plus < 0 ) target_brake_stroke += val_plus;
+
 			pid_params.set_brake_e_prev_distance(e_dist);
 		}
 		else
@@ -1327,7 +1315,7 @@ private:
 		}
 */
 
-		const double stop_stroke = 340.0;
+		const double stop_stroke = 350.0;
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
 			/*std::cout << "tbs," << target_brake_stroke;
@@ -1366,6 +1354,7 @@ private:
 			if(d < 0) d = 0;
  			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 		}
+
 		if(stopper_distance_ >= 0 && stopper_distance_ <= 0.5 && current_velocity < 0.1 && target_brake_stroke > 330)
 		{
 			target_brake_stroke = 500;
@@ -1409,6 +1398,7 @@ private:
 		{
 			if(current_velocity > 5.0 && fabs(jurk2_twist_) < 10)
 			{
+
 				double d = 300 - target_brake_stroke;
 				target_brake_stroke  += d * (1 - stopper_distance_/ 30.0 );
 			}
@@ -1421,6 +1411,8 @@ private:
 				std_msgs::Float64 esd;
 				esd.data = estimated_stopping_distance;
 				pub_estimate_stopper_distance_.publish(esd);
+
+
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 				double P_d = -13;
 				double e_d = stopper_distance_ - estimated_stopping_distance; 
@@ -1462,6 +1454,7 @@ private:
 			//	double P_d = -13;
 			//double e_d = stopper_distance_ - estimated_stopping_distance; 
 				//target_brake_stroke += e_d * P_d;
+
 			}
 			else if(stopper_distance_ >= 1 && stopper_distance_ <= 2)
 			{
@@ -1472,6 +1465,7 @@ private:
 				//		double e_a = cmd_acceralation - acceleration2_twist_ ;
 				//		double P_a = -1;
 				//		target_brake_stroke += e_a * P_a;
+
 						step = 0.5;
 						if(fabs(jurk2_twist_) < 10) 
 						{
@@ -1503,6 +1497,7 @@ private:
 			std_msgs::Float64 esd;
 			esd.data = estimated_stopping_distance;
 			pub_estimate_stopper_distance_.publish(esd);
+
 			if(current_velocity > 15.0 || abs(jurk2_twist_) < 10 )
 			//if(estimated_stopping_distance > stopper_distance_)// && jurk2_twist_ < 4000 )
 			{
@@ -1517,12 +1512,7 @@ private:
 				step = 0.5;
 				target_brake_stroke = pid_params.get_stop_stroke_prev() - 70;
 				//PID distance
-				double P_d = -13;
-				double e = stopper_distance_ - estimated_stopping_distance; 
-				target_brake_stroke += e * P_d;
-				//target_brake_stroke += -5*fabs((fabs(jurk2_twist_) - 10));
-				if(current_velocity < 0.5  || fabs(jurk2_twist_) > 10)
-				{
+				double P_d = -13;velodyne
 					target_brake_stroke -= 70;
 				}
 			}
@@ -1550,9 +1540,10 @@ private:
 
 		if(use_step_flag == true)
 		{
-			/*if(pid_params.get_stop_stroke_prev() < 0 && ret >= 0)
+			/*if(pid_params.get_stop_stroke_prev() > 0 && pid_params.get_stop_stroke_prev() > ret && ret == 0)
 			{
-				double tmp = pid_params.get_stop_stroke_prev() + step;
+				//if(stopper_distance_ >= 0) step = 0.5;
+				double tmp = pid_params.get_stop_stroke_prev() - step;
 				if(tmp < ret) ret = tmp;
 			}*/
 			if(pid_params.get_stop_stroke_prev()-ret >= 50 && pid_params.get_stop_stroke_prev() > 0)
@@ -1564,7 +1555,7 @@ private:
 			//ブレーキをゆっくり踏む
 			if(pid_params.get_stop_stroke_prev() > 0.0 && pid_params.get_stop_stroke_prev() < ret)
 			{
-				double tmp = pid_params.get_stop_stroke_prev() - step;
+				double tmp = pid_params.get_stop_stroke_prev() + step;
 				if(tmp > ret) ret = tmp;
 				if(-ret < setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 			}
@@ -1613,6 +1604,7 @@ private:
 				drive_val = can_receive_502_.velocity_actual;
 				shift_auto_ = false;
 			}
+
 			unsigned char *drive_point = (unsigned char*)&drive_val;
 			buf[4] = drive_point[1];  buf[5] = drive_point[0];*/
 		}
@@ -1721,9 +1713,7 @@ std::cout << "auto_mode" << std::endl;
 				new_stroke = pid_params.get_stroke_prev();
 				break;
 			}
-
-			//ブレーキを離す場合、徐々に離す
-			/*if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
+  double acceleration1_twist_, acceleration2_twist_, jurk1_twist_, jurk2_twist_;w_stroke >= 0)
 			{
 				double tmp = pid_params.get_stroke_prev() + stroke_speed;
 				if(tmp < new_stroke) new_stroke = tmp;

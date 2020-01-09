@@ -1,0 +1,41 @@
+<launch>
+
+  <arg name="x" default="1.08"/>
+  <arg name="y" default="0.011"/>
+  <arg name="z" default="1.81"/>
+  <arg name="yaw" default="-0.025"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="frame_id" default="base_link"/>
+  <arg name="child_frame_id" default="velodyne"/>
+  <arg name="period_in_ms" default="10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_hi" args="2.275 0.0 2.92 -0.025 0.0 0.0 base_link velodyne1 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_ro" args="2.275 0.0 3.01 0.01 0.0 0.0 base_link velodyne2 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_32" args="2.275 0.0 3.19 -1.578 0.0 0.0 base_link velodyne3 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_front_left" args="4.31 -1.02 1.09 -0.785 0.0 0.0 base_link velodyne4 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_front_right" args="4.35 1.02 1.09 0.785 0.0 0.0 base_link velodyne5 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer" args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg frame_id) $(arg child_frame_id) $(arg period_in_ms)"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="6.31 0.0 1.43 0.0 0.0 0.0 base_link me_viz 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_front_base_link" args="3.935 0.0 0.0 0.0 0.0 0.0 base_link front_base_link 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.165 -0.905 -1.5875 0.0 -1.4530 velodyne camera 10"/>
+\
+  <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.230 -0.905 -1.570795 0.0 -1.466075333 velodyne camera 10"/ -->
+
+  <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.301 -0.905 -1.5875 -0.035 -1.500 velodyne camera 10"/ -->
+
+  <param name="/gx" value="1.695"/>
+  <param name="/gy" value="0.0"/>
+  <param name="/gz" value="2.64"/>
+  <param name="/ax" value="0.0"/>
+  <param name="/ay" value="0.0"/>
+  <param name="/az" value="0.0"/>
+</launch>

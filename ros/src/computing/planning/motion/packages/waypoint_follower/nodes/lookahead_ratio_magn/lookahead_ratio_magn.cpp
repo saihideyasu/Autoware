@@ -235,7 +235,7 @@ public:
 					min_dist = math_distance(waypose_[cou], waypose_[cou+1], front_baselink_point);
 					min_angular = math_angular(waypose_[cou]);
 				}
-				//std::cout << "cou : " << cou << "  min_fd : " << min_fd << "  fd," << fd << "  min_fd," << min_fd << std::endl;
+				std::cout << "cou : " << cou << "  min_fd : " << min_fd << "  fd," << fd << "  min_fd," << min_fd << std::endl;
 				if(cou != 1)
 				{
 					/*double x1 = waypose_[cou].position.x, x2 = waypose_[cou-1].position.x;
@@ -247,12 +247,17 @@ public:
 					if(search_dist_sum >= search_dist) break;
 				}
 			}
+
+			//std::cout << "min_fd" << min_fd << "," << min_fd_init << std::endl;
 			if(min_fd == min_fd_init || cou == 1 || waypose_.size() < 2)
 			{
 				autoware_msgs::DifferenceToWaypointDistance dist;
 				dist.header.stamp = ros::Time::now();
-				dist.baselink_distance = 0;
-				dist.baselink_angular = 0;
+				tf::Matrix3x3 sa_m = math_angular(waypose_[1]);
+				double sa_yaw, sa_roll, sa_pitch;
+				sa_m.getRPY(sa_roll, sa_pitch, sa_yaw);
+				dist.baselink_distance = d;
+				dist.baselink_angular = sa_yaw;
 				dist.front_baselink_distance = 0;
 				dist.front_baselink_angular = 0;
 				pub_difference_to_waypoint_distance_.publish(dist);

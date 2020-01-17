@@ -19,7 +19,7 @@ private:
 	geometry_msgs::TwistStamped current_velocity_;
 
 	double front_bumper_to_baselink_;
-	uint32_t stop_waypoint_id_;
+	uint32_t stop_waypoint_id_, front_stop_index_;
 	ros::Time timer_;
 	double stop_time_, distance_;
 
@@ -91,7 +91,7 @@ private:
 
 
 
-	int stop_line_search(const autoware_msgs::Lane& way)
+	int stop_line_search(const autoware_msgs::Lane& way, int index)
 	{
 		std_msgs::Int32 dis;
 		dis.data = -1;
@@ -102,7 +102,7 @@ private:
 			return -1;
 		}
 
-		for(int i=0; i<way.waypoints.size() || i<config_.search_distance; i++)
+		for(int i=index; i<way.waypoints.size() || i<config_.search_distance; i++)
 		{
 			//std::cout << "i," << (int)way.waypoints[i].waypoint_param.temporary_stop_line << std::endl;
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
@@ -148,14 +148,27 @@ private:
 	{
 		std_msgs::Int32 flag;
 
-		int stop_index = stop_line_search(lane); std::cout << stop_index << std::endl;
+		int stop_index = stop_line_search(lane, 0); std::cout << stop_index << std::endl;
 		if(stop_index < 0)
 		{
 			stop_waypoint_id_ = 0;
+			front_stop_index_ = 0;
 			flag.data = 0;//そのまま
 			pub_temporari_flag_.publish(flag);
 			return lane;
 		}
+		if(stop_index == front_stop_index_)
+		{
+			stop_index = stop_line_search(lane, stop_index+1); std::cout << stop_index << std::endl;
+			if(stop_index < 0)
+			{
+				stop_waypoint_id_ = 0;
+				flag.data = 0;//そのまま
+				pub_temporari_flag_.publish(flag);
+				return lane;
+			}
+		}
+		else front_stop_index_ = 0;
 
 		ros::Time now_time = ros::Time::now();
 		if(timer_ < now_time)
@@ -185,6 +198,11 @@ private:
 				pub_temporari_flag_.publish(flag);
 			}
 		}
+		else
+		{
+			front_stop_index_ = stop_index;
+		}
+
 		// front バンパーが一時停止線にあるときに、ベースリンクに一番近い2個のwaypointのうち前のもの。
 		// ≒ stop_index - 5
 		double stop_line_to_baselink = 0;
@@ -304,6 +322,7 @@ private:
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(100)//0
+		, front_stop_index_(0)
 	    , stop_time_(5.0)
 	    , distance_(1000.0)//0.0
 	{

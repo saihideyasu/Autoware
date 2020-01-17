@@ -5,6 +5,7 @@
 #include <autoware_config_msgs/ConfigTemporaryStopper.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
+#include <autoware_can_msgs/MicroBusCan503.h>
 #include <visualization_msgs/MarkerArray.h>
 
 class TemporaryStopper
@@ -19,9 +20,10 @@ private:
 	geometry_msgs::TwistStamped current_velocity_;
 
 	double front_bumper_to_baselink_;
-	uint32_t stop_waypoint_id_;
+	uint32_t stop_waypoint_id_, front_stop_index_;
 	ros::Time timer_;
 	double stop_time_, distance_;
+	bool view_flag_;
 
 	autoware_msgs::Lane apply_acceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
 	                                       size_t fixed_cnt, double fixed_vel)
@@ -89,9 +91,46 @@ private:
 	  return l;
 	}
 
+	void stop_line_view(const autoware_msgs::Lane& way, int index, geometry_msgs::Vector3 scale)
+	{
+		visualization_msgs::Marker marker;
+		marker.header.frame_id = "/map";
+		marker.ns = "Temporary Line";
+		marker.id = 0;
+		marker.type = 1;
+		marker.action = 0;
+		marker.color.r = 0;
+		marker.color.g = 0;
+		marker.color.b = 1;
+		marker.color.a = 0.3;
+		marker.frame_locked = true;
+		marker.mesh_use_embedded_materials = false;
+		//marker.lifetime = ros::Duration(1.0);
+		visualization_msgs::MarkerArray array;
 
+		if(scale.x == 0 && scale.y == 0 && scale.z == 0)
+		{
+			marker.pose.position.x = 0;
+			marker.pose.position.y = 0;
+			marker.pose.position.z = 0;
+			marker.pose.orientation.x = 0;
+			marker.pose.orientation.y = 0;
+			marker.pose.orientation.z = 0;
+			marker.pose.orientation.w = 0;
+			marker.scale = scale;
+		}
+		else
+		{
+			marker.pose = way.waypoints[index].pose.pose;
+			marker.pose.position.z += 1;
+			marker.scale = scale;
+		}
+		
+		array.markers.push_back(marker);
+		pub_temporary_line_.publish(array);
+	}
 
-	int stop_line_search(const autoware_msgs::Lane& way)
+	int stop_line_search(const autoware_msgs::Lane& way, int index)
 	{
 		std_msgs::Int32 dis;
 		dis.data = -1;
@@ -102,14 +141,14 @@ private:
 			return -1;
 		}
 
-		for(int i=0; i<way.waypoints.size() || i<config_.search_distance; i++)
+		for(int i=index; i<way.waypoints.size() || i<config_.search_distance; i++)
 		{
 			//std::cout << "i," << (int)way.waypoints[i].waypoint_param.temporary_stop_line << std::endl;
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
 			{
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;
 
-				visualization_msgs::Marker marker;
+				/*visualization_msgs::Marker marker;
 				marker.header.frame_id = "/map";
 				marker.ns = "Temporary Line";
 				marker.id = 0;
@@ -129,7 +168,7 @@ private:
 				marker.lifetime = ros::Duration(1.0);
 				visualization_msgs::MarkerArray array;
 				array.markers.push_back(marker);
-				pub_temporary_line_.publish(array);
+				pub_temporary_line_.publish(array);*/
 
 				std_msgs::Int32 dis;
 				dis.data = i;
@@ -147,17 +186,42 @@ private:
 	                                                int ahead_cnt, int behind_cnt)
 	{
 		std_msgs::Int32 flag;
+		ros::Time now_time = ros::Time::now();
 
-		int stop_index = stop_line_search(lane); std::cout << stop_index << std::endl;
+		int stop_index = stop_line_search(lane, 0); std::cout << stop_index << std::endl;
 		if(stop_index < 0)
 		{
 			stop_waypoint_id_ = 0;
+			front_stop_index_ = 0;
+			if(view_flag_ == true)
+			{
+				geometry_msgs::Vector3 scale0; scale0.x = scale0.y = scale0.z = 0;
+				stop_line_view(lane, 0, scale0);
+				view_flag_ = false;
+			}
 			flag.data = 0;//そのまま
 			pub_temporari_flag_.publish(flag);
 			return lane;
 		}
+		/*if(stop_index == front_stop_index_)
+		{
+			stop_index = stop_line_search(lane, stop_index+1); std::cout << stop_index << std::endl;
+			if(stop_index < 0)
+			{
+				stop_waypoint_id_ = 0;
+				if(view_flag_ == true)
+				{
+					geometry_msgs::Vector3 scale; scale0.x = scale0.y = scale0.z = 0;
+					stop_line_view(lane, 0, scale0);
+					view_flag_ = false;
+				}
+				flag.data = 0;//そのまま
+				pub_temporari_flag_.publish(flag);
+				return lane;
+			}
+		}
+		else front_stop_index_ = 0;*/
 
-		ros::Time now_time = ros::Time::now();
 		if(timer_ < now_time)
 		{
 //			std::cout << "distance_1 : " << distance_ << std::endl;
@@ -185,6 +249,11 @@ private:
 				pub_temporari_flag_.publish(flag);
 			}
 		}
+		
+		view_flag_ = true;
+		geometry_msgs::Vector3 scale; scale.x = 0.1;  scale.y = 15;  scale.z = 2;
+		stop_line_view(lane, stop_index, scale);
+
 		// front バンパーが一時停止線にあるときに、ベースリンクに一番近い2個のwaypointのうち前のもの。
 		// ≒ stop_index - 5
 		double stop_line_to_baselink = 0;
@@ -304,8 +373,10 @@ private:
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(100)//0
+			, front_stop_index_(0)
 	    , stop_time_(5.0)
 	    , distance_(1000.0)//0.0
+			, view_flag_(false)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
 

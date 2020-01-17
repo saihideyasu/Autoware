@@ -219,7 +219,11 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
       gsd.alt_std = alt_std_;
       pub_std_dev_.publish(gsd);
 
-			gnss_stat_ = stoi(nmea.at(9));
+			//gnss_stat_ = stoi(nmea.at(9));
+      std::vector<std::string> vec = split(nmea.at(9), ';');
+      if(vec.size() < 2) gnss_stat_ = 0;
+      else if(vec[1] == "INS_SOLUTION_GOOD") gnss_stat_ = 3;
+      else gnss_stat_ = 0;
       std_msgs::UInt8 stat;
       stat.data = gnss_stat_;
       pub_stat_.publish(stat);

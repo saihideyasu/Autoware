@@ -60,8 +60,10 @@ struct VehicleInfo
   double minimum_turning_radius;
   double maximum_steering_angle;
 
-  double wheelrad_to_steering_can_value_left = 20935.4958411006;//20691.8161699557;//20952.8189547718;
-  double wheelrad_to_steering_can_value_right = 20791.4464661611;//20802.5331916036;//20961.415734248;
+  const double wheelrad_to_steering_can_value_left = 20935.4958411006;//20691.8161699557;//20952.8189547718;
+  const double wheelrad_to_steering_can_value_right = 20791.4464661611;//20802.5331916036;//20961.415734248;
+  const double angle_velocity_correction_slope_ = -0.0150859385;
+  const double angle_velocity_correction_intersept_ = 1.1773688546;
 
   VehicleInfo()
   {
@@ -86,8 +88,14 @@ struct VehicleInfo
       {
           wheel_val = angle_actual / wheelrad_to_steering_can_value_right;
       }
-      std::cout << "wheel : " << wheel_val << std::endl;
-      return is_stored ? tan(wheel_val) * cur_vel_mps / wheel_base : 0;
+      //std::cout << "wheel : " << wheel_val << std::endl;
+      double ret = tan(wheel_val) * cur_vel_mps / wheel_base;
+      ros::Time time =  ros::Time::now();
+      std::cout << "aaa," << cur_vel_mps << "," << ret << "," << time.sec<< "," << time.nsec << "," << wheel_val << std::endl;
+      double hosei = (angle_velocity_correction_slope_ * cur_vel_mps + angle_velocity_correction_intersept_);
+      if(hosei < 1) hosei = 1;
+      ret *= hosei;
+      return is_stored ? ret : 0;
   }
   double getCurrentTireAngle(const double angle_deg)  // steering [degree] -> tire [degree]
   {

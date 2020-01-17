@@ -36,10 +36,10 @@ float64 gnss_lat_limit
 float64 gnss_lon_limit
 float64 gnss_alt_limit
 float64 acceptable_velocity_variation
-float64 difference_to_waypoint_distance
-float64 difference_to_waypoint_angular
 float64 ndt_gnss_min_distance_limit
 float64 ndt_gnss_max_distance_limit
 float64 ndt_gnss_angle_limit
 float64 steer_speed_limit1
 float64 steer_speed_limit2
+float64 check_distance_th
+float64 check_angular_th

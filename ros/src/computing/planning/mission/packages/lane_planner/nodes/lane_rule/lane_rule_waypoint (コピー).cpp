@@ -423,7 +423,7 @@ void create_waypoint(const autoware_msgs::LaneArray& msg)
 		continue;
   }
 
-  traffic_pub.publish(traffic_waypoint);
+  traffic_pub.publish(red_waypoint);//traffic_waypoint);
   red_pub.publish(red_waypoint);
   green_pub.publish(green_waypoint);
 }

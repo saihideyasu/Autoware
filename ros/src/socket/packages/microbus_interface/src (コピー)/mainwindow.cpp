@@ -12,29 +12,29 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
 
     palette_drive_mode_ok_ = ui->tx_drive_mode->palette();
     palette_steer_mode_ok_ = ui->tx_steer_mode->palette();
+    palette_position_check_ok_ = ui->tx_position_check->palette();
+    palette_angle_limit_over_ok_ = ui->tx_angle_limit_over->palette();
     palette_drive_clutch_connect_ = ui->tx_drive_clutch->palette();
     palette_steer_clutch_connect_ = ui->tx_steer_clutch->palette();
     palette_distance_angular_ok_ = ui->tx_distance_check->palette();
     palette_localizer_select_ok_ = ui->tx_localizer_select->palette();
-    palette_gnss_deviation_ok_ = ui->tx_lat->palette();
-    palette_score_ok_ = ui->tx_ndt_score->palette();
     palette_drive_mode_error_ = palette_drive_mode_ok_;
     palette_steer_mode_error_ = palette_steer_mode_ok_;
+    palette_position_check_error_ = palette_position_check_ok_;
+    palette_angle_limit_over_ok_ = palette_angle_limit_over_ok_;
     palette_drive_clutch_cut_ = palette_drive_clutch_connect_;
     palette_steer_clutch_cut_ = palette_steer_clutch_connect_;
     palette_distance_angular_error_ = palette_distance_angular_ok_;
     palette_localizer_select_error_ = palette_localizer_select_ok_;
-    palette_gnss_deviation_error_ = palette_gnss_deviation_ok_;
-    palette_score_error_ = palette_score_ok_;
     palette_drive_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
+    palette_position_check_error_.setColor(QPalette::Base, QColor("#FF0000"));
+    palette_angle_limit_over_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_drive_clutch_cut_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_clutch_cut_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_distance_angular_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_distance_angular_ok_.setColor(QPalette::Base, QColor("#00FFFF"));
     palette_localizer_select_error_.setColor(QPalette::Base, QColor("#FF0000"));
-    palette_gnss_deviation_error_.setColor(QPalette::Base, QColor("#FF0000"));
-    palette_score_error_.setColor(QPalette::Base, QColor("#FF0000"));
 
     connect(ui->bt_emergency_clear, SIGNAL(clicked()), this, SLOT(publish_emergency_clear()));
     connect(ui->bt_drive_mode_manual, SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
@@ -71,17 +71,13 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_distance_angular_check_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &MainWindow::callbackDistanceAngularCheck, this);
     sub_distance_angular_check_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &MainWindow::callbackDistanceAngularCheckNdt, this);
     sub_distance_angular_check_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &MainWindow::callbackDistanceAngularCheckGnss, this);
-    sub_config_ = nh_.subscribe("/config/microbus_can", 10, &MainWindow::callbackConfig, this);
+    sub_config_ = nh_.subscribe("/config/microbus_interface", 10, &MainWindow::callbackConfig, this);
     sub_localizer_select_ = nh_.subscribe("/localizer_select_num", 10, &MainWindow::callbackLocalizerSelect, this);
     sub_localizer_match_stat_ = nh_.subscribe("/microbus/localizer_match_stat", 10, &MainWindow::callbackLocalizerMatchStat, this);
     sub_can_velocity_param_ = nh_.subscribe("/microbus/velocity_param", 10, &MainWindow::callbackCanVelocityParam, this);
     sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &MainWindow::callbackStopperDistance, this);
     sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 10, &MainWindow::callbackWaypointParam, this);
-    sub_gnss_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &MainWindow::callbackGnssDeviation, this);
-    sub_ndt_stat_ = nh_.subscribe("/ndt_stat", 10, &MainWindow::callbackNdtStat, this);
-    sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &MainWindow::callbackGnssStat, this);
-    sub_ndt_stat_string_ = nh.subscribe("/ndt_monitor/ndt_status", 10 , &MainWindow::callbackNdtStatString, this);
-    sub_stroke_routine_ = nh.subscribe("/microbus/stroke_routine", 10 , &MainWindow::callbackStrokeRoutine, this);
+
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.baselink_distance = 10000;
@@ -100,7 +96,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::window_updata()
 {
-    const int keta = 3;
     bool unlock_flag = (can501_.emergency == false) ? true : false;
 
     ui->bt_drive_mode_manual->setEnabled(unlock_flag);
@@ -263,7 +258,29 @@ void MainWindow::window_updata()
             }
         }
 
-        
+        //position check
+        if(can_status_.position_check_stop == false)
+        {
+            ui->tx_position_check->setPalette(palette_position_check_ok_);
+            ui->tx_position_check->setText("OK");
+        }
+        else
+        {
+            ui->tx_position_check->setPalette(palette_position_check_error_);
+            ui->tx_position_check->setText("ERROR");
+        }
+
+        //angle_limit_over
+        if(can_status_.angle_limit_over == false)
+        {
+            ui->tx_angle_limit_over->setPalette(palette_angle_limit_over_ok_);
+            ui->tx_angle_limit_over->setText("OK");
+        }
+        else
+        {
+            ui->tx_angle_limit_over->setPalette(palette_angle_limit_over_error_);
+            ui->tx_angle_limit_over->setText("ERROR");
+        }
 
         //clutch
         if(can503_.clutch == true)
@@ -310,6 +327,7 @@ void MainWindow::window_updata()
         ui->tx_stroke_actual->setText("");
         ui->tx_angle_target->setText("");
         ui->tx_angle_actual->setText("");
+        ui->tx_position_check->setText("");
     }
 
     if(can_status_.safety_error_message != "" && error_text_lock_ == false)
@@ -321,14 +339,14 @@ void MainWindow::window_updata()
     if(fabs(distance_angular_check_.baselink_distance) <= config_.check_distance_th)
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "distance OK," << config_.check_distance_th << "," << distance_angular_check_.baselink_distance;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_.baselink_distance;
         ui->tx_distance_check->setText(str.str().c_str());
         ui->tx_distance_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "distance NG," << config_.check_distance_th << "," << distance_angular_check_.baselink_distance;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_.baselink_distance;
         ui->tx_distance_check->setText(str.str().c_str());
         ui->tx_distance_check->setPalette(palette_distance_angular_error_);
     }
@@ -336,14 +354,14 @@ void MainWindow::window_updata()
     if(fabs(distance_angular_check_ndt_.baselink_distance) <= config_.check_distance_th)
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "distance OK," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
         ui->tx_ndt_distance_check->setText(str.str().c_str());
         ui->tx_ndt_distance_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "distance NG," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
         ui->tx_ndt_distance_check->setText(str.str().c_str());
         ui->tx_ndt_distance_check->setPalette(palette_distance_angular_error_);
     }
@@ -351,14 +369,14 @@ void MainWindow::window_updata()
     if(fabs(distance_angular_check_gnss_.baselink_distance) <= config_.check_distance_th)
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "distance OK," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
+        str << "distance OK," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
         ui->tx_gnss_distance_check->setText(str.str().c_str());
         ui->tx_gnss_distance_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "distance NG," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
+        str << "distance NG," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
         ui->tx_gnss_distance_check->setText(str.str().c_str());
         ui->tx_gnss_distance_check->setPalette(palette_distance_angular_error_);
     }
@@ -369,14 +387,14 @@ void MainWindow::window_updata()
     if(fabs(angular_deg) <= config_.check_angular_th)
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "angular OK," << config_.check_angular_th << "," << angular_deg;
+        str << "angular OK," << config_.check_angular_th << "," << angular_deg;
         ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "angular NG," << config_.check_angular_th << "," << angular_deg;
+        str << "angular NG," << config_.check_angular_th << "," << angular_deg;
         ui->tx_angular_check->setText(str.str().c_str());
         ui->tx_angular_check->setPalette(palette_distance_angular_error_);
     }
@@ -384,14 +402,14 @@ void MainWindow::window_updata()
     if(fabs(angular_deg_ndt) <= config_.check_angular_th)
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "angular OK," << config_.check_angular_th << "," << angular_deg_ndt;
+        str << "angular OK," << config_.check_angular_th << "," << angular_deg_ndt;
         ui->tx_ndt_angular_check->setText(str.str().c_str());
         ui->tx_ndt_angular_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "angular NG," << config_.check_angular_th << "," << angular_deg_ndt;
+        str << "angular NG," << config_.check_angular_th << "," << angular_deg_ndt;
         ui->tx_ndt_angular_check->setText(str.str().c_str());
         ui->tx_ndt_angular_check->setPalette(palette_distance_angular_error_);
     }
@@ -399,14 +417,14 @@ void MainWindow::window_updata()
     if(fabs(angular_deg_gnss) <= config_.check_angular_th)
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "angular OK," << config_.check_angular_th << "," << angular_deg_gnss;
+        str << "angular OK," << config_.check_angular_th << "," << angular_deg_gnss;
         ui->tx_gnss_angular_check->setText(str.str().c_str());
         ui->tx_gnss_angular_check->setPalette(palette_distance_angular_ok_);
     }
     else
     {
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << "angular NG," << config_.check_angular_th << "," << angular_deg_gnss;
+        str << "angular NG," << config_.check_angular_th << "," << angular_deg_gnss;
         ui->tx_gnss_angular_check->setText(str.str().c_str());
         ui->tx_gnss_angular_check->setPalette(palette_distance_angular_error_);
     }
@@ -447,74 +465,28 @@ void MainWindow::window_updata()
 
     {
         std::stringstream str_vel;
-        str_vel << std::fixed << std::setprecision(keta) << can_velocity_param_.velocity;
+        str_vel << can_velocity_param_.velocity;
         ui->tx_can_velocity->setText(str_vel.str().c_str());
 
         std::stringstream str_acc;
-        str_acc << std::fixed << std::setprecision(keta) << can_velocity_param_.acceleration;
+        str_acc << can_velocity_param_.acceleration;
         ui->tx_can_accel->setText(str_acc.str().c_str());
 
         std::stringstream str_jurk;
-        str_jurk << std::fixed << std::setprecision(keta) << can_velocity_param_.jurk;
+        str_jurk << can_velocity_param_.jurk;
         ui->tx_can_jurk->setText(str_jurk.str().c_str());
 
         std::stringstream str_stop_dis;
-        str_stop_dis  << std::fixed << std::setprecision(keta) << stopper_distance_;
+        str_stop_dis << stopper_distance_;
         ui->tx_stopper_distance->setText(str_stop_dis.str().c_str());
 
         std::stringstream str_way_num;
         str_way_num << waypoint_param_.id;
         ui->tx_waypoint_num->setText(str_way_num.str().c_str());
     }
-
-    {
-        std::stringstream str_lat, str_lon, str_alt;
-        str_lat << std::fixed << std::setprecision(keta) << gnss_deviation_.lat_std;
-        if(gnss_deviation_.lat_std > config_.gnss_lat_limit) ui->tx_lat->setPalette(palette_gnss_deviation_error_);
-        else ui->tx_lat->setPalette(palette_gnss_deviation_ok_);
-        ui->tx_lat->setText(str_lat.str().c_str());
-        str_lon << std::fixed << std::setprecision(keta) << gnss_deviation_.lon_std;
-        if(gnss_deviation_.lon_std > config_.gnss_lon_limit) ui->tx_lon->setPalette(palette_gnss_deviation_error_);
-        else ui->tx_lon->setPalette(palette_gnss_deviation_ok_);
-        ui->tx_lon->setText(str_lon.str().c_str());
-        str_alt << std::fixed << std::setprecision(keta) << gnss_deviation_.alt_std;
-        if(gnss_deviation_.alt_std > config_.gnss_alt_limit) ui->tx_alt->setPalette(palette_gnss_deviation_error_);
-        else ui->tx_alt->setPalette(palette_gnss_deviation_ok_);
-        ui->tx_alt->setText(str_alt.str().c_str());
-    }
-
-    {
-        std::stringstream str_ndt_stat, str_gnss_ok, str_ndt_string;
-        str_ndt_stat << std::fixed << std::setprecision(keta) << ndt_stat_.score;
-        ui->tx_ndt_score->setText(str_ndt_stat.str().c_str());
-        if(gnss_stat_ == 3)
-        {
-            ui->tx_gnss_ok->setPalette(palette_gnss_deviation_ok_);
-            ui->tx_gnss_ok->setText("OK");
-        }
-        else
-        {
-            ui->tx_gnss_ok->setPalette(palette_gnss_deviation_error_);
-            ui->tx_gnss_ok->setText("NG");
-        }
-        if(ndt_stat_string_ == "NDT_OK")
-        {
-            ui->tx_ndt_ok->setPalette(palette_gnss_deviation_ok_);
-            ui->tx_ndt_ok->setText("OK");
-        }
-        else
-        {
-            ui->tx_ndt_ok->setPalette(palette_gnss_deviation_error_);
-            ui->tx_ndt_ok->setText("NG");
-        }
-    }
-
-    {
-        ui->tx_stroke_routine->setText(stroke_routine_.c_str());
-    }
 }
 
-void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg)
+void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg)
 {
     config_ = msg;
 }
@@ -577,31 +549,6 @@ void MainWindow::callbackStopperDistance(const std_msgs::Float64 &msg)
 void MainWindow::callbackWaypointParam(const autoware_msgs::WaypointParam &msg)
 {
     waypoint_param_ = msg;
-}
-
-void MainWindow::callbackNdtStat(const autoware_msgs::NDTStat &msg)
-{
-    ndt_stat_ = msg;
-}
-
-void MainWindow::callbackGnssDeviation(const autoware_msgs::GnssStandardDeviation &msg)
-{
-    gnss_deviation_ = msg;
-}
-
-void MainWindow::callbackGnssStat(const std_msgs::UInt8 &msg)
-{
-    gnss_stat_ = msg.data;
-}
-
-void MainWindow::callbackNdtStatString(const std_msgs::String &msg)
-{
-    ndt_stat_string_ = msg.data;
-}
-
-void MainWindow::callbackStrokeRoutine(const std_msgs::String &msg)
-{
-    stroke_routine_ = msg.data;
 }
 
 void MainWindow::publish_emergency_clear()

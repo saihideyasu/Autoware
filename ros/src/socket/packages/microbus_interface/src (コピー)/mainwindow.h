@@ -3,14 +3,11 @@
 
 #include <QMainWindow>
 #include <ros/ros.h>
-#include <iomanip>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
-#include <std_msgs/UInt8.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
-#include <std_msgs/String.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -18,12 +15,9 @@
 #include <autoware_msgs/LocalizerMatchStat.h>
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
-//#include <autoware_config_msgs/ConfigMicrobusInterface.h>
-#include <autoware_config_msgs/ConfigMicroBusCan.h>
+#include <autoware_config_msgs/ConfigMicrobusInterface.h>
 #include <autoware_can_msgs/MicroBusCanVelocityParam.h>
 #include <autoware_msgs/WaypointParam.h>
-#include <autoware_msgs/GnssStandardDeviation.h>
-#include <autoware_msgs/NDTStat.h>
 
 namespace Ui {
 class MainWindow;
@@ -60,8 +54,6 @@ private:
     ros::Subscriber sub_can_velocity_param_;
     ros::Subscriber sub_stopper_distance_;
     ros::Subscriber sub_waypoint_param_;
-    ros::Subscriber sub_gnss_deviation_, sub_ndt_stat_, sub_gnss_stat_, sub_ndt_stat_string_;
-    ros::Subscriber sub_stroke_routine_;
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
@@ -70,17 +62,12 @@ private:
     void callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackDistanceAngularCheckNdt(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackDistanceAngularCheckGnss(const autoware_msgs::DifferenceToWaypointDistance &msg);
-    void callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg);
+    void callbackConfig(const autoware_config_msgs::ConfigMicrobusInterface &msg);
     void callbackLocalizerSelect(const std_msgs::Int32 &msg);//localizerの遷移状態 
     void callbackLocalizerMatchStat(const autoware_msgs::LocalizerMatchStat &msg);
     void callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVelocityParam &msg);
     void callbackStopperDistance(const std_msgs::Float64 &msg);
     void callbackWaypointParam(const autoware_msgs::WaypointParam &msg);
-    void callbackGnssDeviation(const autoware_msgs::GnssStandardDeviation &msg);
-    void callbackNdtStat(const autoware_msgs::NDTStat &msg);
-    void callbackGnssStat(const std_msgs::UInt8 &msg);
-    void callbackNdtStatString(const std_msgs::String &msg);
-    void callbackStrokeRoutine(const std_msgs::String &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
@@ -88,26 +75,22 @@ private:
     autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
     autoware_msgs::DifferenceToWaypointDistance distance_angular_check_, distance_angular_check_ndt_, distance_angular_check_gnss_;
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
-    autoware_config_msgs::ConfigMicroBusCan config_;
+    autoware_config_msgs::ConfigMicrobusInterface config_;
     int localizer_select_;
     autoware_msgs::LocalizerMatchStat localizer_match_stat_;
     autoware_can_msgs::MicroBusCanVelocityParam can_velocity_param_;
     bool error_text_lock_;
     double stopper_distance_;
     autoware_msgs::WaypointParam waypoint_param_;
-    autoware_msgs::GnssStandardDeviation gnss_deviation_;
-    autoware_msgs::NDTStat ndt_stat_;
-    unsigned char gnss_stat_;
-    std::string ndt_stat_string_, stroke_routine_;
     
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror
+    QPalette palette_position_check_ok_, palette_position_check_error_;//canステータス(正確にはposition_chekerのフラグ)の自動走行OKフラグ用パレット
+    QPalette palette_angle_limit_over_ok_, palette_angle_limit_over_error_;//ハンドル回転司令チェック用テキストボックスのパレット
     QPalette palette_drive_clutch_connect_, palette_drive_clutch_cut_;//ドライブクラッチのテキストボックスパレット
     QPalette palette_steer_clutch_connect_, palette_steer_clutch_cut_;//ハンドルクラッチのテキストボックスパレット
     QPalette palette_distance_angular_ok_, palette_distance_angular_error_;//経路との距離と角度チェックのテキストボックスパレット
     QPalette palette_localizer_select_ok_, palette_localizer_select_error_;//localizerの遷移状態のテキストボックスパレット
-    QPalette palette_gnss_deviation_ok_, palette_gnss_deviation_error_;
-    QPalette palette_score_ok_, palette_score_error_;
 
 private slots:
     void publish_emergency_clear();

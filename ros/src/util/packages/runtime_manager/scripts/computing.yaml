@@ -1077,7 +1077,6 @@ subs :
     - name : microbus_interface stroke
       desc : microbus_interface stroke desc sample
       cmd  : roslaunch microbus_interface microbus_interface.launch
-      param: microbus_interface
 
 buttons:
   car_dpm :
@@ -6249,6 +6248,37 @@ params :
       - Waypoint desc sample
       - Dialog desc sample
       v     : 1
+    - name  : localizer_check
+      desc  : localizer_check desc sample
+      label : localizer_check
+      kind  : radio_box
+      choices:
+      - ndt only
+      - gnss only
+      - ndt and gnss
+      descs :
+      - ndt only
+      - gnss only
+      - ndt and gnss
+      v     : 2
+    - name : yaw_correction1
+      desc : yaw_correction1
+      label: yaw_correction1
+      min  : 0.0
+      max  : 10.0
+      v    : 0.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : yaw_correction2
+      desc : yaw_correction2
+      label: yaw_correction2
+      min  : 0.0
+      max  : 10.0
+      v    : 0.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
     - name      : base_link_pose_topic1
       label     : base_link_pose_topic1
       v         : /ndt_pose
@@ -6467,29 +6497,6 @@ params :
       min  : 1.0
       max  : 5.0
       v    : 1.0
-      cmd_param:
-        dash     : ''
-        delim    : ':='
-
-  - name  : microbus_interface
-    topic : /config/microbus_interface
-    msg   : ConfigMicrobusInterface
-    vars  :
-    - name : check_distance_th
-      desc : check_distance_th
-      label: check_distance_th
-      min  : 0.0
-      max  : 10.0
-      v    : 2
-      cmd_param:
-        dash     : ''
-        delim    : ':='
-    - name : check_angular_th
-      desc : check_angular_th
-      label: check_angular_th
-      min  : 0.0
-      max  : 50.0
-      v    : 30
       cmd_param:
         dash     : ''
         delim    : ':='
@@ -7141,24 +7148,6 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
-    - name : difference_to_waypoint_distance
-      desc : difference_to_waypoint_distance
-      label: difference_to_waypoint_distance
-      min  : 0.0
-      max  : 10.0
-      v    : 2.0
-      cmd_param:
-        dash     : ''
-        delim    : ':='
-    - name : difference_to_waypoint_angular
-      desc : difference_to_waypoint_angular
-      label: difference_to_waypoint_angular
-      min  : 0.0
-      max  : 50.0
-      v    : 30.0
-      cmd_param:
-        dash     : ''
-        delim    : ':='
     - name : ndt_gnss_min_distance_limit
       desc : ndt_gnss_min_distance_limit
       label: ndt_gnss_min_distance_limit
@@ -7228,3 +7217,21 @@ params :
       - twist2
       - imu
       v     : 2
+    - name : check_distance_th
+      desc : check_distance_th
+      label: check_distance_th
+      min  : 0.0
+      max  : 10.0
+      v    : 2
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : check_angular_th
+      desc : check_angular_th
+      label: check_angular_th
+      min  : 0.0
+      max  : 50.0
+      v    : 30
+      cmd_param:
+        dash     : ''
+        delim    : ':='

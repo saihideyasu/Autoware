@@ -216,7 +216,7 @@ public:
 		pub_difference_to_waypoint_distance_.publish(dist);*/
 
 		//////////////////////////////////////
-
+//std::cout << sub_current_pose_->getTopic() << std::endl;
 		if(sub_current_pose_->getTopic() == "/current_pose")
 		{
 			const double search_dist = 10;
@@ -229,8 +229,9 @@ public:
 			{
 				double fd = euclid(waypose_[cou].position.x, waypose_[cou].position.y,
 					front_baselink_point.getX(), front_baselink_point.getY());
+					
 				if(fabs(fd) < fabs(min_fd))
-				{
+				{std::cout << "fd : " << fd << "," << min_fd << std::endl;
 					min_fd = fd;
 					min_dist = math_distance(waypose_[cou], waypose_[cou+1], front_baselink_point);
 					min_angular = math_angular(waypose_[cou]);

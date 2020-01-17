@@ -24,6 +24,8 @@
 //#include <autoware_can_msgs/MicroBusCanSenderPositionCheck.h>
 #include <autoware_config_msgs/ConfigMicroBusCan.h>
 #include <autoware_config_msgs/ConfigVelocitySet.h>
+#include <autoware_config_msgs/ConfigLocalizerSwitchFusion.h>
+//#include <autoware_config_msgs/ConfigMicrobusInterface.h>
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/PositionChecker.h>
 #include <autoware_msgs/WaypointParam.h>
@@ -294,7 +296,7 @@ private:
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
 	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_;
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_;
-	ros::Subscriber sub_localizer_select_num_;
+	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_;//sub_interface_config_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -304,6 +306,8 @@ private:
 	bool flag_drive_mode_, flag_steer_mode_;
 	bool input_drive_mode_, input_steer_mode_;
 	autoware_config_msgs::ConfigMicroBusCan setting_;
+	autoware_config_msgs::ConfigLocalizerSwitchFusion config_localizer_switch_;
+	//autoware_config_msgs::ConfigMicrobusInterface interface_config_;
 	unsigned char drive_control_mode_;
 	autoware_can_msgs::MicroBusCan501 can_receive_501_;
 	autoware_can_msgs::MicroBusCan502 can_receive_502_;
@@ -372,8 +376,8 @@ private:
 
 	void waypointDistanceCheck(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg, std::string pose_name)
 	{
-		if(fabs(msg->baselink_distance) > setting_.difference_to_waypoint_distance || 
-		    fabs(msg->baselink_angular) > setting_.difference_to_waypoint_angular)
+		if(fabs(msg->baselink_distance) > setting_.check_distance_th ||//setting_.difference_to_waypoint_distance ||
+			fabs(msg->baselink_angular) > setting_.check_angular_th)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -398,20 +402,23 @@ private:
 
 	void callbackDifferenceToWaypointDistanceNdt(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
-		waypointDistanceCheck(msg, std::string("ndt"));
+		if(config_localizer_switch_.localizer_check == 0 || config_localizer_switch_.localizer_check == 2)
+			waypointDistanceCheck(msg, std::string("ndt"));
 		difference_toWaypoint_distance_ndt_ = *msg;
 	}
 
 	void callbackDifferenceToWaypointDistanceGnss(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
-		waypointDistanceCheck(msg, std::string("gnss"));
+		if(config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2)
+			waypointDistanceCheck(msg, std::string("gnss"));
 		difference_toWaypoint_distance_gnss_ = *msg;
+
 	}
 
 	void NdtGnssCheck()
 	{
 		bool flag = true;
-		if((gnss_stat_ & 0x3) == 0) flag = false;
+		if(localizer_select_num_ == 0 && gnss_stat_ != 3) flag = false;
 		//if(ndt_stat_string != "NDT_OK") flag = false;
 
 		double ndtx = ndt_pose_.pose.position.x;
@@ -421,7 +428,22 @@ private:
 		double diff_x = ndtx - gnssx;
 		double diff_y = ndty - gnssy;
 		double distance = sqrt(diff_x * diff_x + diff_y* diff_y);
-		if(distance > 8) flag = false;
+		/*if(distance > 8)
+		{
+			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+				drive_clutch_ = false;
+			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+				steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
+			std::cout << "Denger! Ndt Gnss Distance : " << distance << std::endl;
+			std::stringstream safety_error_message;
+			safety_error_message << "Ndt Gnss Distance" << distance;
+			publisStatus(safety_error_message.str());
+			can_send();
+			flag = false;
+		}*/
 
 		/*diff_x /= distance;
 		diff_y /= distance;
@@ -438,7 +460,7 @@ private:
 		autoware_msgs::LocalizerMatchStat lms;
 		lms.header.stamp = ros::Time::now();
 
-		std::string gnss_stat_string = (gnss_stat_ & 0x3) ? "GNSS_OK" : "GNSS_ERROR";
+		std::string gnss_stat_string = (gnss_stat_ = 3) ? "GNSS_OK" : "GNSS_ERROR";
 		std::cout << "stat : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
 
 		/*bool ndt_gnss_difference_stat = false;
@@ -455,20 +477,57 @@ private:
 			   }
 		}*/
 
-		if(ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK")// ndt_gnss_difference_stat)
+		lms.localizer_stat = false;
+		switch(config_localizer_switch_.localizer_check)
+		{
+			case 0://ndt only
+			{
+				if(ndt_stat_string_ == "NDT_OK") lms.localizer_stat = true;
+				break;
+			}
+			case 1://gnss only
+			{
+				if(gnss_stat_string == "GNSS_OK") lms.localizer_stat = true;
+				break;
+			}
+			case 2://ndt and gnss
+			{
+				if(ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK") lms.localizer_stat = true;
+				break;
+			}
+		}
+
+		/*if(localizer_select_num_ == 1 && ndt_stat_string_ == "NDT_OK" && gnss_stat_string == "GNSS_OK")// ndt_gnss_difference_stat)
 		{
 			lms.localizer_stat = true;
 			//lms.localizer_distance = distance;
 		}
-		else
+		else if(localizer_select_num_ == 0 && ndt_stat_string_ == "NDT_OK")
 		{
-			lms.localizer_stat = false;
+			lms.localizer_stat = true;
+		}
+		else*/
+		if(lms.localizer_stat == false)
+		{
+			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+				drive_clutch_ = false;
+			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+				steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
+			std::cout << "Denger! not OK : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
+			std::stringstream safety_error_message;
+			safety_error_message << "not OK : " << ndt_stat_string_ << "," << gnss_stat_string;
+			publisStatus(safety_error_message.str());
+			can_send();
+			//lms.localizer_stat = false;
 			//lms.localizer_distance = distance;
 		}
 
 		pub_localizer_match_stat_.publish(lms);
 
-		if(flag == false)
+		/*if(flag == false)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -482,7 +541,7 @@ private:
 			safety_error_message << "Ndt Gnss error : ";
 			publisStatus(safety_error_message.str());
 			can_send();
-		}
+		}*/
 	}
 
 	void callbackNdtPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -523,22 +582,25 @@ private:
 		std::cout << "gnss_lon : " << msg->lon_std << "," << setting_.gnss_lon_limit << std::endl;
 		std::cout << "gnss_alt : " << msg->alt_std << "," << setting_.gnss_alt_limit << std::endl;
 
-		if(msg->lat_std > setting_.gnss_lat_limit ||
+		if((config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2) && localizer_select_num_ == 1)
+		{
+			if(msg->lat_std > setting_.gnss_lat_limit ||
 		        msg->lon_std > setting_.gnss_lon_limit ||
 		        msg->alt_std > setting_.gnss_alt_limit && localizer_select_num_ == LOCALIZER_SELECT_GNSS)
-		{
-			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
-				drive_clutch_ = false;
-			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
-				steer_clutch_ = false;
-			//flag_drive_mode_ = false;
-			//flag_steer_mode_ = false;
-			shift_auto_ = false;
-			std::cout << "Denger! Gnss deviation limit over : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std << std::endl;
-			std::stringstream safety_error_message;
-			safety_error_message << "Gnss deviation error : ";// << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;
-			publisStatus(safety_error_message.str());
-			can_send();
+			{
+				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+					drive_clutch_ = false;
+				if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+					steer_clutch_ = false;
+				//flag_drive_mode_ = false;
+				//flag_steer_mode_ = false;
+				shift_auto_ = false;
+				std::cout << "Denger! Gnss deviation limit over : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std << std::endl;
+				std::stringstream safety_error_message;
+				safety_error_message << "Gnss deviation error : ";// << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;
+				publisStatus(safety_error_message.str());
+				can_send();
+			}
 		}
 		gnss_deviation_ = *msg;
 	}
@@ -736,7 +798,7 @@ private:
 		double mps = current_velocity_.twist.linear.x;
 		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
 
-		std::string gnss_stat_string = (gnss_stat_ & 0x3) ? "GNSS_OK" : "GNSS_ERROR";
+		std::string gnss_stat_string = (gnss_stat_ == 3) ? "GNSS_OK" : "GNSS_ERROR";
 		str << "," << stopper_distance_ << "," << estimated_stopping_distance;
 		str << "," << ndt_stat_.score << "," <<ndt_reliability_ << "," << ndt_stat_.exe_time << "," << ndt_stat_string_ << "," << gnss_stat_string;
 		str << "," << gnss_deviation_.lat_std << "," << gnss_deviation_.lon_std << "," << gnss_deviation_.alt_std;
@@ -878,6 +940,11 @@ private:
 		automaticDoorSet(msg->data);
 	}
 
+	/*void callbackConfigInterface(const autoware_config_msgs::ConfigMicrobusInterface::ConstPtr &msg)
+	{
+		interface_config_ = *msg;
+	}*/
+
 	void callbackConfigMicroBusCan(const autoware_config_msgs::ConfigMicroBusCan::ConstPtr &msg)
 	{
 		setting_ = *msg;
@@ -898,6 +965,11 @@ private:
 		else if(setting_.pedal_stroke_max - setting_.pedal_stroke_center )*/
 		std::string safety_error_message = "";
 		publisStatus(safety_error_message);
+	}
+
+	void callbackConfigLocalizerSwitch(const autoware_config_msgs::ConfigLocalizerSwitchFusion::ConstPtr &msg)
+	{
+		config_localizer_switch_ = *msg;
 	}
 
 	void callbackWaypointParam(const autoware_msgs::WaypointParam::ConstPtr &msg)
@@ -1143,6 +1215,7 @@ private:
 			std::cout << "steer_correction : " << steer_correction_ << std::endl;
 		}
 		else steer_val = input_steer_;
+		//steer_val -= 600;
 		//PID
 		double wheel_base = 3.935;
 //		steer_val += _steer_pid_control(difference_toWaypoint_distance_.base_linkdistance);
@@ -1196,7 +1269,7 @@ private:
 
 	double _accel_stroke_pid_control(double current_velocity, double cmd_velocity)
 	{
-		double step = 5;
+		double step = 3;
 		//ブレーキからアクセルに変わった場合、Iの積算値をリセット
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
 		std::cout << "voltage stroke : " << stroke << std::endl;
@@ -1588,19 +1661,23 @@ private:
 				double tmp = pid_params.get_stop_stroke_prev() + step;
 				if(tmp < ret) ret = tmp;
 			}*/
-			if(pid_params.get_stop_stroke_prev()-ret >= 50 && pid_params.get_stop_stroke_prev() > 0)
+			
+			if(pid_params.get_stop_stroke_prev()-ret >= 50 && pid_params.get_stop_stroke_prev() >= 0)
 			{
 				ret = pid_params.get_stop_stroke_prev();
 				ret -= step;
 				if(ret < 0) ret = 0;
+				//std::cout << "brake_ret 1" << std::endl;
 			}
 			//ブレーキをゆっくり踏む
-			if(pid_params.get_stop_stroke_prev() > 0.0 && pid_params.get_stop_stroke_prev() < ret)
+			else if(pid_params.get_stop_stroke_prev() > 0.0 && pid_params.get_stop_stroke_prev() < ret)
 			{
 				double tmp = pid_params.get_stop_stroke_prev() - step;
 				if(tmp > ret) ret = tmp;
 				if(-ret < setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
+				//std::cout << "brake_ret 2" << std::endl;
 			}
+			else std::cout << "brake_ret 3" << std::endl;
 		}
 
 		pid_params.set_stop_stroke_prev(ret);
@@ -1697,13 +1774,13 @@ std::cout << "auto_mode" << std::endl;
 			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
 			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_>=0 && stopper_distance_ <=current_velocity) )
 			{
-				std::cout << "yosou stroke brake" << std::endl;
+				std::cout << "stroke brake" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止線判定
-			else if (stopper_distance_ > 0 && stopper_distance_ < 30.0)
+			else if (stopper_distance_ >= 0 && stopper_distance_ < 30.0)
 			{
-				std::cout << "yosoku stroke distance" << std::endl;
+				std::cout << "stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止判定
@@ -1946,6 +2023,7 @@ public:
 		//sub_waypoints_ = nh_.subscribe("/waypoint_param", 10, &kvaser_can_sender::callbackWaypointParam, this);
 		sub_position_checker_ = nh_.subscribe("/final_waypoints", 10, &kvaser_can_sender::callbackWaypoints, this);
 		sub_config_microbus_can_ = nh_.subscribe("/config/microbus_can", 10, &kvaser_can_sender::callbackConfigMicroBusCan, this);
+		sub_config_localizer_switch_ = nh_.subscribe("/config/localizer_switch", 10, &kvaser_can_sender::callbackConfigLocalizerSwitch, this);
 		sub_shift_auto_ = nh_.subscribe("/microbus/shift_auto", 10, &kvaser_can_sender::callbackShiftAuto, this);
 		sub_shift_position_ = nh_.subscribe("/microbus/shift_position", 10, &kvaser_can_sender::callbackShiftPosition, this);
 		sub_emergency_stop_ = nh_.subscribe("/microbus/emergency_stop", 10, &kvaser_can_sender::callbackEmergencyStop, this);
@@ -1974,6 +2052,7 @@ public:
 		sub_difference_to_waypoint_distance_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceNdt, this);
 		sub_difference_to_waypoint_distance_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceGnss, this);
 		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);
+		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
 		sub_current_velocity_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, "/current_velocity", 10);

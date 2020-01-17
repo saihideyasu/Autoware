@@ -59,6 +59,8 @@ private:
     std::string gnss_deviation_topic_;
     //fusion select flag
     int fusion_select_;
+    //yaw_correction
+    double yaw_correction_;
 
     //baselink data
     geometry_msgs::PoseStamped baselink_;
@@ -71,16 +73,21 @@ private:
                         const geometry_msgs::TwistStampedConstPtr &estimate_twist_msg,
                         const geometry_msgs::PoseStampedConstPtr &localizer_pose_msg)
     {
+        tf::Quaternion pose_orien;
+        tf::quaternionMsgToTF(base_link_pose_msg->pose.orientation, pose_orien);
+        tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
+        tf::Quaternion math_orie = pose_orien * hosei;
+
         baselink_.header.frame_id = base_link_pose_msg->header.frame_id;
         baselink_.header.stamp = base_link_pose_msg->header.stamp;
         baselink_.header.seq = base_link_pose_msg->header.seq;
         baselink_.pose.position.x = base_link_pose_msg->pose.position.x;
         baselink_.pose.position.y = base_link_pose_msg->pose.position.y;
         baselink_.pose.position.z = base_link_pose_msg->pose.position.z;
-        baselink_.pose.orientation.x = base_link_pose_msg->pose.orientation.x;
-        baselink_.pose.orientation.y = base_link_pose_msg->pose.orientation.y;
-        baselink_.pose.orientation.z = base_link_pose_msg->pose.orientation.z;
-        baselink_.pose.orientation.w = base_link_pose_msg->pose.orientation.w;
+        baselink_.pose.orientation.x = math_orie.getX();//base_link_pose_msg->pose.orientation.x;
+        baselink_.pose.orientation.y = math_orie.getY();//base_link_pose_msg->pose.orientation.y;
+        baselink_.pose.orientation.z = math_orie.getZ();//base_link_pose_msg->pose.orientation.z;
+        baselink_.pose.orientation.w = math_orie.getW();//base_link_pose_msg->pose.orientation.w;
 
         twist_.header.frame_id = estimate_twist_msg->header.frame_id;
         twist_.header.stamp = estimate_twist_msg->header.stamp;
@@ -213,8 +220,8 @@ public:
         ros::Time time = ros::Time::now();
 		bool flag;std::cout << "aaa" << std::endl;
         flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
-        //if(flag == true) std::cout << "bbb\n" << std::flush;
-        //else std::cout << "ccc\n" << std::flush;
+        if(flag == true) std::cout << "bbb\n" << std::flush;
+        else std::cout << "ccc\n" << std::flush;
 		std::cout << twist_.header.frame_id << std::endl;
         tf_listener->lookupTransform("map", twist_.header.frame_id, twist_.header.stamp, tf_stamped);
         //if(flag == false) std::cout << "bbb\n";
@@ -254,6 +261,11 @@ public:
     void set_fusion_select(int select)
     {
         fusion_select_ = select;
+    }
+
+    void set_yaw_correction(double val)
+    {
+        yaw_correction_ = val;
     }
 };
 
@@ -380,9 +392,11 @@ private:
     void config_callback(const autoware_config_msgs::ConfigLocalizerSwitchFusionConstPtr &msg)
     {
 		std::cout << "fusuion select : " << (int)msg->fusion_select << std::endl;
-
+        std::cout << "yaw_correction1 : " << msg->yaw_correction1 << std::endl;
         localizer_select(msg->fusion_select);
 
+        topic_list_[0].set_yaw_correction(msg->yaw_correction1);
+        topic_list_[1].set_yaw_correction(msg->yaw_correction2);
         config_ = *msg;
     }
 
@@ -406,10 +420,10 @@ public:
             topic_list_[i].callback_run();
         }
 
-        localizer_select_num_ = localizer_select;
+        /*localizer_select_num_ = localizer_select;
         std_msgs::Int32 lsn;
         lsn.data = localizer_select_num_;
-        pub_localizer_select_num_.publish(lsn);
+        pub_localizer_select_num_.publish(lsn);*/
     }
 };
 
@@ -428,6 +442,7 @@ int main(int argc, char** argv)
     {
         std::string base_link_pose_topic, estimate_twist_topic, localizer_pose_topic;
         std::stringstream base_link_pose_name, estimate_twist_name, localizer_pose_name, base_link_tf_name, alignment_mechanism_name;
+        std::stringstream yaw_bias_name;
 
         base_link_pose_name << "base_link_pose" << cou;
         private_nh.param<std::string>(base_link_pose_name.str(), base_link_pose_topic, std::string(""));
@@ -469,6 +484,11 @@ int main(int argc, char** argv)
             }
         }
     
+        /*yaw_bias_name << "yaw_bias1";// << cou;
+        double yaw_bias;
+        private_nh.param<double>(yaw_bias_name.str(), yaw_bias, 1.0);
+        std::cout << yaw_bias_name.str() << " : " << yaw_bias << std::endl;*/
+
         TopicList list(nh, private_nh,
                        base_link_pose_topic, estimate_twist_topic, localizer_pose_topic,
                        alignment_mechanism, ndt_status_topic, gnss_deviation_topic);

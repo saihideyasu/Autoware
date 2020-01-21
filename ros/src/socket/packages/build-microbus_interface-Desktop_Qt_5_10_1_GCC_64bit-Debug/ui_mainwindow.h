@@ -184,7 +184,7 @@ public:
         lb_drive_input_mode->setGeometry(QRect(10, 110, 101, 17));
         tx_drive_mode = new QTextEdit(groupBox_drive);
         tx_drive_mode->setObjectName(QStringLiteral("tx_drive_mode"));
-        tx_drive_mode->setGeometry(QRect(60, 30, 121, 41));
+        tx_drive_mode->setGeometry(QRect(110, 40, 71, 21));
         tx_drive_mode->setAutoFillBackground(true);
         tx_drive_mode->setLineWidth(0);
         tx_drive_mode->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -544,7 +544,7 @@ public:
         lb_steer_input_mod->setGeometry(QRect(10, 80, 101, 17));
         tx_steer_mode = new QTextEdit(groupBox_steer);
         tx_steer_mode->setObjectName(QStringLiteral("tx_steer_mode"));
-        tx_steer_mode->setGeometry(QRect(60, 30, 121, 41));
+        tx_steer_mode->setGeometry(QRect(120, 40, 61, 21));
         tx_steer_mode->setAutoFillBackground(true);
         tx_steer_mode->setLineWidth(0);
         tx_steer_mode->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

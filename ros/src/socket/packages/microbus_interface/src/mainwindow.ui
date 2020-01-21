@@ -154,10 +154,10 @@
       <widget class="QTextEdit" name="tx_drive_mode">
        <property name="geometry">
         <rect>
-         <x>60</x>
-         <y>30</y>
-         <width>121</width>
-         <height>41</height>
+         <x>110</x>
+         <y>40</y>
+         <width>71</width>
+         <height>21</height>
         </rect>
        </property>
        <property name="autoFillBackground">
@@ -1964,10 +1964,10 @@
       <widget class="QTextEdit" name="tx_steer_mode">
        <property name="geometry">
         <rect>
-         <x>60</x>
-         <y>30</y>
-         <width>121</width>
-         <height>41</height>
+         <x>120</x>
+         <y>40</y>
+         <width>61</width>
+         <height>21</height>
         </rect>
        </property>
        <property name="autoFillBackground">

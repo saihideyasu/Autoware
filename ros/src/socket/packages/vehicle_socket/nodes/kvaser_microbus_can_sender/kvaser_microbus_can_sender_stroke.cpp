@@ -467,7 +467,7 @@ private:
 
 		if(config_localizer_switch_.localizer_check == 2)
 		{
-			if(fabs(difference_toWaypoint_distance_gnss_.baselink_distance - difference_toWaypoint_distance_ndt_.front_baselink_distance) > setting_.ndt_gnss_max_distance_limit)
+			if(fabs(difference_toWaypoint_distance_gnss_.baselink_distance - difference_toWaypoint_distance_ndt_.baselink_distance) > setting_.ndt_gnss_max_distance_limit)
 			{
 				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 					drive_clutch_ = false;
@@ -814,8 +814,8 @@ private:
 //		str << x << "," << v0 << "," << v << "," << v_sa;
 		str << std::setprecision(10) << waypoint_id_ << "," << twist_msg->twist.linear.x <<","<< acc2 << "," << jurk2 << ",";
 		str << difference_toWaypoint_distance_.baselink_angular << "," << difference_toWaypoint_distance_.baselink_distance << "," ;
-		str << difference_toWaypoint_distance_.front_baselink_distance <<",";
-		str << _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance) ;
+		//str << difference_toWaypoint_distance_.front_baselink_distance <<",";
+		//str << _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance) ;
 	
 		double mps = current_velocity_.twist.linear.x;
 		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);

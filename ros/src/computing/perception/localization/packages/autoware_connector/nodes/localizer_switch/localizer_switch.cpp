@@ -11,6 +11,7 @@
 #include <autoware_msgs/NDTStat.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/LocalizerMatchStat.h>
+#include <autoware_msgs/WaypointParam.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -277,7 +278,7 @@ private:
     std::vector<TopicList> topic_list_;
 
     ros::Publisher pub_localizer_select_num_;
-    ros::Subscriber sub_fusion_select_, sub_localizer_match_stat_, sub_localizer_select_;
+    ros::Subscriber sub_fusion_select_, sub_localizer_match_stat_, sub_localizer_select_, sub_waypoint_param_;
 
     tf::TransformBroadcaster tf_Broadcaster_;
 
@@ -400,6 +401,17 @@ private:
         config_ = *msg;
     }
 
+    void waypoint_param_callback(const autoware_msgs::WaypointParamConstPtr &msg)
+    {
+        if(msg->ndt_yaw_correction >= -10 && msg->ndt_yaw_correction <= 10)
+        {
+            topic_list_[0].set_yaw_correction(msg->ndt_yaw_correction);
+        }
+        if(msg->gnss_yaw_correction >= -10 && msg->gnss_yaw_correction <= 10)
+        {
+            topic_list_[1].set_yaw_correction(msg->gnss_yaw_correction);
+        }
+    }
 public:
     LocalizerSwitch(ros::NodeHandle nh, ros::NodeHandle private_nh, std::vector<TopicList> list,
         int localizer_select)
@@ -413,6 +425,8 @@ public:
                     "/config/localizer_switch", 10, &LocalizerSwitch::config_callback, this);
         sub_localizer_select_ = nh_.subscribe<std_msgs::Int32>(
                     "/fusion_select", 10, &LocalizerSwitch::fusion_select_callback, this);
+        sub_waypoint_param_ = nh_.subscribe<autoware_msgs::WaypointParam>(
+                    "/waypoint_param", 10, &LocalizerSwitch::waypoint_param_callback, this);
 
         topic_list_ = list;
         for(int i=0; i<topic_list_.size(); i++)

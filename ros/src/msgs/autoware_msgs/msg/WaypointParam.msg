@@ -30,4 +30,7 @@ float32 lookahead_ratio
 float32 minimum_lookahead_distance
 float32 lookahead_ratio_magn
 int8 steer_pid_on
+float64 ndt_yaw_correction
+float64 gnss_yaw_correction
+int32 localizer_check
 LiesseXZB70MParam liesse

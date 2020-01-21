@@ -369,7 +369,8 @@ private:
 			std::cout << "Denger! localizer change error" << std::endl;
 			std::stringstream safety_error_message;
 			safety_error_message << "localizer change error";
-			publisStatus(safety_error_message.str());
+			publishStatus(safety_error_message.str());
+			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 			can_send();
 		}
 	}
@@ -389,7 +390,8 @@ private:
 			std::cout << "Denger! " << pose_name << " : distance : " << msg->baselink_distance << "  angular : " << msg->baselink_angular << std::endl;
 			std::stringstream safety_error_message;
 			safety_error_message << pose_name << "\ndistance," << msg->baselink_distance << "\nangular," << msg->baselink_angular;
-			publisStatus(safety_error_message.str());
+			publishStatus(safety_error_message.str());
+			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 			can_send();
 		}
 	}
@@ -440,7 +442,7 @@ private:
 			std::cout << "Denger! Ndt Gnss Distance : " << distance << std::endl;
 			std::stringstream safety_error_message;
 			safety_error_message << "Ndt Gnss Distance" << distance;
-			publisStatus(safety_error_message.str());
+			publishStatus(safety_error_message.str());
 			can_send();
 			flag = false;
 		}*/
@@ -463,8 +465,26 @@ private:
 		std::string gnss_stat_string = (gnss_stat_ = 3) ? "GNSS_OK" : "GNSS_ERROR";
 		std::cout << "stat : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
 
-		/*bool ndt_gnss_difference_stat = false;
-		if(setting_.ndt_gnss_min_distance_limit <= distance)
+		if(config_localizer_switch_.localizer_check == 2)
+		{
+			if(fabs(difference_toWaypoint_distance_gnss_.baselink_distance - difference_toWaypoint_distance_ndt_.front_baselink_distance) > setting_.ndt_gnss_max_distance_limit)
+			{
+				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+					drive_clutch_ = false;
+				if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+					steer_clutch_ = false;
+				//flag_drive_mode_ = false;
+				//flag_steer_mode_ = false;
+				shift_auto_ = false;
+				std::cout << "Denger! difference_toWaypoint_distance_gnss : " << difference_toWaypoint_distance_ndt_.front_baselink_distance << "," << difference_toWaypoint_distance_gnss_.baselink_distance<< std::endl;
+				std::stringstream safety_error_message;
+				safety_error_message << "not difference_toWaypoint\ndistance_gnss\n" << difference_toWaypoint_distance_ndt_.front_baselink_distance << "," << difference_toWaypoint_distance_gnss_.baselink_distance;
+				publishStatus(safety_error_message.str());
+				//system("aplay -D plughw:PCH /home/autoware/one33.wav");
+				can_send();
+			}
+		}
+		/*if(setting_.ndt_gnss_min_distance_limit <= distance)
 		{
 			ndt_gnss_difference_stat = true;
 		}
@@ -519,7 +539,8 @@ private:
 			std::cout << "Denger! not OK : " << ndt_stat_string_ << "," << gnss_stat_string << std::endl;
 			std::stringstream safety_error_message;
 			safety_error_message << "not OK : " << ndt_stat_string_ << "," << gnss_stat_string;
-			publisStatus(safety_error_message.str());
+			publishStatus(safety_error_message.str());
+			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 			can_send();
 			//lms.localizer_stat = false;
 			//lms.localizer_distance = distance;
@@ -539,7 +560,7 @@ private:
 			std::cout << "Denger! Ndt Gnss check : " << std::endl;
 			std::stringstream safety_error_message;
 			safety_error_message << "Ndt Gnss error : ";
-			publisStatus(safety_error_message.str());
+			publishStatus(safety_error_message.str());
 			can_send();
 		}*/
 	}
@@ -598,7 +619,8 @@ private:
 				std::cout << "Denger! Gnss deviation limit over : " << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std << std::endl;
 				std::stringstream safety_error_message;
 				safety_error_message << "Gnss deviation error : ";// << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;
-				publisStatus(safety_error_message.str());
+				publishStatus(safety_error_message.str());
+				//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 				can_send();
 			}
 		}
@@ -697,13 +719,13 @@ private:
 		{
 			input_steer_mode_ = false; //std::cout << "aaa" << std::endl;
 			std::string safety_error_message = "";
-			publisStatus(safety_error_message);
+			publishStatus(safety_error_message);
 		}
 		if(msg->clutch==false && can_receive_502_.clutch==true)
 		{
 			input_steer_mode_ = true;
 			std::string safety_error_message = "";
-			publisStatus(safety_error_message);
+			publishStatus(safety_error_message);
 		}
 
 		can_receive_502_ = *msg;
@@ -718,7 +740,7 @@ private:
 			shift_auto_ = true;
 			input_drive_mode_ = false;
 			std::string safety_error_message = "";
-			publisStatus(safety_error_message);
+			publishStatus(safety_error_message);
 		}
 		if(msg->clutch==false && can_receive_503_.clutch==true)
 		{
@@ -726,7 +748,7 @@ private:
 			shift_auto_ = false;
 			input_drive_mode_ = true;
 			std::string safety_error_message = "";
-			publisStatus(safety_error_message);
+			publishStatus(safety_error_message);
 		}
 		can_receive_503_ = *msg;
 	}
@@ -879,10 +901,11 @@ private:
 			shift_auto_ = false;
 			safety_error_message << "target angle over , " << deg;
 			//std::cout << safety_error_message.str() << std::endl;
+			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 			can_send();
 		}
 
-		publisStatus(safety_error_message.str());
+		publishStatus(safety_error_message.str());
 		twist_ = *msg;
 	}
 
@@ -964,7 +987,7 @@ private:
 			config_result = ERROR_STROKE_MAX_MIN_INCONSISTENCY;
 		else if(setting_.pedal_stroke_max - setting_.pedal_stroke_center )*/
 		std::string safety_error_message = "";
-		publisStatus(safety_error_message);
+		publishStatus(safety_error_message);
 	}
 
 	void callbackConfigLocalizerSwitch(const autoware_config_msgs::ConfigLocalizerSwitchFusion::ConstPtr &msg)
@@ -975,6 +998,11 @@ private:
 	void callbackWaypointParam(const autoware_msgs::WaypointParam::ConstPtr &msg)
 	{
 		pedal_ = msg->microbus_pedal;
+
+		if(msg->localizer_check > 0)
+		{
+			config_localizer_switch_.localizer_check = msg->localizer_check;
+		}
 
 		if(msg->automatic_door == 2 && msg->automatic_door != waypoint_param_.automatic_door)
 		{
@@ -1046,14 +1074,15 @@ private:
 				std::cout << "Denger! Autoware stop flag : " << msg->stop_flag << std::endl;
 				std::stringstream safety_error_message;
 				safety_error_message << "positon error : " << msg->stop_flag;
-				publisStatus(safety_error_message.str());
+				publishStatus(safety_error_message.str());
+				//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 				can_send();
 			}
 			else
 			{
 				std::stringstream safety_error_message;
 				safety_error_message << "";
-				publisStatus(safety_error_message.str());
+				publishStatus(safety_error_message.str());
 				//can_send();
 			}
 		}
@@ -1061,12 +1090,12 @@ private:
 		{
 			std::stringstream safety_error_message;
 			safety_error_message << "";
-			publisStatus(safety_error_message.str());
+			publishStatus(safety_error_message.str());
 			//can_send();
 		}
 	}
 
-	void publisStatus(std::string safety_error_message)
+	void publishStatus(std::string safety_error_message)
 	{
 		autoware_can_msgs::MicroBusCanSenderStatus msg;
 		msg.header.stamp = ros::Time::now();
@@ -1087,7 +1116,7 @@ private:
 		input_steer_mode_ = msg->data;
 		std::cout << "aaa" << std::endl;
 		std::string safety_error_message = "";
-		publisStatus(safety_error_message);
+		publishStatus(safety_error_message);
 	}
 
 	void callbackInputSteerValue(const std_msgs::Int16::ConstPtr &msg)
@@ -1101,7 +1130,7 @@ private:
 		input_drive_mode_ = msg->data;
 		std::cout << "ccc" << std::endl;
 		std::string safety_error_message = "";
-		publisStatus(safety_error_message);
+		publishStatus(safety_error_message);
 	}
 
 	void callbackInputDriveValue(const std_msgs::Int16::ConstPtr &msg)
@@ -1350,6 +1379,16 @@ private:
 	{
 		double step = 2;
 		bool use_step_flag = true;
+
+		if(pid_params.get_stroke_prev() > 0)
+		{
+			//if(current_velocity > cmd_velocity)
+			{
+				pid_params.set_stroke_prev(pid_params.get_stroke_prev()-5);
+				return pid_params.get_stroke_prev() - step;
+			}
+			//else return pid_params.get_stroke_prev();
+		}
 
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
@@ -2060,7 +2099,7 @@ public:
 		sync_twist_pose_->registerCallback(boost::bind(&kvaser_can_sender::TwistPoseCallback, this, _1, _2));
 
 		std::string safety_error_message = "";
-		publisStatus(safety_error_message);
+		publishStatus(safety_error_message);
 
 		waypoint_param_.blinker = 0;
 		automatic_door_time_ = blinker_right_time_ = blinker_left_time_ =

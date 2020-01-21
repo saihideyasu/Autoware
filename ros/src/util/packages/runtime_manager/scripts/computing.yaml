@@ -6264,7 +6264,7 @@ params :
     - name : yaw_correction1
       desc : yaw_correction1
       label: yaw_correction1
-      min  : 0.0
+      min  : -10.0
       max  : 10.0
       v    : 0.0
       cmd_param:
@@ -6273,7 +6273,7 @@ params :
     - name : yaw_correction2
       desc : yaw_correction2
       label: yaw_correction2
-      min  : 0.0
+      min  : -10.0
       max  : 10.0
       v    : 0.0
       cmd_param:

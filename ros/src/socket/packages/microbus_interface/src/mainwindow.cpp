@@ -316,6 +316,7 @@ void MainWindow::window_updata()
     {
         ui->tx_error_text->setText(can_status_.safety_error_message.c_str());
         error_text_lock_ = true;
+        system("aplay -D plughw:PCH /home/autoware/one33.wav");
     }
 
     if(fabs(distance_angular_check_.baselink_distance) <= config_.check_distance_th)
@@ -447,7 +448,7 @@ void MainWindow::window_updata()
 
     {
         std::stringstream str_vel;
-        str_vel << std::fixed << std::setprecision(keta) << can_velocity_param_.velocity;
+        str_vel << std::fixed << std::setprecision(keta) << can_velocity_param_.velocity * 3.6;
         ui->tx_can_velocity->setText(str_vel.str().c_str());
 
         std::stringstream str_acc;

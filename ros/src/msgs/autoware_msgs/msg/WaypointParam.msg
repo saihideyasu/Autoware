@@ -33,4 +33,5 @@ int8 steer_pid_on
 float64 ndt_yaw_correction
 float64 gnss_yaw_correction
 int32 localizer_check
+int32 accel_stroke_offset
 LiesseXZB70MParam liesse

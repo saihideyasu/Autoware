@@ -7094,11 +7094,11 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
-    - name : accel_stroke_offset
+    - name : accel_stroke_offsets
       desc : accel_stroke_offset
       label: accel_stroke_offset
       min  : 0
-      max  : 30
+      max  : 300
       v    : 0
       cmd_param:
         dash     : ''

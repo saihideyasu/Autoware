@@ -251,6 +251,8 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.ndt_yaw_correction = ((map.find("ndt_yaw_correction") != map.end()) ? std::stod(map["ndt_yaw_correction"]) : 0);
   wp->waypoint_param.gnss_yaw_correction = ((map.find("gnss_yaw_correction") != map.end()) ? std::stod(map["gnss_yaw_correction"]) : 0);
   wp->waypoint_param.localizer_check = ((map.find("localizer_check") != map.end()) ? std::stoi(map["localizer_check"]) : -1);
+  wp->waypoint_param.accel_stroke_offset = ((map.find("accel_stroke_offset") != map.end()) ? std::stoi(map["accel_stroke_offset"]) : -1);
+  
   if(wp->waypoint_param.signal_stop_line != 0)
   {
 	geometry_msgs::Vector3 signal_stop_line;

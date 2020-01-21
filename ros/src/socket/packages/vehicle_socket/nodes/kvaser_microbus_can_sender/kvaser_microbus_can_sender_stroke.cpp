@@ -1039,6 +1039,11 @@ private:
 			if(steer_correction_ > 500 || steer_correction_ < -500) steer_correction_ = 0;
 		}
 
+		if(msg->accel_stroke_offset >= 0 && msg->accel_stroke_offset <= 300)
+		{
+			setting_.accel_stroke_offset = msg->accel_stroke_offset;
+		}
+
 		waypoint_param_ = *msg;
 	}
 
@@ -1354,7 +1359,7 @@ private:
 			ret = setting_.pedal_stroke_max;
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
-
+		if(ret < setting_.accel_stroke_offset) ret = setting_.accel_stroke_offset;
 		//if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
 		//	current_velocity >= 10.0 && ret > 0) ret = 0;
 
@@ -1394,8 +1399,8 @@ private:
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
 		//std::cout << "stroke " << stroke << std::endl;
-		std::cout << "if : " << stroke << " > " << setting_.accel_stroke_offset << std::endl;;
-		if (stroke > setting_.accel_stroke_offset)
+		//std::cout << "if : " << stroke << " > " << setting_.accel_stroke_offset << std::endl;;
+		if (stroke > 10)
 		{
 			std::cout << "ACCEL_PEDAL_STROKE_OFFSET_" << std::endl;
 			pid_params.set_brake_e_prev_velocity(0);

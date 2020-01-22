@@ -11,6 +11,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/Imu.h>
 #include <tf/transform_datatypes.h>
@@ -63,7 +64,7 @@ private:
     ros::Subscriber sub_stopper_distance_;//停止線の位置情報
     ros::Subscriber sub_waypoint_param_;//経路の埋め込み情報
     ros::Subscriber sub_imu_;//IMU情報
-    ros::Subscriber sub_gnss_deviation_, sub_ndt_stat_, sub_gnss_stat_, sub_ndt_stat_string_;
+    ros::Subscriber sub_gnss_pose_, sub_gnss_deviation_, sub_ndt_stat_, sub_gnss_stat_, sub_ndt_stat_string_;
     ros::Subscriber sub_stroke_routine_;
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
@@ -80,6 +81,7 @@ private:
     void callbackStopperDistance(const std_msgs::Float64 &msg);
     void callbackWaypointParam(const autoware_msgs::WaypointParam &msg);
     void callbackImu(const sensor_msgs::Imu &msg);
+    void callbackGnssPose(const geometry_msgs::PoseStamped &msg);
     void callbackGnssDeviation(const autoware_msgs::GnssStandardDeviation &msg);
     void callbackNdtStat(const autoware_msgs::NDTStat &msg);
     void callbackGnssStat(const std_msgs::UInt8 &msg);
@@ -99,6 +101,7 @@ private:
     bool error_text_lock_;
     double stopper_distance_;
     autoware_msgs::WaypointParam waypoint_param_;
+    geometry_msgs::PoseStamped gnss_pose_;
     autoware_msgs::GnssStandardDeviation gnss_deviation_;
     autoware_msgs::NDTStat ndt_stat_;
     unsigned char gnss_stat_;

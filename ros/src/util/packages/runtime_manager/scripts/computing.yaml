@@ -7094,7 +7094,7 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
-    - name : accel_stroke_offsets
+    - name : accel_stroke_offset
       desc : accel_stroke_offset
       label: accel_stroke_offset
       min  : 0

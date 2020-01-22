@@ -16,21 +16,21 @@ private:
 	double const front_bumper_to_baselink = 6.25 - 1.7;
 
 	int light_color_ = 1;
-	void cameraLightColorCallback(const autoware_msgs::TrafficLight& msg)
+	void callbackCameraLightColor(const autoware_msgs::TrafficLight& msg)
 	{
 		light_color_ = msg.traffic_light;
 		std::cout << light_color_ << std::endl;
 	}
 
 	int temporary_flag_ = 0;
-	void cameraTemporaryFlag(const std_msgs::Int32& msg)
+	void callbackTemporaryFlag(const std_msgs::Int32& msg)
 	{
 		temporary_flag_ = msg.data;
 	}
 
 	int obstacle_waypoint_ = -1;
 	const int obstacle_offset_ = 6;
-	void cameraObstacleWaypoint(const std_msgs::Int32& msg)
+	void callbackObstacleWaypoint(const std_msgs::Int32& msg)
 	{
 		obstacle_waypoint_ = msg.data;
 	}
@@ -86,9 +86,9 @@ public:
 
 		pub_stopline_distance_ = nh_.advertise<std_msgs::Float64>("/stopper_distance", 1);
 		sub_waypoint_ = nh_.subscribe("/final_waypoints", 1, &StopperDistance::waypointCallback, this);
-		sub_camera_light_color_ = nh_.subscribe("/camera_light_color", 1, &StopperDistance::cameraLightColorCallback, this);
-		sub_temporari_flag_ = nh_.subscribe("/temporary_flag", 1, &StopperDistance::cameraTemporaryFlag, this);
-		sub_obstacle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 1, &StopperDistance::cameraObstacleWaypoint, this);
+		sub_camera_light_color_ = nh_.subscribe("/camera_light_color", 1, &StopperDistance::callbackCameraLightColor, this);
+		sub_temporari_flag_ = nh_.subscribe("/temporary_flag", 1, &StopperDistance::callbackTemporaryFlag, this);
+		sub_obstacle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 1, &StopperDistance::callbackObstacleWaypoint, this);
 	}
 };
 

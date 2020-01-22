@@ -9,6 +9,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     ui->setupUi(this);
 
     ui->gb_shift->setVisible(false);
+    ui->gb_velocity->setVisible(false);
 
     palette_drive_mode_ok_ = ui->tx_drive_mode->palette();
     palette_steer_mode_ok_ = ui->tx_steer_mode->palette();
@@ -78,6 +79,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &MainWindow::callbackStopperDistance, this);
     sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 10, &MainWindow::callbackWaypointParam, this);
     sub_imu_ = nh_.subscribe("/gnss_imu", 10, &MainWindow::callbackImu, this);
+    sub_gnss_pose_ = nh_.subscribe("/gnss_pose", 10, &MainWindow::callbackGnssPose, this);
     sub_gnss_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &MainWindow::callbackGnssDeviation, this);
     sub_ndt_stat_ = nh_.subscribe("/ndt_stat", 10, &MainWindow::callbackNdtStat, this);
     sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &MainWindow::callbackGnssStat, this);
@@ -519,7 +521,7 @@ void MainWindow::window_updata()
     {
         double yaw, roll, pitch;
         tf::Quaternion qua;
-        tf::quaternionMsgToTF(imu_.orientation, qua);
+        tf::quaternionMsgToTF(gnss_pose_.pose.orientation, qua);
         tf::Matrix3x3 mat(qua);
         mat.getRPY(roll, pitch, yaw);
 
@@ -606,6 +608,11 @@ void MainWindow::callbackWaypointParam(const autoware_msgs::WaypointParam &msg)
 void MainWindow::callbackNdtStat(const autoware_msgs::NDTStat &msg)
 {
     ndt_stat_ = msg;
+}
+
+void MainWindow::callbackGnssPose(const geometry_msgs::PoseStamped &msg)
+{
+    gnss_pose_ = msg;
 }
 
 void MainWindow::callbackGnssDeviation(const autoware_msgs::GnssStandardDeviation &msg)

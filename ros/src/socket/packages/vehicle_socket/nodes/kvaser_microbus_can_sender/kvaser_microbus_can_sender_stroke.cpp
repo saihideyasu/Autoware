@@ -350,7 +350,8 @@ private:
 	double ndt_gnss_angle_, waypoint_angle_;
 	tf::Quaternion waypoint_localizer_angle_;
 	waypoint_param_geter wpg_;
-
+	double accel_avoidance_distance_min_, stop_stroke_max_;
+ 
 	const int LOCALIZER_SELECT_NDT = 0;
 	const int LOCALIZER_SELECT_GNSS = 1;
 	void callbackLocalizerSelectNum(const std_msgs::Int32::ConstPtr msg)
@@ -824,7 +825,12 @@ private:
 		str << "," << stopper_distance_ << "," << estimated_stopping_distance;
 		str << "," << ndt_stat_.score << "," <<ndt_reliability_ << "," << ndt_stat_.exe_time << "," << ndt_stat_string_ << "," << gnss_stat_string;
 		str << "," << gnss_deviation_.lat_std << "," << gnss_deviation_.lon_std << "," << gnss_deviation_.alt_std;
-		
+		tf::Quaternion gnss_qua;
+		tf::quaternionMsgToTF(gnss_pose_.pose.orientation, gnss_qua);
+		tf::Matrix3x3 gnss_mat(gnss_qua);
+		double gnss_roll, gnss_pitch, gnss_yaw;
+		gnss_mat.getRPY(gnss_roll, gnss_pitch, gnss_yaw);
+		str << "," << gnss_roll << "," << gnss_pitch << "," << gnss_yaw;
 
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
@@ -1043,6 +1049,9 @@ private:
 		{
 			setting_.accel_stroke_offset = msg->accel_stroke_offset;
 		}
+
+		accel_avoidance_distance_min_ = msg->accel_avoidance_distance_min;
+		stop_stroke_max_ = msg->stop_stroke_max;
 
 		waypoint_param_ = *msg;
 	}
@@ -1477,7 +1486,7 @@ private:
 		}
 */
 
-		const double stop_stroke = 340.0;
+		//const double stop_stroke = 340.0;
 		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
 		{
 			/*std::cout << "tbs," << target_brake_stroke;
@@ -1500,12 +1509,11 @@ private:
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 			}
 		}
-		else
-		 if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
+		else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
 		{
 			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 			step = 0.5;
-			target_brake_stroke = 0.0 + stop_stroke * (2.0 - stopper_distance_)/2.0;
+			target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_)/2.0;
 			if(target_brake_stroke < pid_params.get_stop_stroke_prev())
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 		}
@@ -1806,10 +1814,10 @@ std::cout << "auto_mode" << std::endl;
 			//std::cout << "if : " << cmd_velocity << " > " "0.0" << std::endl;
 			//std::cout << "if : " << current_velocity << " > " << setting_.velocity_limit << std::endl;
 			//加速判定
-			double accel_mode_avoidance_distance_ = (current_velocity > 30) ? current_velocity:30;
+			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity:30;
 			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit
-			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance_))
+			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance))
 			{
 				std::cout << " stroke drive" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
@@ -2006,6 +2014,8 @@ public:
 	    , angle_limit_over_(false)
 	    , steer_correction_(0)
 		, localizer_select_num_(1)
+		, accel_avoidance_distance_min_(30)
+		, stop_stroke_max_(340)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;

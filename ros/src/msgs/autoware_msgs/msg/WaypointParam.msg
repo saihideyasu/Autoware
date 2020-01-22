@@ -35,4 +35,6 @@ float64 gnss_yaw_correction
 int32 localizer_check
 int32 accel_stroke_offset
 float64 temporary_acceleration
+float64 accel_avoidance_distance_min
+float64 stop_stroke_max
 LiesseXZB70MParam liesse

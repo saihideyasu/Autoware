@@ -306,7 +306,8 @@ private:
 
 	void callbackWaypointParam(const autoware_msgs::WaypointParam& msg)
 	{
-		config_.acceleration = msg.temporary_acceleration;
+		if(msg.temporary_acceleration >= 0.0)
+			config_.acceleration = msg.temporary_acceleration;
 	}
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)

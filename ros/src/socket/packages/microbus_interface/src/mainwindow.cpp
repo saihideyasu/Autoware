@@ -77,11 +77,13 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can_velocity_param_ = nh_.subscribe("/microbus/velocity_param", 10, &MainWindow::callbackCanVelocityParam, this);
     sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &MainWindow::callbackStopperDistance, this);
     sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 10, &MainWindow::callbackWaypointParam, this);
+    sub_imu_ = nh_.subscribe("/gnss_imu", 10, &MainWindow::callbackImu, this);
     sub_gnss_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &MainWindow::callbackGnssDeviation, this);
     sub_ndt_stat_ = nh_.subscribe("/ndt_stat", 10, &MainWindow::callbackNdtStat, this);
     sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &MainWindow::callbackGnssStat, this);
     sub_ndt_stat_string_ = nh.subscribe("/ndt_monitor/ndt_status", 10 , &MainWindow::callbackNdtStatString, this);
     sub_stroke_routine_ = nh.subscribe("/microbus/stroke_routine", 10 , &MainWindow::callbackStrokeRoutine, this);
+
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.baselink_distance = 10000;
@@ -513,6 +515,22 @@ void MainWindow::window_updata()
     {
         ui->tx_stroke_routine->setText(stroke_routine_.c_str());
     }
+
+    {
+        double yaw, roll, pitch;
+        tf::Quaternion qua;
+        tf::quaternionMsgToTF(imu_.orientation, qua);
+        tf::Matrix3x3 mat(qua);
+        mat.getRPY(roll, pitch, yaw);
+
+        std::stringstream str_yaw, str_roll, str_pitch;
+        str_yaw << std::setprecision(keta) << yaw;
+        ui->tx_yaw->setText(str_yaw.str().c_str());
+        str_roll << std::setprecision(keta) << roll;
+        ui->tx_roll->setText(str_roll.str().c_str());
+        str_pitch << std::setprecision(keta) << pitch;
+        ui->tx_pitch->setText(str_pitch.str().c_str());
+    }
 }
 
 void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg)
@@ -563,6 +581,11 @@ void MainWindow::callbackDistanceAngularCheckNdt(const autoware_msgs::Difference
 void MainWindow::callbackDistanceAngularCheckGnss(const autoware_msgs::DifferenceToWaypointDistance &msg)
 {
     distance_angular_check_gnss_ = msg;
+}
+
+void MainWindow::callbackImu(const sensor_msgs::Imu & msg)
+{
+    imu_ = msg;
 }
 
 void MainWindow::callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVelocityParam &msg)

@@ -2,8 +2,10 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <autoware_msgs/Lane.h>
+#include <autoware_msgs/WaypointParam.h>
 #include <autoware_config_msgs/ConfigTemporaryStopper.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <sensor_msgs/Imu.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -11,7 +13,7 @@ class TemporaryStopper
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
-	ros::Subscriber sub_waypoint_, sub_can_, sub_current_velocity_, sub_distance_, sub_config_;
+	ros::Subscriber sub_waypoint_, sub_waypoint_param_, sub_can_, sub_current_velocity_, sub_distance_, sub_config_;
 	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_;
 
 	autoware_config_msgs::ConfigTemporaryStopper config_;
@@ -301,6 +303,11 @@ private:
 		                            config_.number_of_zeros_ahead, config_.number_of_zeros_behind);
 		pub_waypoint_.publish(lane);
 	}
+
+	void callbackWaypointParam(const autoware_msgs::WaypointParam& msg)
+	{
+		config_.acceleration = msg.temporary_acceleration;
+	}
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(100)//0
@@ -324,10 +331,12 @@ public:
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
 		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStopper::callbackWaypoint, this);
+		sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &TemporaryStopper::callbackWaypointParam, this);
 		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan, this);
 		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStopper::callbackCurrentVelocity, this);
 		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
 		sub_config_ = nh_.subscribe("/config/temporary_stopper", 1, &TemporaryStopper::callbackConfig, this);
+
 	}
 };
 

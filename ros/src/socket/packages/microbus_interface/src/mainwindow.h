@@ -12,6 +12,8 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <sensor_msgs/Imu.h>
+#include <tf/transform_datatypes.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <autoware_can_msgs/MicroBusCan503.h>
@@ -56,10 +58,11 @@ private:
     ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
     ros::Subscriber sub_config_;
     ros::Subscriber sub_localizer_select_;//localizerの遷移状態 
-    ros::Subscriber sub_localizer_match_stat_;
-    ros::Subscriber sub_can_velocity_param_;
-    ros::Subscriber sub_stopper_distance_;
-    ros::Subscriber sub_waypoint_param_;
+    ros::Subscriber sub_localizer_match_stat_;//localizerのマッチング状態
+    ros::Subscriber sub_can_velocity_param_;//canの速度情報
+    ros::Subscriber sub_stopper_distance_;//停止線の位置情報
+    ros::Subscriber sub_waypoint_param_;//経路の埋め込み情報
+    ros::Subscriber sub_imu_;//IMU情報
     ros::Subscriber sub_gnss_deviation_, sub_ndt_stat_, sub_gnss_stat_, sub_ndt_stat_string_;
     ros::Subscriber sub_stroke_routine_;
 
@@ -76,6 +79,7 @@ private:
     void callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVelocityParam &msg);
     void callbackStopperDistance(const std_msgs::Float64 &msg);
     void callbackWaypointParam(const autoware_msgs::WaypointParam &msg);
+    void callbackImu(const sensor_msgs::Imu &msg);
     void callbackGnssDeviation(const autoware_msgs::GnssStandardDeviation &msg);
     void callbackNdtStat(const autoware_msgs::NDTStat &msg);
     void callbackGnssStat(const std_msgs::UInt8 &msg);
@@ -99,7 +103,8 @@ private:
     autoware_msgs::NDTStat ndt_stat_;
     unsigned char gnss_stat_;
     std::string ndt_stat_string_, stroke_routine_;
-    
+    sensor_msgs::Imu imu_;
+
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror
     QPalette palette_drive_clutch_connect_, palette_drive_clutch_cut_;//ドライブクラッチのテキストボックスパレット

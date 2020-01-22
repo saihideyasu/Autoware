@@ -1046,12 +1046,15 @@ private:
 		}
 
 		if(msg->accel_stroke_offset >= 0 && msg->accel_stroke_offset <= 300)
-		{
+		{ 
 			setting_.accel_stroke_offset = msg->accel_stroke_offset;
 		}
 
-		accel_avoidance_distance_min_ = msg->accel_avoidance_distance_min;
-		stop_stroke_max_ = msg->stop_stroke_max;
+		if(msg->accel_avoidance_distance_min >= 0 && msg->accel_avoidance_distance_min <= 100)
+			accel_avoidance_distance_min_ = msg->accel_avoidance_distance_min;
+
+		if(msg->stop_stroke_max >= 300 && msg->stop_stroke_max <=500)
+			stop_stroke_max_ = msg->stop_stroke_max;
 
 		waypoint_param_ = *msg;
 	}

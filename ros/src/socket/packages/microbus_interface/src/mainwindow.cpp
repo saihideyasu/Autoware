@@ -329,22 +329,30 @@ void MainWindow::window_updata()
         if(can503_.clutch == true)
         {
             ui->tx_drive_clutch->setPalette(palette_drive_clutch_connect_);
+            ui->tx2_drive_clutch->setPalette(palette_drive_clutch_connect_);
             ui->tx_drive_clutch->setText("connect");
+            ui->tx2_drive_clutch->setText("connect");
         }
         else
         {
             ui->tx_drive_clutch->setPalette(palette_drive_clutch_cut_);
+            ui->tx2_drive_clutch->setPalette(palette_drive_clutch_cut_);
             ui->tx_drive_clutch->setText("cut");
+            ui->tx2_drive_clutch->setText("cut");
         }
         if(can502_.clutch == true)
         {
             ui->tx_steer_clutch->setPalette(palette_steer_clutch_connect_);
+            ui->tx2_steer_clutch->setPalette(palette_steer_clutch_connect_);
             ui->tx_steer_clutch->setText("connect");
+            ui->tx2_steer_clutch->setText("connect");
         }
         else
         {
             ui->tx_steer_clutch->setPalette(palette_steer_clutch_cut_);
+            ui->tx2_steer_clutch->setPalette(palette_steer_clutch_cut_);
             ui->tx_steer_clutch->setText("cut");
+            ui->tx2_steer_clutch->setText("cut");
         }
 
         //入力モード
@@ -422,7 +430,7 @@ void MainWindow::window_updata()
 
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
-        ui->tx2_ndt_distance->setText(str.str().c_str());
+        ui->tx2_ndt_distance->setText(str2.str().c_str());
         ui->tx2_ndt_distance->setPalette(palette_distance_angular_error_);
     }
 
@@ -432,6 +440,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "distance OK," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
         ui->tx_gnss_distance_check->setText(str.str().c_str());
         ui->tx_gnss_distance_check->setPalette(palette_distance_angular_ok_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_gnss_.baselink_distance;
+        ui->tx2_gnss_distance->setText(str2.str().c_str());
+        ui->tx2_gnss_distance->setPalette(palette_distance_angular_ok_);
     }
     else
     {
@@ -439,6 +452,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "distance NG," << config_.check_distance_th << "," << distance_angular_check_gnss_.baselink_distance;
         ui->tx_gnss_distance_check->setText(str.str().c_str());
         ui->tx_gnss_distance_check->setPalette(palette_distance_angular_error_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_gnss_.baselink_distance;
+        ui->tx2_gnss_distance->setText(str2.str().c_str());
+        ui->tx2_gnss_distance->setPalette(palette_distance_angular_error_);
     }
 
     double angular_deg = distance_angular_check_.baselink_angular * 180.0 / M_PI;
@@ -479,7 +497,7 @@ void MainWindow::window_updata()
         ui->tx_ndt_angular_check->setPalette(palette_distance_angular_error_);
 
         std::stringstream str2;
-        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
+        str2 << std::fixed << std::setprecision(keta) << angular_deg_ndt;
         ui->tx2_ndt_angular->setText(str2.str().c_str());
         ui->tx2_ndt_angular->setPalette(palette_distance_angular_error_);
     }
@@ -490,6 +508,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "angular OK," << config_.check_angular_th << "," << angular_deg_gnss;
         ui->tx_gnss_angular_check->setText(str.str().c_str());
         ui->tx_gnss_angular_check->setPalette(palette_distance_angular_ok_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << angular_deg_gnss;
+        ui->tx2_gnss_angular->setText(str2.str().c_str());
+        ui->tx2_gnss_angular->setPalette(palette_distance_angular_ok_);
     }
     else
     {
@@ -497,6 +520,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "angular NG," << config_.check_angular_th << "," << angular_deg_gnss;
         ui->tx_gnss_angular_check->setText(str.str().c_str());
         ui->tx_gnss_angular_check->setPalette(palette_distance_angular_error_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << angular_deg_gnss;
+        ui->tx2_gnss_angular->setText(str2.str().c_str());
+        ui->tx2_gnss_angular->setPalette(palette_distance_angular_error_);
     }
 
     {

@@ -558,9 +558,28 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
 		return EControl::STOP;
 	  else if (ob_type == (int)EObstacleType::STOPLINE)
 		return EControl::STOPLINE;
-	  /*else if(ob_type & (int)EObstacleType::ON_WAYPOINTS)
+    else if(ob_type & (int)EObstacleType::ON_MOBILEYE)
+    {
+        std_msgs::Float64 vel;
+			  vel.data = *pillar_velocity;
+			  mobileye_velocity_pub.publish(vel);
+        if(0 >= *mobileye_velocity)
+				  return EControl::KEEP;
+			  else return EControl::STOP;
+    }
+	  else if(ob_type & (int)EObstacleType::ON_POINT_PILLAR)
+    {
+		  	std_msgs::Float64 vel;
+			  vel.data = *pillar_velocity;
+			  pillar_velocity_pub.publish(vel);
+			  //if(vs_path.getCurrentVelocity() < *pillar_velocity)
+			  if(0 >= *pillar_velocity)
+				  return EControl::KEEP;
+			  else return EControl::STOP;
+    }
+	  else if(ob_type & (int)EObstacleType::ON_WAYPOINTS)
 	  {
-		  if(ob_type & (int)EObstacleType::ON_POINT_PILLAR)
+		  /*if(ob_type & (int)EObstacleType::ON_POINT_PILLAR)
 		  {
 			  std_msgs::Float64 vel;
 			  vel.data = *pillar_velocity;
@@ -579,27 +598,8 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
 				  return EControl::KEEP;
 			  else return EControl::STOP;
       }
-		  else return EControl::STOP;
-	  }*/
-	  else if(ob_type &= (int)EObstacleType::ON_POINT_PILLAR)
-    {
-		  	std_msgs::Float64 vel;
-			  vel.data = *pillar_velocity;
-			  pillar_velocity_pub.publish(vel);
-			  //if(vs_path.getCurrentVelocity() < *pillar_velocity)
-			  if(0 >= *pillar_velocity)
-				  return EControl::KEEP;
-			  else return EControl::STOP;
-    }
-    else if(ob_type &= (int)EObstacleType::ON_MOBILEYE)
-    {
-        std_msgs::Float64 vel;
-			  vel.data = *pillar_velocity;
-			  mobileye_velocity_pub.publish(vel);
-        if(0 >= *mobileye_velocity)
-				  return EControl::KEEP;
-			  else return EControl::STOP;
-    }
+		  else*/ return EControl::STOP;
+	  }
 	  else
 		return EControl::OTHERS;
   }

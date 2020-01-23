@@ -126,11 +126,13 @@ void MainWindow::window_updata()
         std::stringstream str_drive_target;
         str_drive_target << can501_.velocity;
         ui->tx_stroke_target->setText(str_drive_target.str().c_str());
+        ui->tx2_drive_stroke_target->setText(str_drive_target.str().c_str());
 
         double stroke = PEDAL_VOLTAGE_CENTER_ - can503_.pedal_voltage;
         std::stringstream str_drive_actual;
         str_drive_actual << stroke;
         ui->tx_stroke_actual->setText(str_drive_actual.str().c_str());
+        ui->tx2_drive_stroke_actual->setText(str_drive_actual.str().c_str());
 
         std::stringstream str_velocity;
         str_velocity << can502_.velocity_actual / 100;
@@ -140,6 +142,8 @@ void MainWindow::window_updata()
         {
             ui->tx_drive_mode->setPalette(palette_drive_mode_ok_);
             ui->tx_drive_mode->setText("auto");
+            ui->tx2_drive_mode->setPalette(palette_drive_mode_ok_);
+            ui->tx2_drive_mode->setText("auto");
             ui->bt_drive_control_mode_velocity->setEnabled(true);
             ui->bt_drive_control_mode_stroke->setEnabled(true);
             ui->bt_drive_input_mode_direct->setEnabled(true);
@@ -189,24 +193,48 @@ void MainWindow::window_updata()
             {
                 ui->tx_drive_mode->setPalette(palette_drive_mode_ok_);
                 ui->tx_drive_mode->setText("V0");
+                ui->tx2_drive_mode->setPalette(palette_drive_mode_ok_);
+                ui->tx2_drive_mode->setText("V0");
             }
             else
             {
                 ui->tx_drive_mode->setPalette(palette_drive_mode_error_);
+                ui->tx2_drive_mode->setPalette(palette_drive_mode_error_);
                 if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_NOT_V0)
+                {
                     ui->tx_drive_mode->setText("not V0");
+                    ui->tx2_drive_mode->setText("not V0");
+                }
                 else if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_NOT_JOY_CENTER)
+                {
                     ui->tx_drive_mode->setText("not joy center");
+                    ui->tx2_drive_mode->setText("not joy center");
+                }
                 else if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_NOT_BOARD_RES)
+                {
                     ui->tx_drive_mode->setText("not board res");
+                    ui->tx2_drive_mode->setText("not board res");
+                }
                 else if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_V0 + autoware_can_msgs::MicroBusCan501::DRIVE_NOT_JOY_CENTER)
+                {
                     ui->tx_drive_mode->setText("not V0\nnot joy center");
+                    ui->tx2_drive_mode->setText("not V0\nnot joy center");
+                }
                 else if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_V0 + autoware_can_msgs::MicroBusCan501::DRIVE_NOT_BOARD_RES)
+                {
                     ui->tx_drive_mode->setText("not V0\nnot board res");
+                    ui->tx2_drive_mode->setText("not V0\nnot board res");
+                }
                 else if(can501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_NOT_JOY_CENTER + autoware_can_msgs::MicroBusCan501::DRIVE_NOT_BOARD_RES)
+                {
                     ui->tx_drive_mode->setText("not joy cente\nnot board res");
+                    ui->tx2_drive_mode->setText("not joy cente\nnot board res");
+                }
                 else
+                {
                     ui->tx_drive_mode->setText("undefined");
+                    ui->tx2_drive_mode->setText("undefined");
+                }
             }
         }
 
@@ -214,15 +242,19 @@ void MainWindow::window_updata()
         std::stringstream str_steer_target;
         str_steer_target << can501_.steering_angle;
         ui->tx_angle_target->setText(str_steer_target.str().c_str());
+        ui->tx2_steer_angle_target->setText(str_steer_target.str().c_str());
 
         std::stringstream str_steer_actual;
         str_steer_actual << can502_.angle_actual;
         ui->tx_angle_actual->setText(str_steer_actual.str().c_str());
-        
+        ui->tx2_steer_angle_actual->setText(str_steer_actual.str().c_str());
+
         if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
         {
             ui->tx_steer_mode->setPalette(palette_steer_mode_ok_);
             ui->tx_steer_mode->setText("auto");
+            ui->tx2_steer_mode->setPalette(palette_steer_mode_ok_);
+            ui->tx2_steer_mode->setText("auto");
             ui->bt_steer_input_mode_direct->setEnabled(true);
             ui->bt_steer_input_mode_autoware->setEnabled(true);
             //ui->gb_angle->setEnabled(true);
@@ -246,24 +278,48 @@ void MainWindow::window_updata()
             {
                 ui->tx_steer_mode->setPalette(palette_steer_mode_ok_);
                 ui->tx_steer_mode->setText("V0");
+                ui->tx2_steer_mode->setPalette(palette_steer_mode_ok_);
+                ui->tx2_steer_mode->setText("V0");
             }
             else
             {
                 ui->tx_steer_mode->setPalette(palette_steer_mode_error_);
+                ui->tx2_steer_mode->setPalette(palette_steer_mode_error_);
                 if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_NOT_V0)
+                {
                     ui->tx_steer_mode->setText("not V0");
+                    ui->tx2_steer_mode->setText("not V0");
+                }
                 else if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_NOT_JOY_CENTER)
+                {
                     ui->tx_steer_mode->setText("not joy center");
+                    ui->tx2_steer_mode->setText("not joy center");
+                }
                 else if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_NOT_BOARD_RES)
+                {
                     ui->tx_steer_mode->setText("not board res");
+                    ui->tx2_steer_mode->setText("not board res");
+                }
                 else if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_V0 + autoware_can_msgs::MicroBusCan501::STEER_NOT_JOY_CENTER)
+                {
                     ui->tx_steer_mode->setText("not V0\nnot joy center");
+                    ui->tx2_steer_mode->setText("not V0\nnot joy center");
+                }
                 else if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_V0 + autoware_can_msgs::MicroBusCan501::STEER_NOT_BOARD_RES)
+                {
                     ui->tx_steer_mode->setText("not V0\nnot board res");
+                    ui->tx2_steer_mode->setText("not V0\nnot board res");
+                }
                 else if(can501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_NOT_JOY_CENTER + autoware_can_msgs::MicroBusCan501::STEER_NOT_BOARD_RES)
+                {
                     ui->tx_steer_mode->setText("not joy cente\nnot board res");
+                    ui->tx2_steer_mode->setText("not joy cente\nnot board res");
+                }
                 else
+                {
                     ui->tx_steer_mode->setText("undefined");
+                    ui->tx2_steer_mode->setText("undefined");
+                }
             }
         }
 
@@ -304,21 +360,28 @@ void MainWindow::window_updata()
     else
     {
         ui->tx_drive_mode->setText("");
+        ui->tx2_drive_mode->setText("");
         ui->tx_drive_control_mode->setText("");
         ui->tx_drive_input_mode->setText("");
         ui->tx_steer_mode->setText("");
+        ui->tx2_steer_mode->setText("");
         ui->tx_steer_input_mode->setText("");
         ui->tx_velocity_target->setText("");
         ui->tx_velocity_actual->setText("");
         ui->tx_stroke_target->setText("");
+        ui->tx2_drive_stroke_target->setText("");
         ui->tx_stroke_actual->setText("");
+        ui->tx2_drive_stroke_actual->setText("");
         ui->tx_angle_target->setText("");
+        ui->tx2_steer_angle_target->setText("");
         ui->tx_angle_actual->setText("");
+        ui->tx2_steer_angle_actual->setText("");
     }
 
     if(can_status_.safety_error_message != "" && error_text_lock_ == false)
     {
         ui->tx_error_text->setText(can_status_.safety_error_message.c_str());
+        ui->tx2_error_text->setText(can_status_.safety_error_message.c_str());
         error_text_lock_ = true;
         system("aplay -D plughw:PCH /home/autoware/one33.wav");
     }
@@ -344,6 +407,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "distance OK," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
         ui->tx_ndt_distance_check->setText(str.str().c_str());
         ui->tx_ndt_distance_check->setPalette(palette_distance_angular_ok_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
+        ui->tx2_ndt_distance->setText(str2.str().c_str());
+        ui->tx2_ndt_distance->setPalette(palette_distance_angular_ok_);
     }
     else
     {
@@ -351,6 +419,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "distance NG," << config_.check_distance_th << "," << distance_angular_check_ndt_.baselink_distance;
         ui->tx_ndt_distance_check->setText(str.str().c_str());
         ui->tx_ndt_distance_check->setPalette(palette_distance_angular_error_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
+        ui->tx2_ndt_distance->setText(str.str().c_str());
+        ui->tx2_ndt_distance->setPalette(palette_distance_angular_error_);
     }
 
     if(fabs(distance_angular_check_gnss_.baselink_distance) <= config_.check_distance_th)
@@ -392,6 +465,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "angular OK," << config_.check_angular_th << "," << angular_deg_ndt;
         ui->tx_ndt_angular_check->setText(str.str().c_str());
         ui->tx_ndt_angular_check->setPalette(palette_distance_angular_ok_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
+        ui->tx2_ndt_angular->setText(str2.str().c_str());
+        ui->tx2_ndt_angular->setPalette(palette_distance_angular_ok_);
     }
     else
     {
@@ -399,6 +477,11 @@ void MainWindow::window_updata()
         str << std::fixed << std::setprecision(keta) << "angular NG," << config_.check_angular_th << "," << angular_deg_ndt;
         ui->tx_ndt_angular_check->setText(str.str().c_str());
         ui->tx_ndt_angular_check->setPalette(palette_distance_angular_error_);
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
+        ui->tx2_ndt_angular->setText(str2.str().c_str());
+        ui->tx2_ndt_angular->setPalette(palette_distance_angular_error_);
     }
 
     if(fabs(angular_deg_gnss) <= config_.check_angular_th)
@@ -454,18 +537,22 @@ void MainWindow::window_updata()
         std::stringstream str_vel;
         str_vel << std::fixed << std::setprecision(keta) << can_velocity_param_.velocity * 3.6;
         ui->tx_can_velocity->setText(str_vel.str().c_str());
+        ui->tx2_vel->setText(str_vel.str().c_str());
 
         std::stringstream str_acc;
         str_acc << std::fixed << std::setprecision(keta) << can_velocity_param_.acceleration;
         ui->tx_can_accel->setText(str_acc.str().c_str());
+        ui->tx2_acc->setText(str_acc.str().c_str());
 
         std::stringstream str_jurk;
         str_jurk << std::fixed << std::setprecision(keta) << can_velocity_param_.jurk;
         ui->tx_can_jurk->setText(str_jurk.str().c_str());
+        ui->tx2_jurk->setText(str_jurk.str().c_str());
 
         std::stringstream str_stop_dis;
         str_stop_dis  << std::fixed << std::setprecision(keta) << stopper_distance_;
         ui->tx_stopper_distance->setText(str_stop_dis.str().c_str());
+        ui->tx2_stopD->setText(str_stop_dis.str().c_str());
 
         std::stringstream str_way_num;
         str_way_num << waypoint_param_.id;
@@ -475,42 +562,80 @@ void MainWindow::window_updata()
     {
         std::stringstream str_lat, str_lon, str_alt;
         str_lat << std::fixed << std::setprecision(keta) << gnss_deviation_.lat_std;
-        if(gnss_deviation_.lat_std > config_.gnss_lat_limit) ui->tx_lat->setPalette(palette_gnss_deviation_error_);
-        else ui->tx_lat->setPalette(palette_gnss_deviation_ok_);
+        if(gnss_deviation_.lat_std > config_.gnss_lat_limit)
+        {
+            ui->tx_lat->setPalette(palette_gnss_deviation_error_);
+            ui->tx2_gnss_lat->setPalette(palette_gnss_deviation_error_);
+        }
+        else
+        {
+            ui->tx_lat->setPalette(palette_gnss_deviation_ok_);
+            ui->tx2_gnss_lat->setPalette(palette_gnss_deviation_ok_);
+        }
         ui->tx_lat->setText(str_lat.str().c_str());
+        ui->tx2_gnss_lat->setText(str_lat.str().c_str());
+
         str_lon << std::fixed << std::setprecision(keta) << gnss_deviation_.lon_std;
-        if(gnss_deviation_.lon_std > config_.gnss_lon_limit) ui->tx_lon->setPalette(palette_gnss_deviation_error_);
-        else ui->tx_lon->setPalette(palette_gnss_deviation_ok_);
+        if(gnss_deviation_.lon_std > config_.gnss_lon_limit)
+        {
+            ui->tx_lon->setPalette(palette_gnss_deviation_error_);
+            ui->tx2_gnss_lon->setPalette(palette_gnss_deviation_error_);
+        }
+        else
+        {
+            ui->tx_lon->setPalette(palette_gnss_deviation_ok_);
+            ui->tx2_gnss_lon->setPalette(palette_gnss_deviation_ok_);
+        }
         ui->tx_lon->setText(str_lon.str().c_str());
+        ui->tx2_gnss_lon->setText(str_lon.str().c_str());
+
         str_alt << std::fixed << std::setprecision(keta) << gnss_deviation_.alt_std;
-        if(gnss_deviation_.alt_std > config_.gnss_alt_limit) ui->tx_alt->setPalette(palette_gnss_deviation_error_);
-        else ui->tx_alt->setPalette(palette_gnss_deviation_ok_);
+        if(gnss_deviation_.alt_std > config_.gnss_alt_limit)
+        {
+            ui->tx_alt->setPalette(palette_gnss_deviation_error_);
+            ui->tx2_gnss_alt->setPalette(palette_gnss_deviation_error_);
+        }
+        else
+        {
+            ui->tx_alt->setPalette(palette_gnss_deviation_ok_);
+            ui->tx2_gnss_alt->setPalette(palette_gnss_deviation_ok_);
+        }
         ui->tx_alt->setText(str_alt.str().c_str());
+        ui->tx2_gnss_alt->setText(str_alt.str().c_str());
     }
 
     {
         std::stringstream str_ndt_stat, str_gnss_ok, str_ndt_string;
         str_ndt_stat << std::fixed << std::setprecision(keta) << ndt_stat_.score;
         ui->tx_ndt_score->setText(str_ndt_stat.str().c_str());
+        ui->tx2_ndt_score->setText(str_ndt_stat.str().c_str());
         if(gnss_stat_ == 3)
         {
             ui->tx_gnss_ok->setPalette(palette_gnss_deviation_ok_);
             ui->tx_gnss_ok->setText("OK");
+            ui->tx2_gnss_ok->setPalette(palette_gnss_deviation_ok_);
+            ui->tx2_gnss_ok->setText("OK");
         }
         else
         {
             ui->tx_gnss_ok->setPalette(palette_gnss_deviation_error_);
             ui->tx_gnss_ok->setText("NG");
+            ui->tx2_gnss_ok->setPalette(palette_gnss_deviation_error_);
+            ui->tx2_gnss_ok->setText("NG");
         }
         if(ndt_stat_string_ == "NDT_OK")
         {
             ui->tx_ndt_ok->setPalette(palette_gnss_deviation_ok_);
             ui->tx_ndt_ok->setText("OK");
+            ui->tx2_ndt_ok->setPalette(palette_gnss_deviation_ok_);
+            ui->tx2_ndt_ok->setText("OK");
         }
         else
         {
             ui->tx_ndt_ok->setPalette(palette_gnss_deviation_error_);
             ui->tx_ndt_ok->setText("NG");
+            ui->tx2_ndt_ok->setPalette(palette_gnss_deviation_error_);
+            ui->tx2_ndt_ok->setText("NG");
         }
     }
 
@@ -528,10 +653,13 @@ void MainWindow::window_updata()
         std::stringstream str_yaw, str_roll, str_pitch;
         str_yaw << std::setprecision(keta) << yaw;
         ui->tx_yaw->setText(str_yaw.str().c_str());
+        ui->tx2_gnss_yaw->setText(str_yaw.str().c_str());
         str_roll << std::setprecision(keta) << roll;
         ui->tx_roll->setText(str_roll.str().c_str());
+        ui->tx2_gnss_roll->setText(str_roll.str().c_str());
         str_pitch << std::setprecision(keta) << pitch;
         ui->tx_pitch->setText(str_pitch.str().c_str());
+        ui->tx2_gnss_pitch->setText(str_pitch.str().c_str());
     }
 }
 
@@ -744,4 +872,5 @@ void MainWindow::click_error_text_reset()
 {
     error_text_lock_ = false;
     ui->tx_error_text->setText("");
+    ui->tx2_error_text->setText("");
 }

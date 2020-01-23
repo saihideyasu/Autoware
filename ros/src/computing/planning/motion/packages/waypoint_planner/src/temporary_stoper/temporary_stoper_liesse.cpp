@@ -156,6 +156,7 @@ private:
 			stop_waypoint_id_ = 0;
 			flag.data = 0;//そのまま
 			pub_temporari_flag_.publish(flag);
+			timer_ = ros::Time::now();
 			return lane;
 		}
 

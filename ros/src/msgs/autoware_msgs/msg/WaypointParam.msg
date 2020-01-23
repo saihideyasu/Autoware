@@ -37,4 +37,17 @@ int32 accel_stroke_offset
 float64 temporary_acceleration
 float64 accel_avoidance_distance_min
 float64 stop_stroke_max
+float64 accel_stroke_max
+float64 k_accel_p_velocity
+float64 k_accel_i_velocity
+float64 k_accel_d_velocity
+float64 k_brake_p_velocity
+float64 k_brake_i_velocity
+float64 k_brake_d_velocity
+int8 in_accel_mode
+int8 in_brake_mode
+int8 use_stopper_distance
+float64 stopper_distance1
+float64 stopper_distance2
+float64 stopper_distance3
 LiesseXZB70MParam liesse

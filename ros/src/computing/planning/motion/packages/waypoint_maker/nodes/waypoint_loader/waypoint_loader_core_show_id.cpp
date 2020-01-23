@@ -255,6 +255,19 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.temporary_acceleration = ((map.find("temporary_acceleration") != map.end()) ? std::stod(map["temporary_acceleration"]) : -1);
   wp->waypoint_param.accel_avoidance_distance_min = ((map.find("accel_avoidance_distance_min") != map.end()) ? std::stod(map["accel_avoidance_distance_min"]) : -1);
   wp->waypoint_param.stop_stroke_max = ((map.find("stop_stroke_max") != map.end()) ? std::stod(map["stop_stroke_max"]) : -1);
+  wp->waypoint_param.accel_stroke_max = ((map.find("accel_stroke_max") != map.end()) ? std::stod(map["accel_stroke_max"]) : -1);
+  wp->waypoint_param.k_accel_p_velocity = ((map.find("k_accel_p_velocity") != map.end()) ? std::stod(map["k_accel_p_velocity"]) : -1);
+  wp->waypoint_param.k_accel_i_velocity = ((map.find("k_accel_i_velocity") != map.end()) ? std::stod(map["k_accel_i_velocity"]) : -1);
+  wp->waypoint_param.k_accel_d_velocity = ((map.find("k_accel_d_velocity") != map.end()) ? std::stod(map["k_accel_d_velocity"]) : -1);
+  wp->waypoint_param.k_brake_p_velocity = ((map.find("k_brake_p_velocity") != map.end()) ? std::stod(map["k_brake_p_velocity"]) : -1);
+  wp->waypoint_param.k_brake_i_velocity = ((map.find("k_brake_i_velocity") != map.end()) ? std::stod(map["k_brake_i_velocity"]) : -1);
+  wp->waypoint_param.k_brake_d_velocity = ((map.find("k_brake_d_velocity") != map.end()) ? std::stod(map["k_brake_d_velocity"]) : -1);
+  wp->waypoint_param.in_accel_mode = ((map.find("in_accel_mode") != map.end()) ? std::stoi(map["in_accel_mode"]) : 1);
+  wp->waypoint_param.in_brake_mode = ((map.find("in_brake_mode") != map.end()) ? std::stoi(map["in_brake_mode"]) : 1);
+  wp->waypoint_param.use_stopper_distance = ((map.find("use_stopper_distance") != map.end()) ? std::stoi(map["use_stopper_distance"]) : 1);
+  wp->waypoint_param.stopper_distance1 = ((map.find("stopper_distance1") != map.end()) ? std::stod(map["stopper_distance1"]) : -1);
+  wp->waypoint_param.stopper_distance2 = ((map.find("stopper_distance2") != map.end()) ? std::stod(map["stopper_distance2"]) : -1);
+  wp->waypoint_param.stopper_distance3 = ((map.find("stopper_distance3") != map.end()) ? std::stod(map["stopper_distance3"]) : -1);
 
   if(wp->waypoint_param.signal_stop_line != 0)
   {

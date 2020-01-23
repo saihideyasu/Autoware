@@ -351,7 +351,10 @@ private:
 	tf::Quaternion waypoint_localizer_angle_;
 	waypoint_param_geter wpg_;
 	double accel_avoidance_distance_min_, stop_stroke_max_;
- 
+	bool in_accel_mode_, in_brake_mode_;
+	std_msgs::String routine_;
+	bool use_stopper_distance_;
+
 	const int LOCALIZER_SELECT_NDT = 0;
 	const int LOCALIZER_SELECT_GNSS = 1;
 	void callbackLocalizerSelectNum(const std_msgs::Int32::ConstPtr msg)
@@ -813,8 +816,13 @@ private:
 //		str << twist_msg->twist.angular.z << "," << twist_msg->twist.linear.x << ",";
 //		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
 //		str << x << "," << v0 << "," << v << "," << v_sa;
-		str << std::setprecision(10) << waypoint_id_ << "," << twist_msg->twist.linear.x <<","<< acc2 << "," << jurk2 << ",";
-		str << difference_toWaypoint_distance_.baselink_angular << "," << difference_toWaypoint_distance_.baselink_distance << "," ;
+		str << std::setprecision(10) 
+			<< waypoint_id_ 
+			<< "," << twist_msg->twist.linear.x 
+			<<"," << acc2 
+			<< "," << jurk2 
+			<< "," << difference_toWaypoint_distance_.baselink_angular
+			<< "," << difference_toWaypoint_distance_.baselink_distance;
 		//str << difference_toWaypoint_distance_.front_baselink_distance <<",";
 		//str << _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance) ;
 	
@@ -822,27 +830,40 @@ private:
 		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
 
 		std::string gnss_stat_string = (gnss_stat_ == 3) ? "GNSS_OK" : "GNSS_ERROR";
-		str << "," << stopper_distance_ << "," << estimated_stopping_distance;
-		str << "," << ndt_stat_.score << "," <<ndt_reliability_ << "," << ndt_stat_.exe_time << "," << ndt_stat_string_ << "," << gnss_stat_string;
-		str << "," << gnss_deviation_.lat_std << "," << gnss_deviation_.lon_std << "," << gnss_deviation_.alt_std;
+		str << "," << stopper_distance_
+			<< "," << estimated_stopping_distance 
+			<< "," << ndt_stat_.score 
+			<< "," <<ndt_reliability_ 
+			<< "," << ndt_stat_.exe_time
+			<< "," << ndt_stat_string_  //11
+			<< "," << gnss_stat_string
+			<< "," << gnss_deviation_.lat_std
+			<< "," << gnss_deviation_.lon_std
+			<< "," << gnss_deviation_.alt_std;
 		tf::Quaternion gnss_qua;
 		tf::quaternionMsgToTF(gnss_pose_.pose.orientation, gnss_qua);
 		tf::Matrix3x3 gnss_mat(gnss_qua);
 		double gnss_roll, gnss_pitch, gnss_yaw;
 		gnss_mat.getRPY(gnss_roll, gnss_pitch, gnss_yaw);
-		str << "," << gnss_roll << "," << gnss_pitch << "," << gnss_yaw;
-
+		str << "," << gnss_roll //16
+		    << "," << gnss_pitch 
+			<< "," << gnss_yaw;
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
-		double gnssx = gnss_pose_.pose.position.x;
+		double gnssx = gnss_pose_.pose.position.x;//21
 		double gnssy = gnss_pose_.pose.position.y;
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
-		str <<","<<ndtx <<"," <<ndty <<"," << gnssx<<"," << gnssy <<"," << distance;
-
+		str <<","<<ndtx 
+		    <<"," <<ndty
+			<<"," << gnssx
+			<<"," << gnssy//26
+			<<"," << distance;
 		double roll, pitch, yaw;
 		tf::Matrix3x3 wla(waypoint_localizer_angle_);
 		wla.getRPY(roll, pitch, yaw);
-		str << "," <<  waypoint_angle_ <<"," << ndt_gnss_angle_ << "," << yaw;
+		str << "," <<  waypoint_angle_ 
+			<<"," << ndt_gnss_angle_ 
+			<< "," << yaw;
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
 		pub_acceleration_write_.publish(aw_msg);
@@ -1051,11 +1072,43 @@ private:
 		}
 
 		if(msg->accel_avoidance_distance_min >= 0 && msg->accel_avoidance_distance_min <= 100)
+		{
 			accel_avoidance_distance_min_ = msg->accel_avoidance_distance_min;
-
+			//std::cout << "kkk accel_avoidance_distance_min:  " << accel_avoidance_distance_min_ << std::endl;
+		}
 		if(msg->stop_stroke_max >= 300 && msg->stop_stroke_max <=500)
+		{
 			stop_stroke_max_ = msg->stop_stroke_max;
+			//std::cout << "kkk stop_stroke_min : " << stop_stroke_max_ << std::endl;
+		}
+		if(msg->accel_stroke_max >= 300 && msg->accel_stroke_max <= 850)
+		{
+			setting_.pedal_stroke_max = msg->accel_stroke_max;
+		}
+		if(msg->k_accel_p_velocity >= 0 && msg->k_accel_p_velocity <= 2)
+			setting_.k_accel_p_velocity = msg->k_accel_p_velocity;
+		if(msg->k_accel_i_velocity >= 0 && msg->k_accel_i_velocity <= 2)
+			setting_.k_accel_i_velocity = msg->k_accel_i_velocity;
+		if(msg->k_accel_d_velocity >= 0 && msg->k_accel_d_velocity <= 2)
+			setting_.k_accel_d_velocity = msg->k_accel_d_velocity;
+		if(msg->k_brake_p_velocity >= 0 && msg->k_brake_p_velocity <= 2)
+			setting_.k_brake_p_velocity = msg->k_brake_p_velocity;
+		if(msg->k_brake_i_velocity >= 0 && msg->k_brake_i_velocity <= 2)
+			setting_.k_brake_i_velocity = msg->k_brake_i_velocity;
+		if(msg->k_brake_d_velocity >= 0 && msg->k_brake_d_velocity <= 2)
+			setting_.k_brake_d_velocity = msg->k_brake_d_velocity;
 
+		if(msg->in_accel_mode == 1) in_accel_mode_ = true;
+		else in_accel_mode_ = false;
+		if(msg->in_brake_mode == 1) in_brake_mode_ = true;
+		else in_brake_mode_ = false;
+
+		if(msg->use_stopper_distance == 0) use_stopper_distance_ = false;
+		else use_stopper_distance_ = true;
+		if(msg->stopper_distance1 < 0) setting_.stopper_distance1 = msg->stopper_distance1;
+		if(msg->stopper_distance2 < 0) setting_.stopper_distance2 = msg->stopper_distance2;
+		if(msg->stopper_distance3 < 0) setting_.stopper_distance3 = msg->stopper_distance3;
+		
 		waypoint_param_ = *msg;
 	}
 
@@ -1490,35 +1543,39 @@ private:
 */
 
 		//const double stop_stroke = 340.0;
-		if(stopper_distance_ >= 8 && stopper_distance_ <= 20)
+		if(use_stopper_distance_ == true)
 		{
-			/*std::cout << "tbs," << target_brake_stroke;
-			double d = stop_stroke - target_brake_stroke;
-			if(d < 0) d = 0;
- 			target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
-			std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;*/
-		}
-		else if(stopper_distance_ >= 2 && stopper_distance_ <= 8)
-		{
-			/*if(current_velocity > 5.0)
+			std::cout << "kkk stop_stroke_max : " << stop_stroke_max_ << std::endl;
+			if(stopper_distance_ >= setting_.stopper_distance2 && stopper_distance_ <= setting_.stopper_distance1)
 			{
-				std::cout << "tbs," << target_brake_stroke;
+				/*std::cout << "tbs," << target_brake_stroke;
 				double d = stop_stroke - target_brake_stroke;
 				if(d < 0) d = 0;
 				target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
-				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;*/
 			}
-			else*/ {
-				target_brake_stroke = pid_params.get_stop_stroke_prev();
+			else if(stopper_distance_ >= setting_.stopper_distance3 && stopper_distance_ <= setting_.stopper_distance2)
+			{
+				/*if(current_velocity > 5.0)
+				{
+					std::cout << "tbs," << target_brake_stroke;
+					double d = stop_stroke - target_brake_stroke;
+					if(d < 0) d = 0;
+					target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
+					std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
+				}
+				else*/ {
+					target_brake_stroke = pid_params.get_stop_stroke_prev();
+				}
 			}
-		}
-		else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
-		{
-			//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
-			step = 0.5;
-			target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_)/2.0;
-			if(target_brake_stroke < pid_params.get_stop_stroke_prev())
-				target_brake_stroke = pid_params.get_stop_stroke_prev();
+			else if(stopper_distance_ >= 0 && stopper_distance_ <= setting_.stopper_distance3)
+			{
+				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
+				step = 0.5;
+				target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_)/2.0;
+				if(target_brake_stroke < pid_params.get_stop_stroke_prev())
+					target_brake_stroke = pid_params.get_stop_stroke_prev();
+			}
 		}
 /*
 		if(stopper_distance_ >= 0.5 && stopper_distance_ <= 3 && current_velocity >= 0.1 && target_brake_stroke < 330)
@@ -1758,6 +1815,39 @@ private:
 		}
 	}
 
+	double _keep_control()
+	{
+		if(routine_.data == "accel")
+		{
+			pid_params.set_stop_stroke_prev(0);
+			return pid_params.get_stroke_prev();
+		}
+		else if(routine_.data == "brake")
+		{
+			double acc = pid_params.get_stroke_prev();
+			double brake = pid_params.get_stroke_prev();
+			brake -= 2;
+			if(brake < 0)
+			{
+				pid_params.set_stop_stroke_prev(brake);
+				return brake;
+			}
+			else return 0;
+		}
+		else if(routine_.data == "keep")
+		{
+			double acc = pid_params.get_stroke_prev();
+			double brake = pid_params.get_stroke_prev();
+			brake -= 2;
+			if(brake < 0)
+			{
+				pid_params.set_stop_stroke_prev(brake);
+				return brake;
+			}
+			else return 0;
+		}
+	}
+
 	void bufset_drive(unsigned char *buf, double current_velocity, double acceleration, double stroke_speed)
 	{
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
@@ -1815,25 +1905,28 @@ std::cout << "auto_mode" << std::endl;
 			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
 			//std::cout << "if : " << cmd_velocity << " > " << current_velocity << std::endl;
 			//std::cout << "if : " << cmd_velocity << " > " "0.0" << std::endl;
-			//std::cout << "if : " << current_velocity << " > " << setting_.velocity_limit << std::endl;
+			//std::cout << "if : " <<current_velocity << " > " << setting_.velocity_limit << std::endl;
 			//加速判定
-			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity:30;
+			std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
+			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity : accel_avoidance_distance_min_;
 			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit
-			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance))
+			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance)
+					&& in_accel_mode_ == true)
 			{
 				std::cout << " stroke drive" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
 			}
 			//減速判定
 			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
-			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_>=0 && stopper_distance_ <=current_velocity) )
+			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_>=0 && stopper_distance_ <=current_velocity)
+					 && in_brake_mode_ == true)
 			{
 				std::cout << "stroke brake" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止線判定
-			else if (stopper_distance_ >= 0 && stopper_distance_ < 30.0)
+			else if (stopper_distance_ >= 0 && stopper_distance_ < accel_avoidance_distance_min_ && in_brake_mode_ == true)
 			{
 				std::cout << "stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
@@ -1862,28 +1955,30 @@ std::cout << "auto_mode" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_KEEP_);
 			}
 
-			std_msgs::String routine;
+			//td_msgs::String routine;
 			switch(pid_params.get_stroke_state_mode_())
 			{
 			case PID_params::STROKE_STATE_MODE_ACCEL_:
 				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);//, &stroke_speed);
-								routine.data = "accel";
-				pub_stroke_routine_.publish(routine);
+				routine_.data = "accel";
+				pub_stroke_routine_.publish(routine_);
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
 				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);//, &stroke_speed);
 				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
 					new_stroke > pid_params.get_stroke_prev())
 						new_stroke = pid_params.get_stroke_prev();*/
-				routine.data = "brake";
-				pub_stroke_routine_.publish(routine);
+				routine_.data = "brake";
+				pub_stroke_routine_.publish(routine_);
 				break;
 			case PID_params::STROKE_STATE_MODE_STOP_:
 				new_stroke = _stopping_control(current_velocity);
 				pid_params.set_stop_stroke_prev(new_stroke);
 				break;
 			case PID_params::STROKE_STATE_MODE_KEEP_:
-				new_stroke = pid_params.get_stroke_prev();
+				new_stroke = _keep_control();//pid_params.get_stroke_prev();
+				routine_.data = "keep";
+				pub_stroke_routine_.publish(routine_);
 				break;
 			}
 
@@ -2019,6 +2114,9 @@ public:
 		, localizer_select_num_(1)
 		, accel_avoidance_distance_min_(30)
 		, stop_stroke_max_(340)
+		, in_accel_mode_(true)
+		, in_brake_mode_(true)
+		, use_stopper_distance_(true)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2124,6 +2222,10 @@ public:
 		        blinker_stop_time_ = ros::Time::now();
 
 		pid_params.init(0.0);
+
+		setting_.stopper_distance1 = 20;
+		setting_.stopper_distance2 = 8;
+		setting_.stopper_distance3 = 2;
 	}
 
 	~kvaser_can_sender()

@@ -43,3 +43,6 @@ float64 steer_speed_limit1
 float64 steer_speed_limit2
 float64 check_distance_th
 float64 check_angular_th
+float64 stopper_distance1
+float64 stopper_distance2
+float64 stopper_distance3

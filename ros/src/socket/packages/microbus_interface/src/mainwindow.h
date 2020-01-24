@@ -53,6 +53,7 @@ private:
     ros::Publisher pub_drive_control_;//driveのコントロールモード(velocity操作とstroke操作の切り替え)
     ros::Publisher pub_drive_input_, pub_steer_input_;//programモード時の自動入力と手動入力の切り替え
     ros::Publisher pub_drive_clutch_, pub_steer_clutch_;//クラッチの状態変更フラグ
+    ros::Publisher pub_blinker_right_, pub_blinker_left_, pub_blinker_stop_; //ウィンカー
 
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
@@ -134,6 +135,9 @@ private slots:
     void publish_drive_clutch_cut();
     void publish_steer_clutch_connect();
     void publish_steer_clutch_cut();
+    void publish_blinker_right();
+    void publish_blinker_left();
+    void publish_blinker_stop();
     void click_error_text_reset();
 };
 

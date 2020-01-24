@@ -66,6 +66,9 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     pub_steer_input_ = nh_.advertise<std_msgs::Bool>("/microbus/input_steer_flag", 1);
     pub_drive_clutch_ = nh_.advertise<std_msgs::Bool>("/microbus/drive_clutch", 1);
     pub_steer_clutch_ = nh_.advertise<std_msgs::Bool>("/microbus/steer_clutch", 1);
+    pub_blinker_left_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_left", 1);
+    pub_blinker_right_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_right", 1);
+    pub_blinker_stop_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_stop", 1);
 
     sub_can501_ = nh_.subscribe("/microbus/can_receive501", 10, &MainWindow::callbackCan501, this);
     sub_can502_ = nh_.subscribe("/microbus/can_receive502", 10, &MainWindow::callbackCan502, this);
@@ -693,13 +696,13 @@ void MainWindow::window_updata()
         mat.getRPY(roll, pitch, yaw);
 
         std::stringstream str_yaw, str_roll, str_pitch;
-        str_yaw << std::setprecision(keta) << yaw;
+        str_yaw << std::setprecision(keta) << yaw*180/M_PI;
         ui->tx_yaw->setText(str_yaw.str().c_str());
         ui->tx2_gnss_yaw->setText(str_yaw.str().c_str());
-        str_roll << std::setprecision(keta) << roll;
+        str_roll << std::setprecision(keta) << roll*180/M_PI;
         ui->tx_roll->setText(str_roll.str().c_str());
         ui->tx2_gnss_roll->setText(str_roll.str().c_str());
-        str_pitch << std::setprecision(keta) << pitch;
+        str_pitch << std::setprecision(keta) << pitch*180/M_PI;
         ui->tx_pitch->setText(str_pitch.str().c_str());
         ui->tx2_gnss_pitch->setText(str_pitch.str().c_str());
     }
@@ -908,6 +911,27 @@ void MainWindow::publish_steer_clutch_cut()
     std_msgs::Bool msg;
     msg.data = false;
     pub_steer_clutch_.publish(msg);
+}
+
+void MainWindow::publish_blinker_right()
+{
+    std_msgs::Bool msg;
+    msg.data = true;
+    pub_blinker_right_.publish(msg);
+}
+
+void MainWindow::publish_blinker_left()
+{
+    std_msgs::Bool msg;
+    msg.data = true;
+    pub_blinker_left_.publish(msg);
+}
+
+void MainWindow::publish_blinker_stop()
+{
+    std_msgs::Bool msg;
+    msg.data = true;
+    pub_blinker_stop_.publish(msg);
 }
 
 void MainWindow::click_error_text_reset()

@@ -37,7 +37,10 @@ VelocitySetInfo::VelocitySetInfo()
     velocity_change_limit_(2.77),
     temporal_waypoints_size_(100),
     set_pose_(false),
-    wpidx_detectionResultByOtherNodes_(-1)
+    wpidx_detectionResultByOtherNodes_(-1),
+    use_point_cloud_(true),
+    use_point_pillar_(false),
+    use_mobileye_(false)
 {
   ros::NodeHandle private_nh_("~");
   ros::NodeHandle nh;
@@ -73,6 +76,9 @@ void VelocitySetInfo::configCallback(const autoware_config_msgs::ConfigVelocityS
   velocity_change_limit_ = config->velocity_change_limit / 3.6; // kmph -> mps
   deceleration_range_ = config->deceleration_range;
   temporal_waypoints_size_ = config->temporal_waypoints_size;
+  use_point_cloud_ = config->use_point_cloud;
+  use_point_pillar_ = config->use_point_pillar;
+  use_mobileye_ = config->use_mobileye;
 }
 
 void VelocitySetInfo::pointsCallback(const sensor_msgs::PointCloud2ConstPtr &msg)

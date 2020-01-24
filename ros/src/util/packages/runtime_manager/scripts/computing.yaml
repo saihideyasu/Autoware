@@ -2112,7 +2112,30 @@ params :
       min   : 0
       max   : 150
       v     : 100.0
-
+    - name      : use_point_cloud
+      desc      : use_point_cloud
+      label     : 'use_point_cloud'
+      kind      : checkbox
+      v         : true
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name      : use_point_pillar
+      desc      : use_point_pillar
+      label     : 'use_point_pillar'
+      kind      : checkbox
+      v         : false
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name      : use_mobileye
+      desc      : use_mobileye
+      label     : 'use_mobileye'
+      kind      : checkbox
+      v         : false
+      cmd_param :
+        dash        : ''
+        delim       : ':='
   - name  : lattice_velocity_set
     topic : /config/lattice_velocity_set
     msg   : ConfigLatticeVelocitySet

@@ -116,6 +116,7 @@ private:
     QPalette palette_localizer_select_ok_, palette_localizer_select_error_;//localizerの遷移状態のテキストボックスパレット
     QPalette palette_gnss_deviation_ok_, palette_gnss_deviation_error_;
     QPalette palette_score_ok_, palette_score_error_;
+    QPalette palette_current_localizer_;
 
 private slots:
     void publish_emergency_clear();

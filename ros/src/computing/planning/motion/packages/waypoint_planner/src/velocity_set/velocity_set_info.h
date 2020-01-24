@@ -44,6 +44,7 @@ class VelocitySetInfo
   double velocity_change_limit_;    // (m/s)
   double temporal_waypoints_size_;  // (meter)
   int	wpidx_detectionResultByOtherNodes_; // waypoints index@finalwaypoints
+  bool use_point_cloud_, use_point_pillar_, use_mobileye_; //use detection
 
   // ROS param
   double remove_points_upto_;
@@ -129,6 +130,21 @@ class VelocitySetInfo
   double getTemporalWaypointsSize() const
   {
     return temporal_waypoints_size_;
+  }
+
+  bool getUsePointCloud() const
+  {
+    return use_point_cloud_;
+  }
+
+  bool getUsePointPillar() const
+  {
+    return use_point_pillar_;
+  }
+
+  bool getUseMobileye() const
+  {
+    return use_mobileye_;
   }
 
   pcl::PointCloud<pcl::PointXYZ> getPoints() const

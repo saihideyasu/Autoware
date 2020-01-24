@@ -10,3 +10,6 @@ float32 deceleration_stopline
 float32 velocity_change_limit
 float32 deceleration_range
 float32 temporal_waypoints_size
+bool use_point_cloud
+bool use_point_pillar
+bool use_mobileye

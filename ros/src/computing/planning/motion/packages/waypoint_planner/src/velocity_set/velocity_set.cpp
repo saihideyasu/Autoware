@@ -267,7 +267,8 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
                        double points_threshold, const geometry_msgs::PoseStamped& localizer_pose,
                        ObstaclePoints* obstacle_points, int* obstacle_type,
                        const int wpidx_detection_result_by_other_nodes, bool enable_mobileye,
-                       double *pillar_velocity, const ros::Publisher detection_moblieye_pub, double *mobileye_velocity)
+                       double *pillar_velocity, const ros::Publisher detection_moblieye_pub, double *mobileye_velocity,
+                       const bool use_point_cloud, const bool use_point_pillar, const bool use_mobileye)
 {
   int stop_obstacle_waypoint = -1;
   int ob_type = (int)EObstacleType::NONE;
@@ -314,7 +315,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
     tf::Vector3 tf_waypoint = point2vector(waypoint);
     tf_waypoint.setZ(0);
 
-    if(!check_point)
+    if(!check_point && use_point_cloud)
     {
       int stop_point_count = 0;
       for (const auto& p : points)
@@ -350,7 +351,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
   	obstacle_points->clearStopPoints();
 
   	double min_dt = 100000;
-	  if(!check_pillar && !check_mobileye)
+	  if(!check_pillar && !check_mobileye && use_point_pillar)
     {
       //point pillar
       for(int obj_i=0; obj_i<object_tracker.objects.size(); obj_i++)
@@ -399,7 +400,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
       }
     }
 
-    if(!check_mobileye)
+    if(!check_mobileye && use_mobileye)
     {
       double x = lane.waypoints[i].pose.pose.position.x + mobileye_transform.getOrigin().getX();
       double y = lane.waypoints[i].pose.pose.position.y + mobileye_transform.getOrigin().getY();
@@ -544,7 +545,8 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
       detectStopObstacle(points, mobileye_obstacle, closest_waypoint, lane, crosswalk, vs_info.getStopRange(),
                          vs_info.getPointsThreshold(), vs_info.getLocalizerPose(),
                          obstacle_points, &ob_type, vs_info.getDetectionResultByOtherNodes(), enableMobileye,
-                         pillar_velocity, detection_mobileye_pub, mobileye_velocity);
+                         pillar_velocity, detection_mobileye_pub, mobileye_velocity,
+                         vs_info.getUsePointCloud(), vs_info.getUsePointPillar(), vs_info.getUseMobileye());
   *obstacle_type = ob_type;
 
   // skip searching deceleration range

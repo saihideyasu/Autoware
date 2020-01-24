@@ -62,6 +62,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt2_blinker_right, SIGNAL(clicked()), this, SLOT(publish_blinker_right()));
     connect(ui->bt2_blinker_left, SIGNAL(clicked()), this, SLOT(publish_blinker_left()));
     connect(ui->bt2_blinker_stop, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
+    connect(ui->bt2_error_clear, SIGNAL(clicked()), this, SLOT(click_error_text_reset()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -335,8 +336,6 @@ void MainWindow::window_updata()
             }
         }
 
-        
-
         //clutch
         if(can503_.clutch == true)
         {
@@ -477,6 +476,13 @@ void MainWindow::window_updata()
         ui->tx2_gnss_distance->setPalette(palette_distance_angular_error_);
     }
 
+    {
+        double dif = distance_angular_check_ndt_.baselink_distance - distance_angular_check_gnss_.baselink_distance;
+        std::stringstream str;
+        str << std::fixed << std::setprecision(keta) << dif;
+        ui->tx2_localizer_difference->setText(str.str().c_str());
+    }
+
     double angular_deg = distance_angular_check_.baselink_angular * 180.0 / M_PI;
     double angular_deg_ndt = distance_angular_check_ndt_.baselink_angular * 180.0 / M_PI;
     double angular_deg_gnss = distance_angular_check_gnss_.baselink_angular * 180.0 / M_PI;
@@ -503,7 +509,7 @@ void MainWindow::window_updata()
         ui->tx_ndt_angular_check->setPalette(palette_distance_angular_ok_);
 
         std::stringstream str2;
-        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_angular;
         ui->tx2_ndt_angular->setText(str2.str().c_str());
         if(localizer_select_ == 0 || localizer_select_ == 10)
             ui->tx2_ndt_angular->setPalette(palette_current_localizer_);

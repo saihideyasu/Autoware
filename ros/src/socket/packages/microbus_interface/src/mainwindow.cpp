@@ -37,7 +37,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_localizer_select_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_gnss_deviation_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_score_error_.setColor(QPalette::Base, QColor("#FF0000"));
-    palette_current_localizer_.setColor(QPalette::Base, QColor("#00FFFF"));
+    palette_current_localizer_.setColor(QPalette::Base, QColor("#00FF00"));
 
     connect(ui->bt_emergency_clear, SIGNAL(clicked()), this, SLOT(publish_emergency_clear()));
     connect(ui->bt_drive_mode_manual, SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
@@ -55,6 +55,10 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt_steer_clutch_connect, SIGNAL(clicked()), this, SLOT(publish_steer_clutch_connect()));
     connect(ui->bt_steer_clutch_cut, SIGNAL(clicked()), this, SLOT(publish_steer_clutch_cut()));
     connect(ui->bt_error_text_reset, SIGNAL(clicked()), this, SLOT(click_error_text_reset()));
+    connect(ui->bt_blinker_right_on, SIGNAL(clicked()), this, SLOT(publish_blinker_right()));
+    connect(ui->bt_blinker_left_on, SIGNAL(clicked()), this, SLOT(publish_blinker_left()));
+    connect(ui->bt_blinker_right_off, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
+    connect(ui->bt_blinker_left_off, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -424,7 +428,7 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
         ui->tx2_ndt_distance->setText(str2.str().c_str());
-        if(localizer_select_ == 0 && localizer_select_ == 10)
+        if(localizer_select_ == 0 || localizer_select_ == 10)
             ui->tx2_ndt_distance->setPalette(palette_current_localizer_);
         else
             ui->tx2_ndt_distance->setPalette(palette_distance_angular_ok_);
@@ -452,7 +456,7 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_gnss_.baselink_distance;
         ui->tx2_gnss_distance->setText(str2.str().c_str());
-        if(localizer_select_ == 1 && localizer_select_ == 11)
+        if(localizer_select_ == 1 || localizer_select_ == 11)
             ui->tx2_gnss_distance->setPalette(palette_current_localizer_);
         else
             ui->tx2_gnss_distance->setPalette(palette_distance_angular_ok_);
@@ -498,7 +502,7 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
         ui->tx2_ndt_angular->setText(str2.str().c_str());
-        if(localizer_select_ == 0 && localizer_select_ == 10)
+        if(localizer_select_ == 0 || localizer_select_ == 10)
             ui->tx2_ndt_angular->setPalette(palette_current_localizer_);
         else
             ui->tx2_ndt_angular->setPalette(palette_distance_angular_ok_);
@@ -526,7 +530,7 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << angular_deg_gnss;
         ui->tx2_gnss_angular->setText(str2.str().c_str());
-        if(localizer_select_ == 1 && localizer_select_ == 11)
+        if(localizer_select_ == 1 || localizer_select_ == 11)
             ui->tx2_gnss_angular->setPalette(palette_current_localizer_);
         else
             ui->tx2_gnss_angular->setPalette(palette_distance_angular_ok_);

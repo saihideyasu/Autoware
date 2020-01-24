@@ -129,3 +129,13 @@ void VelocitySetInfo::mobileyeObstacleCallback(const mobileye_560_660_msgs::Obst
 {
 	mobileye_obstacle_.push_back(msg);
 }
+
+void VelocitySetInfo::waypointParamCallback(const autoware_msgs::WaypointParam &msg)
+{
+  if(msg.detection_use_point_cloud == 0) use_point_cloud_ = false;
+  else if(msg.detection_use_point_cloud == 1) use_point_cloud_ = true;
+  if(msg.detection_use_point_pillar == 0) use_point_pillar_ = false;
+  else if(msg.detection_use_point_pillar == 1) use_point_pillar_ = true;
+  if(msg.detection_use_mobileye == 0) use_mobileye_ = false;
+  else if(msg.detection_use_mobileye == 1) use_mobileye_ = true;
+}

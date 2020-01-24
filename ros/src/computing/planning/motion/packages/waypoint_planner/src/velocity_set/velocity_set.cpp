@@ -827,12 +827,11 @@ int main(int argc, char** argv)
   VelocitySetPath vs_path;
   VelocitySetInfo vs_info;
 
-  // velocity set subscriber
+  // velocity set subs criber
   ros::Subscriber waypoints_sub = nh.subscribe("safety_waypoints", 1, &VelocitySetPath::waypointsCallback, &vs_path);
   ros::Subscriber current_vel_sub =
       nh.subscribe("current_velocity", 1, &VelocitySetPath::currentVelocityCallback, &vs_path);
   ros::Subscriber sub_object_tracker = nh.subscribe("/detection/object_tracker/objects", 1, objectTrackerCallback);
-
 
   // velocity set info subscriber
   ros::Subscriber config_sub = nh.subscribe("config/velocity_set", 1, &VelocitySetInfo::configCallback, &vs_info);
@@ -841,6 +840,7 @@ int main(int argc, char** argv)
   ros::Subscriber control_pose_sub = nh.subscribe("current_pose", 1, &VelocitySetInfo::controlPoseCallback, &vs_info);
   ros::Subscriber detectionresult_sub = nh.subscribe("/state/stopline_wpidx", 1, &VelocitySetInfo::detectionCallback, &vs_info);
   ros::Subscriber mobileye_obstacle_sub = nh.subscribe("/parsed_tx/obstacle_data", 1, &VelocitySetInfo::mobileyeObstacleCallback, &vs_info);
+  ros::Subscriber sub_waypoint_param = nh.subscribe("/waypoint_param", 1, &VelocitySetInfo::waypointParamCallback, &vs_info);
 
   // vector map subscriber
   ros::Subscriber sub_dtlane = nh.subscribe("vector_map_info/cross_walk", 1, &CrossWalk::crossWalkCallback, &crosswalk);

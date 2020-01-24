@@ -28,6 +28,8 @@
 #include <autoware_health_checker/node_status_publisher.h>
 #include <memory>
 
+#include "autoware_msgs/WaypointParam.h"
+
 class VelocitySetInfo
 {
  private:
@@ -68,6 +70,7 @@ class VelocitySetInfo
   void localizerPoseCallback(const geometry_msgs::PoseStampedConstPtr &msg);
   void detectionCallback(const std_msgs::Int32 &msg);
   void mobileyeObstacleCallback(const mobileye_560_660_msgs::ObstacleData &msg);
+  void waypointParamCallback(const autoware_msgs::WaypointParam &msg);
 
   void clearPoints();
   void clearMobileyeObstacle();

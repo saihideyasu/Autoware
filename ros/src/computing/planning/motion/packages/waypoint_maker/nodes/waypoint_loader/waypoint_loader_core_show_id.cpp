@@ -268,6 +268,9 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.stopper_distance1 = ((map.find("stopper_distance1") != map.end()) ? std::stod(map["stopper_distance1"]) : -1);
   wp->waypoint_param.stopper_distance2 = ((map.find("stopper_distance2") != map.end()) ? std::stod(map["stopper_distance2"]) : -1);
   wp->waypoint_param.stopper_distance3 = ((map.find("stopper_distance3") != map.end()) ? std::stod(map["stopper_distance3"]) : -1);
+  wp->waypoint_param.detection_use_point_cloud = ((map.find("use_point_cloud") != map.end()) ? std::stoi(map["use_point_cloud"]) : -1);
+  wp->waypoint_param.detection_use_point_pillar = ((map.find("use_point_pillar") != map.end()) ? std::stoi(map["use_point_pillar"]) : -1);
+  wp->waypoint_param.detection_use_mobileye = ((map.find("use_mobileye") != map.end()) ? std::stoi(map["use_mobileye"]) : -1);
 
   if(wp->waypoint_param.signal_stop_line != 0)
   {

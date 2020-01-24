@@ -50,4 +50,7 @@ int8 use_stopper_distance
 float64 stopper_distance1
 float64 stopper_distance2
 float64 stopper_distance3
+int8 detection_use_point_cloud
+int8 detection_use_point_pillar
+int8 detection_use_mobileye
 LiesseXZB70MParam liesse

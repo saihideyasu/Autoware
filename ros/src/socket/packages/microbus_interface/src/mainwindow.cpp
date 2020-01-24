@@ -59,6 +59,9 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt_blinker_left_on, SIGNAL(clicked()), this, SLOT(publish_blinker_left()));
     connect(ui->bt_blinker_right_off, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
     connect(ui->bt_blinker_left_off, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
+    connect(ui->bt2_blinker_right, SIGNAL(clicked()), this, SLOT(publish_blinker_right()));
+    connect(ui->bt2_blinker_left, SIGNAL(clicked()), this, SLOT(publish_blinker_left()));
+    connect(ui->bt2_blinker_stop, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
 
     nh_ = nh;  private_nh_ = p_nh;
 

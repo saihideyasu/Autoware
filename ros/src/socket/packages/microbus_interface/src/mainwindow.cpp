@@ -88,6 +88,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_can_status_ = nh_.subscribe("/microbus/can_sender_status", 10, &MainWindow::callbackCanStatus, this);
     sub_distance_angular_check_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &MainWindow::callbackDistanceAngularCheck, this);
     sub_distance_angular_check_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &MainWindow::callbackDistanceAngularCheckNdt, this);
+    sub_distance_angular_check_ekf_ = nh_.subscribe("/difference_to_waypoint_distance_ekf", 10, &MainWindow::callbackDistanceAngularCheckEkf, this);
     sub_distance_angular_check_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &MainWindow::callbackDistanceAngularCheckGnss, this);
     sub_config_ = nh_.subscribe("/config/microbus_can", 10, &MainWindow::callbackConfig, this);
     sub_localizer_select_ = nh_.subscribe("/localizer_select_num", 10, &MainWindow::callbackLocalizerSelect, this);
@@ -109,6 +110,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     distance_angular_check_.baselink_angular = 180;
     distance_angular_check_ndt_.baselink_distance = 10000;
     distance_angular_check_ndt_.baselink_angular = 180;
+    distance_angular_check_ekf_.baselink_distance = 10000;
+    distance_angular_check_ekf_.baselink_angular = 180;
     distance_angular_check_gnss_.baselink_distance = 10000;
     distance_angular_check_gnss_.baselink_angular = 180;
     stopper_distance_ = -1;
@@ -452,6 +455,31 @@ void MainWindow::window_updata()
         ui->tx2_ndt_distance->setPalette(palette_distance_angular_error_);
     }
 
+    if(fabs(distance_angular_check_ekf_.baselink_distance) <= config_.check_distance_th)
+    {
+        /*std::stringstream str;
+        str << std::fixed << std::setprecision(keta) << "distance OK," << config_.check_distance_th << "," << distance_angular_check_ekf_.baselink_distance;
+        ui->tx_ekf_distance_check->setText(str.str().c_str());
+        ui->tx_ekf_distance_check->setPalette(palette_distance_angular_ok_);*/
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ekf_.baselink_distance;
+        ui->tx2_ekf_distance->setText(str2.str().c_str());
+        ui->tx2_ekf_distance->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        /*std::stringstream str;
+        str << std::fixed << std::setprecision(keta) << "distance NG," << config_.check_distance_th << "," << distance_angular_check_ekf_.baselink_distance;
+        ui->tx_ekf_distance_check->setText(str.str().c_str());
+        ui->tx_ekf_distance_check->setPalette(palette_distance_angular_error_);*/
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ekf_.baselink_distance;
+        ui->tx2_ekf_distance->setText(str2.str().c_str());
+        ui->tx2_ekf_distance->setPalette(palette_distance_angular_error_);
+    }
+    
     if(fabs(distance_angular_check_gnss_.baselink_distance) <= config_.check_distance_th)
     {
         std::stringstream str;
@@ -489,6 +517,7 @@ void MainWindow::window_updata()
 
     double angular_deg = distance_angular_check_.baselink_angular * 180.0 / M_PI;
     double angular_deg_ndt = distance_angular_check_ndt_.baselink_angular * 180.0 / M_PI;
+    double angular_deg_ekf = distance_angular_check_ekf_.baselink_angular * 180.0 / M_PI;
     double angular_deg_gnss = distance_angular_check_gnss_.baselink_angular * 180.0 / M_PI;
     if(fabs(angular_deg) <= config_.check_angular_th)
     {
@@ -531,6 +560,31 @@ void MainWindow::window_updata()
         str2 << std::fixed << std::setprecision(keta) << angular_deg_ndt;
         ui->tx2_ndt_angular->setText(str2.str().c_str());
         ui->tx2_ndt_angular->setPalette(palette_distance_angular_error_);
+    }
+
+    if(fabs(angular_deg_ekf) <= config_.check_angular_th)
+    {
+        /*std::stringstream str;
+        str << std::fixed << std::setprecision(keta) << "angular OK," << config_.check_angular_th << "," << angular_deg_ekf;
+        ui->tx_ekf_angular_check->setText(str.str().c_str());
+        ui->tx_ekf_angular_check->setPalette(palette_distance_angular_ok_);*/
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ekf_.baselink_angular;
+        ui->tx2_ekf_angular->setText(str2.str().c_str());
+        ui->tx2_ekf_angular->setPalette(palette_distance_angular_ok_);
+    }
+    else
+    {
+        /*std::stringstream str;
+        str << std::fixed << std::setprecision(keta) << "angular NG," << config_.check_angular_th << "," << angular_deg_ekf;
+        ui->tx_ekf_angular_check->setText(str.str().c_str());
+        ui->tx_ekf_angular_check->setPalette(palette_distance_angular_error_);*/
+
+        std::stringstream str2;
+        str2 << std::fixed << std::setprecision(keta) << angular_deg_ekf;
+        ui->tx2_ekf_angular->setText(str2.str().c_str());
+        ui->tx2_ekf_angular->setPalette(palette_distance_angular_error_);
     }
 
     if(fabs(angular_deg_gnss) <= config_.check_angular_th)
@@ -768,6 +822,11 @@ void MainWindow::callbackDistanceAngularCheck(const autoware_msgs::DifferenceToW
 void MainWindow::callbackDistanceAngularCheckNdt(const autoware_msgs::DifferenceToWaypointDistance &msg)
 {
     distance_angular_check_ndt_ = msg;
+}
+
+void MainWindow::callbackDistanceAngularCheckEkf(const autoware_msgs::DifferenceToWaypointDistance &msg)
+{
+    distance_angular_check_ekf_ = msg;
 }
 
 void MainWindow::callbackDistanceAngularCheckGnss(const autoware_msgs::DifferenceToWaypointDistance &msg)

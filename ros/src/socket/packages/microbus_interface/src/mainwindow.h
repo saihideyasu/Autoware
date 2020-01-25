@@ -57,7 +57,7 @@ private:
 
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
-    ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
+    ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_ekf_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
     ros::Subscriber sub_config_;
     ros::Subscriber sub_localizer_select_;//localizerの遷移状態 
     ros::Subscriber sub_localizer_match_stat_;//localizerのマッチング状態
@@ -74,6 +74,7 @@ private:
     void callbackCanStatus(const autoware_can_msgs::MicroBusCanSenderStatus &msg);//canステータス
     void callbackDistanceAngularCheck(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackDistanceAngularCheckNdt(const autoware_msgs::DifferenceToWaypointDistance &msg);
+    void callbackDistanceAngularCheckEkf(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackDistanceAngularCheckGnss(const autoware_msgs::DifferenceToWaypointDistance &msg);
     void callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg);
     void callbackLocalizerSelect(const std_msgs::Int32 &msg);//localizerの遷移状態 
@@ -93,7 +94,7 @@ private:
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
     autoware_can_msgs::MicroBusCan503 can503_;//マイコン応答ID503
     autoware_can_msgs::MicroBusCanSenderStatus can_status_;//canステータス
-    autoware_msgs::DifferenceToWaypointDistance distance_angular_check_, distance_angular_check_ndt_, distance_angular_check_gnss_;
+    autoware_msgs::DifferenceToWaypointDistance distance_angular_check_, distance_angular_check_ndt_, distance_angular_check_ekf_, distance_angular_check_gnss_;
     geometry_msgs::TwistStamped current_velocity_;//autowareからの現在の速度
     autoware_config_msgs::ConfigMicroBusCan config_;
     int localizer_select_;

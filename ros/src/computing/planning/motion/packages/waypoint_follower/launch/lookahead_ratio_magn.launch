@@ -10,6 +10,13 @@
 		<remap from="/current_velocity" to="/ndt_estimate_twist" />
 	</node>
 
+	<node pkg="waypoint_follower" type="lookahead_ratio_magn" name="lookahead_ratio_magn_ekf" output="log">
+		<remap from="/difference_to_waypoint_distance" to="/difference_to_waypoint_distance_ekf" />
+		<remap from="/lookahead_ratio_magn" to="/lookahead_ratio_magn_ndt" />
+		<remap from="/current_pose" to="/ekf_pose" />
+		<remap from="/current_velocity" to="/ekf_twist" />
+	</node>
+
 	<node pkg="waypoint_follower" type="lookahead_ratio_magn" name="lookahead_ratio_magn_gnss" output="log">
 		<remap from="/difference_to_waypoint_distance" to="/difference_to_waypoint_distance_gnss" />
 		<remap from="/lookahead_ratio_magn" to="/lookahead_ratio_magn_gnss" />

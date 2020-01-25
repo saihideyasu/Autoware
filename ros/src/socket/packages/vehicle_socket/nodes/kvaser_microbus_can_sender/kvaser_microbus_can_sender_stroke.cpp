@@ -324,7 +324,7 @@ private:
 	unsigned char shift_position_, drive_clutch_, steer_clutch_, automatic_door_;
 	unsigned char emergency_stop_;
 	bool light_high_, light_low_, light_small_;
-	bool blinker_right_, blinker_left_, blinker_stop_;
+	bool blinker_right_, blinker_left_, blinker_stop_, blinker_param_sender_;
 	EControl econtrol;
 	int obstracle_waypoint_;
 	double stopper_distance_;
@@ -1042,17 +1042,25 @@ private:
 			automaticDoorSet(1);
 		}
 
-		if(msg->blinker == 1)
-		{
-			blinkerLeft();
-		}
-		else if(msg->blinker == 2)
-		{
-			blinkerRight();
-		}
-		else if(msg->blinker == 0)
+		if(can_receive_502_.clutch == false && can_receive_503_.clutch == false && blinker_param_sender_ == true)
 		{
 			blinkerStop();
+			blinker_param_sender_ = false;
+		}
+		else if(msg->blinker == 1 && (can_receive_502_.clutch == true || can_receive_503_.clutch == true))
+		{
+			blinkerLeft();
+			blinker_param_sender_ = true;
+		}
+		else if(msg->blinker == 2 && (can_receive_502_.clutch == true || can_receive_503_.clutch == true))
+		{
+			blinkerRight();
+			blinker_param_sender_ = true;
+		}
+		else if(msg->blinker == 0 && (can_receive_502_.clutch == true || can_receive_503_.clutch == true))
+		{
+			blinkerStop();
+			blinker_param_sender_ = false;
 		}
 
 		if(msg->liesse.shift >= 0)
@@ -1255,6 +1263,7 @@ private:
 	void callbackBlinkerRight(const std_msgs::Bool::ConstPtr &msg)
 	{
 		blinkerRight();
+		blinker_param_sender_ = false;
 	}
 
 	void blinkerLeft()
@@ -1268,6 +1277,7 @@ private:
 	void callbackBlinkerLeft(const std_msgs::Bool::ConstPtr &msg)
 	{
 		blinkerLeft();
+		blinker_param_sender_ = false;
 	}
 
 	void blinkerStop()
@@ -1281,6 +1291,7 @@ private:
 	void callbackBlinkerStop(const std_msgs::Bool::ConstPtr &msg)
 	{
 		blinkerStop();
+		blinker_param_sender_ = false;
 	}
 
 	void bufset_mode(unsigned char *buf)
@@ -2098,6 +2109,7 @@ public:
 	    , blinker_right_(false)
 	    , blinker_left_(false)
 	    , blinker_stop_(false)
+		, blinker_param_sender_(false)
 	    , automatic_door_(0)
 	    , drive_clutch_(true)
 	    , steer_clutch_(true)

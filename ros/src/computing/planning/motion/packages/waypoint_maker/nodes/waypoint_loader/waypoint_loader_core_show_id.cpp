@@ -274,13 +274,12 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
 
   if(wp->waypoint_param.signal_stop_line != 0)
   {
-	  geometry_msgs::Vector3 signal_stop_line;
-	  signal_stop_line.x = wp->pose.pose.position.x;
-	  signal_stop_line.y = wp->pose.pose.position.y;
-	  signal_stop_line.z = wp->pose.pose.position.z;
-	  signal_stop_line_points_.linears.push_back(signal_stop_line);
+	geometry_msgs::Vector3 signal_stop_line;
+	signal_stop_line.x = wp->pose.pose.position.x;
+	signal_stop_line.y = wp->pose.pose.position.y;
+	signal_stop_line.z = wp->pose.pose.position.z;
+	signal_stop_line_points_.linears.push_back(signal_stop_line);
   }
-
   if(wp->waypoint_param.temporary_stop_line != 0)
   {
 	  geometry_msgs::Vector3 temporary_stop_line;
@@ -290,7 +289,7 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
 	  temporary_stop_line_points_.linears.push_back(temporary_stop_line);
   }
 
-  /*for(int cou=1; cou<=3; cou++)
+  for(int cou=1; cou<=3; cou++)
   {
 	  int count = 0;
 	  std::stringstream ss;
@@ -324,7 +323,7 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
 	  {
 		  wp->signals.clear();
 		  break;
-	  }*/
+	  }
 
 	  wp->signals.push_back(ep);
   }

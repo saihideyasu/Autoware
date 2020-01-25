@@ -20,7 +20,7 @@
       <x>10</x>
       <y>30</y>
       <width>691</width>
-      <height>641</height>
+      <height>661</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -3100,7 +3100,7 @@
         <x>0</x>
         <y>0</y>
         <width>301</width>
-        <height>141</height>
+        <height>191</height>
        </rect>
       </property>
       <property name="palette">
@@ -3182,7 +3182,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>100</y>
+         <y>150</y>
          <width>81</width>
          <height>31</height>
         </rect>
@@ -3203,7 +3203,7 @@
        <property name="geometry">
         <rect>
          <x>80</x>
-         <y>100</y>
+         <y>150</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -3236,7 +3236,7 @@
        <property name="geometry">
         <rect>
          <x>80</x>
-         <y>30</y>
+         <y>80</y>
          <width>111</width>
          <height>31</height>
         </rect>
@@ -3260,7 +3260,7 @@
        <property name="geometry">
         <rect>
          <x>190</x>
-         <y>100</y>
+         <y>150</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -3293,7 +3293,7 @@
        <property name="geometry">
         <rect>
          <x>190</x>
-         <y>30</y>
+         <y>80</y>
          <width>111</width>
          <height>31</height>
         </rect>
@@ -3317,7 +3317,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>60</y>
+         <y>110</y>
          <width>81</width>
          <height>31</height>
         </rect>
@@ -3338,7 +3338,7 @@
        <property name="geometry">
         <rect>
          <x>190</x>
-         <y>60</y>
+         <y>110</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -3371,7 +3371,7 @@
        <property name="geometry">
         <rect>
          <x>80</x>
-         <y>60</y>
+         <y>110</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -3400,6 +3400,78 @@
         <set>Qt::TextSelectableByMouse</set>
        </property>
       </widget>
+      <widget class="QPushButton" name="bt2_drive_on">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>51</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>DP</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="bt2_steer_on">
+       <property name="geometry">
+        <rect>
+         <x>80</x>
+         <y>40</y>
+         <width>51</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>SP</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="bt2_drive_off">
+       <property name="geometry">
+        <rect>
+         <x>150</x>
+         <y>40</y>
+         <width>51</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>DM</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="bt2_steer_off">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>40</y>
+         <width>51</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>SM</string>
+       </property>
+      </widget>
      </widget>
      <widget class="QGroupBox" name="gb2_localizer">
       <property name="enabled">
@@ -3407,9 +3479,9 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>340</x>
+        <x>330</x>
         <y>0</y>
-        <width>331</width>
+        <width>341</width>
         <height>191</height>
        </rect>
       </property>
@@ -3760,7 +3832,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>18</pointsize>
+         <pointsize>17</pointsize>
         </font>
        </property>
        <property name="text">
@@ -3781,9 +3853,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>160</y>
+        <y>190</y>
         <width>321</width>
-        <height>161</height>
+        <height>141</height>
        </rect>
       </property>
       <property name="palette">
@@ -3867,7 +3939,7 @@
          <x>210</x>
          <y>40</y>
          <width>111</width>
-         <height>31</height>
+         <height>21</height>
         </rect>
        </property>
        <property name="font">
@@ -3889,7 +3961,7 @@
        <property name="geometry">
         <rect>
          <x>100</x>
-         <y>120</y>
+         <y>102</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -3922,7 +3994,7 @@
        <property name="geometry">
         <rect>
          <x>100</x>
-         <y>80</y>
+         <y>62</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -3957,7 +4029,7 @@
          <x>100</x>
          <y>40</y>
          <width>111</width>
-         <height>31</height>
+         <height>21</height>
         </rect>
        </property>
        <property name="font">
@@ -3981,8 +4053,8 @@
       <widget class="QLabel" name="lb2_target">
        <property name="geometry">
         <rect>
-         <x>0</x>
-         <y>80</y>
+         <x>10</x>
+         <y>60</y>
          <width>81</width>
          <height>31</height>
         </rect>
@@ -4005,8 +4077,8 @@
       <widget class="QLabel" name="lb2_actual">
        <property name="geometry">
         <rect>
-         <x>0</x>
-         <y>120</y>
+         <x>10</x>
+         <y>100</y>
          <width>81</width>
          <height>31</height>
         </rect>
@@ -4030,7 +4102,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>80</y>
+         <y>62</y>
          <width>111</width>
          <height>41</height>
         </rect>
@@ -4063,7 +4135,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>120</y>
+         <y>102</y>
          <width>111</width>
          <height>41</height>
         </rect>

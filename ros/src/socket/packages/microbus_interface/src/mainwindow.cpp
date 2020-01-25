@@ -63,7 +63,11 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt2_blinker_left, SIGNAL(clicked()), this, SLOT(publish_blinker_left()));
     connect(ui->bt2_blinker_stop, SIGNAL(clicked()), this, SLOT(publish_blinker_stop()));
     connect(ui->bt2_error_clear, SIGNAL(clicked()), this, SLOT(click_error_text_reset()));
-
+    connect(ui->bt2_drive_on,SIGNAL(clicked()), this, SLOT(publish_Dmode_program()));
+    connect(ui->bt2_steer_on,SIGNAL(clicked()), this, SLOT(publish_Smode_program()));
+    connect(ui->bt2_drive_off,SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
+    connect(ui->bt2_steer_off,SIGNAL(clicked()), this, SLOT(publish_Smode_manual()));
+    
     nh_ = nh;  private_nh_ = p_nh;
 
     pub_unlock_ = nh_.advertise<std_msgs::Empty>("/microbus/emergency_reset", 1);

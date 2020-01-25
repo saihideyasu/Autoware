@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.9.0, 2020-01-24T13:24:12. -->
+<!-- Written by QtCreator 4.9.0, 2020-01-25T10:26:13. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -315,7 +315,7 @@
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
     <value type="QString" key="RunConfiguration.WorkingDirectory"></value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default"></value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/home/autoware/Autoware_1.11.0_sai_edit/ros/src/socket/packages/build-microbus_interface-Desktop_Qt_5_10_1_GCC_64bit-Debug</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

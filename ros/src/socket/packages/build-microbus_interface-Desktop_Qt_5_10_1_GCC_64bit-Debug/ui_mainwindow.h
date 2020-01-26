@@ -13,6 +13,7 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
@@ -199,6 +200,7 @@ public:
     QLabel *lb2_error;
     QTextEdit *tx2_error_text;
     QPushButton *bt2_error_clear;
+    QCheckBox *cb_use_clutch;
     QGroupBox *gb2_blinker;
     QPushButton *bt2_blinker_right;
     QPushButton *bt2_blinker_left;
@@ -227,6 +229,7 @@ public:
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
         MainWindow->resize(1066, 738);
+        MainWindow->setAutoFillBackground(false);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         tabWidget = new QTabWidget(centralWidget);
@@ -1092,6 +1095,7 @@ public:
         lb2_gnss->setObjectName(QStringLiteral("lb2_gnss"));
         lb2_gnss->setGeometry(QRect(270, 30, 81, 31));
         lb2_gnss->setFont(font1);
+        lb2_gnss->setAutoFillBackground(true);
         lb2_gnss->setScaledContents(false);
         lb2_gnss->setAlignment(Qt::AlignCenter);
         tx2_gnss_angular = new QTextEdit(gb2_localizer);
@@ -1499,7 +1503,7 @@ public:
         lb2_error->setAlignment(Qt::AlignCenter);
         tx2_error_text = new QTextEdit(gb2_autoware_info);
         tx2_error_text->setObjectName(QStringLiteral("tx2_error_text"));
-        tx2_error_text->setGeometry(QRect(90, 80, 461, 71));
+        tx2_error_text->setGeometry(QRect(90, 80, 351, 71));
         QFont font4;
         font4.setPointSize(12);
         tx2_error_text->setFont(font4);
@@ -1511,10 +1515,17 @@ public:
         tx2_error_text->setTextInteractionFlags(Qt::TextSelectableByMouse);
         bt2_error_clear = new QPushButton(gb2_autoware_info);
         bt2_error_clear->setObjectName(QStringLiteral("bt2_error_clear"));
-        bt2_error_clear->setGeometry(QRect(560, 80, 121, 71));
+        bt2_error_clear->setGeometry(QRect(450, 80, 121, 71));
         bt2_error_clear->setCheckable(false);
         bt2_error_clear->setAutoRepeat(false);
         bt2_error_clear->setAutoExclusive(false);
+        cb_use_clutch = new QCheckBox(gb2_autoware_info);
+        cb_use_clutch->setObjectName(QStringLiteral("cb_use_clutch"));
+        cb_use_clutch->setGeometry(QRect(590, 100, 92, 23));
+        QFont font5;
+        font5.setPointSize(15);
+        cb_use_clutch->setFont(font5);
+        cb_use_clutch->setChecked(true);
         gb2_blinker = new QGroupBox(tab_2);
         gb2_blinker->setObjectName(QStringLiteral("gb2_blinker"));
         gb2_blinker->setEnabled(true);
@@ -1605,30 +1616,30 @@ public:
         bt_shift_P->setObjectName(QStringLiteral("bt_shift_P"));
         bt_shift_P->setEnabled(false);
         bt_shift_P->setGeometry(QRect(40, 30, 51, 51));
-        QFont font5;
-        font5.setPointSize(18);
-        bt_shift_P->setFont(font5);
+        QFont font6;
+        font6.setPointSize(18);
+        bt_shift_P->setFont(font6);
         bt_shift_R = new QPushButton(gb_shift);
         bt_shift_R->setObjectName(QStringLiteral("bt_shift_R"));
         bt_shift_R->setEnabled(false);
         bt_shift_R->setGeometry(QRect(100, 30, 51, 51));
-        bt_shift_R->setFont(font5);
+        bt_shift_R->setFont(font6);
         bt_shift_D = new QPushButton(gb_shift);
         bt_shift_D->setObjectName(QStringLiteral("bt_shift_D"));
         bt_shift_D->setGeometry(QRect(220, 30, 51, 51));
-        bt_shift_D->setFont(font5);
+        bt_shift_D->setFont(font6);
         bt_shift_N = new QPushButton(gb_shift);
         bt_shift_N->setObjectName(QStringLiteral("bt_shift_N"));
         bt_shift_N->setGeometry(QRect(160, 30, 51, 51));
-        bt_shift_N->setFont(font5);
+        bt_shift_N->setFont(font6);
         bt_shift_4 = new QPushButton(gb_shift);
         bt_shift_4->setObjectName(QStringLiteral("bt_shift_4"));
         bt_shift_4->setGeometry(QRect(100, 90, 51, 51));
-        bt_shift_4->setFont(font5);
+        bt_shift_4->setFont(font6);
         bt_shift_2L = new QPushButton(gb_shift);
         bt_shift_2L->setObjectName(QStringLiteral("bt_shift_2L"));
         bt_shift_2L->setGeometry(QRect(160, 90, 51, 51));
-        bt_shift_2L->setFont(font5);
+        bt_shift_2L->setFont(font6);
         gb_velocity = new QGroupBox(centralWidget);
         gb_velocity->setObjectName(QStringLiteral("gb_velocity"));
         gb_velocity->setEnabled(false);
@@ -1839,6 +1850,7 @@ public:
         lb2_error->setText(QApplication::translate("MainWindow", "ERROR", nullptr));
         bt2_error_clear->setText(QApplication::translate("MainWindow", "ERROR\n"
 "CLEAR", nullptr));
+        cb_use_clutch->setText(QApplication::translate("MainWindow", "clutch", nullptr));
         gb2_blinker->setTitle(QApplication::translate("MainWindow", "BLINKER", nullptr));
         bt2_blinker_right->setText(QApplication::translate("MainWindow", "RIGHT", nullptr));
         bt2_blinker_left->setText(QApplication::translate("MainWindow", "LEFT", nullptr));

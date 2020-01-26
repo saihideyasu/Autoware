@@ -41,6 +41,9 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_score_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_current_localizer_.setColor(QPalette::Base, QColor("#00FF00"));
     palette_lb_localize_.setColor(QPalette::Base, QColor("#00FF00"));
+    ui->lb2_ndt->setPalette(palette_lb_localize_);
+    ui->lb2_ekf->setPalette(palette_lb_localize_);
+    ui->lb2_gnss->setPalette(palette_lb_localize_);
 
     connect(ui->bt_emergency_clear, SIGNAL(clicked()), this, SLOT(publish_emergency_clear()));
     connect(ui->bt_drive_mode_manual, SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
@@ -630,37 +633,37 @@ void MainWindow::window_updata()
             case 0:
                 ui->tx_localizer_select->setText("NDT+ODOM");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
-                ui->lb2_ndt->setPalette(palette_lb_normal_);
-                ui->lb2_ekf->setPalette(palette_lb_localize_);
-                ui->lb2_gnss->setPalette(palette_lb_normal_);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(true);
+                ui->lb2_ndt->setAutoFillBackground(false);
                 break;
             case 10:
                 ui->tx_localizer_select->setText("GNSS+GYLO->NDT+ODOM");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
-                ui->lb2_ndt->setPalette(palette_lb_normal_);
-                ui->lb2_ekf->setPalette(palette_lb_localize_);
-                ui->lb2_gnss->setPalette(palette_lb_normal_);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(true);
+                ui->lb2_ndt->setAutoFillBackground(false);
                 break;
             case 1:
                 ui->tx_localizer_select->setText("GNSS+GYLO");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
-                ui->lb2_ndt->setPalette(palette_lb_normal_);
-                ui->lb2_ekf->setPalette(palette_lb_normal_);
-                ui->lb2_gnss->setPalette(palette_lb_localize_);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(true);
                 break;
             case 11:
                 ui->tx_localizer_select->setText("NDT+ODOM->GNSS+GYLO");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
-                ui->lb2_ndt->setPalette(palette_lb_normal_);
-                ui->lb2_ekf->setPalette(palette_lb_normal_);
-                ui->lb2_gnss->setPalette(palette_lb_localize_);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(true);
                 break;
             default:
                 ui->tx_localizer_select->setText("distance too large");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_error_);
-                ui->lb2_ndt->setPalette(palette_lb_normal_);
-                ui->lb2_ekf->setPalette(palette_lb_normal_);
-                ui->lb2_gnss->setPalette(palette_lb_normal_);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(false);
+                ui->lb2_ndt->setAutoFillBackground(false);
         }
         
     }
@@ -824,11 +827,15 @@ void MainWindow::callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg)
 
 void MainWindow::callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg)
 {
+    if(ui->cb_use_clutch->isChecked() == true && msg.clutch == true && error_text_lock_ == true)
+        click_error_text_reset();
     can502_ = msg;
 }
 
 void MainWindow::callbackCan503(const autoware_can_msgs::MicroBusCan503 &msg)
 {
+    if(ui->cb_use_clutch->isChecked() == true && msg.clutch == true && error_text_lock_ == true)
+        click_error_text_reset();
     can503_ = msg;
 }
 

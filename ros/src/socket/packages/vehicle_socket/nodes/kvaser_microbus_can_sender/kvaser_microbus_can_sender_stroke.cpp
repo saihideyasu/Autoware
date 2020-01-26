@@ -295,7 +295,7 @@ private:
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
 	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_;
-	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_;
+	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
@@ -838,7 +838,7 @@ private:
 		str << "," << stopper_distance_
 			<< "," << estimated_stopping_distance 
 			<< "," << ndt_stat_.score 
-			<< "," <<ndt_reliability_ 
+			<< "," << ndt_reliability_ 
 			<< "," << ndt_stat_.exe_time
 			<< "," << ndt_stat_string_  //11
 			<< "," << gnss_stat_string
@@ -855,6 +855,7 @@ private:
 			<< "," << gnss_yaw;
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
+		
 		double gnssx = gnss_pose_.pose.position.x;//21
 		double gnssy = gnss_pose_.pose.position.y;
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
@@ -2226,6 +2227,7 @@ public:
 		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);
 		sub_difference_to_waypoint_distance_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceNdt, this);
 		sub_difference_to_waypoint_distance_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceGnss, this);
+		sub_difference_to_waypoint_distance_ekf_ = nh_.subscribe("/difference_to_waypoint_distance_ekf", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceEkf, this);
 		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);
 		sub_interface_lock_ = nh_.subscribe("/microbus/interface_lock", 10, &kvaser_can_sender::callbackInterfaceLock, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);

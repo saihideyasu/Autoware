@@ -82,6 +82,8 @@ add_message_files(
             ImuMathValue.msg
             DifferenceToWaypointDistance.msg
             LocalizerMatchStat.msg
+            TemporaryStopperInfo.msg
+            TemporaryStopperInfoList.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

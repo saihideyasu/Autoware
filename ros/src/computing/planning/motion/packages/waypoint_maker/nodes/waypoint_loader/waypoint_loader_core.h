@@ -30,6 +30,7 @@
 
 #include "autoware_msgs/LaneArray.h"
 #include "autoware_msgs/LinearArray.h"
+#include "autoware_msgs/TemporaryStopperInfoList.h"
 
 namespace waypoint_maker
 {
@@ -76,8 +77,9 @@ private:
   std::vector<std::string> multi_file_path_;
   autoware_msgs::LaneArray output_lane_array_;
 
-  autoware_msgs::LinearArray signal_stop_line_points_, temporary_stop_line_points_;
-
+  autoware_msgs::LinearArray signal_stop_line_points_;//, temporary_stop_line_points_;
+  autoware_msgs::TemporaryStopperInfoList temporary_list_;
+  
   //id counter
   uint32_t id_counter_;
 

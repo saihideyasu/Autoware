@@ -37,24 +37,29 @@ void WaypointLoaderNode::initPubSub()
   // setup publisher
   lane_pub_ = nh_.advertise<autoware_msgs::LaneArray>("/based/lane_waypoints_raw", 10, true);
   signal_stop_line_pub_ = nh_.advertise<autoware_msgs::LinearArray>("/signal_stop_line_points", 10, true);
-  temporary_stop_line_pub_ = nh_.advertise<autoware_msgs::LinearArray>("/temporary_stop_line_points", 10, true);
+  //temporary_stop_line_pub_ = nh_.advertise<autoware_msgs::TemporaryStopperInfoList>("/temporary_stop_line_points", 10, true);
+  temporary_stop_line_pub_ = nh_.advertise<autoware_msgs::TemporaryStopperInfoList>("/create_temporary_list", 10, true);
 }
 
 void WaypointLoaderNode::run()
 {
   signal_stop_line_points_.linears.clear();
-  temporary_stop_line_points_.linears.clear();
+  //temporary_stop_line_points_.linears.clear();
+  temporary_list_.list.clear();
   multi_file_path_.clear();
   signal_stop_line_points_.header.stamp = ros::Time::now();
   signal_stop_line_points_.header.frame_id = "map";
-  temporary_stop_line_points_.header.stamp = ros::Time::now();
-  temporary_stop_line_points_.header.frame_id = "map";
+  //temporary_stop_line_points_.header.stamp = ros::Time::now();
+  temporary_list_.header.stamp = ros::Time::now();
+  //temporary_stop_line_points_.header.frame_id = "map";
+  temporary_list_.header.frame_id = "map";
   parseColumns(multi_lane_csv_, &multi_file_path_);
   autoware_msgs::LaneArray lane_array;
   createLaneArray(multi_file_path_, &lane_array);
   lane_pub_.publish(lane_array);
   if(signal_stop_line_points_.linears.size() != 0) signal_stop_line_pub_.publish(signal_stop_line_points_);
-  if(temporary_stop_line_points_.linears.size() != 0) temporary_stop_line_pub_.publish(temporary_stop_line_points_);
+  //if(temporary_stop_line_points_.linears.size() != 0) temporary_stop_line_pub_.publish(temporary_stop_line_points_);
+  temporary_stop_line_pub_.publish(temporary_list_);
   output_lane_array_ = lane_array;
   ros::spin();
 }
@@ -220,7 +225,7 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->wpstate.stop_state = (map.find("stop_flag") != map.end()) ? std::stoi(map["stop_flag"]) : 0;
   wp->wpstate.event_state = (map.find("event_flag") != map.end()) ? std::stoi(map["event_flag"]) : 0;
 
-  wp->waypoint_param.id = id_counter_;  id_counter_++;
+  wp->waypoint_param.id = id_counter_;  //id_counter_++;
   wp->waypoint_param.weight = (map.find("weight") != map.end()) ? std::stof(map["weight"]) : 0;
   wp->waypoint_param.feat_proj_x = (map.find("feat_proj_x") != map.end()) ? std::stof(map["feat_proj_x"]) : -10000;
   wp->waypoint_param.feat_proj_y = (map.find("feat_proj_y") != map.end()) ? std::stof(map["feat_proj_y"]) : -10000;
@@ -274,20 +279,30 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
 
   if(wp->waypoint_param.signal_stop_line != 0)
   {
-	geometry_msgs::Vector3 signal_stop_line;
-	signal_stop_line.x = wp->pose.pose.position.x;
-	signal_stop_line.y = wp->pose.pose.position.y;
-	signal_stop_line.z = wp->pose.pose.position.z;
-	signal_stop_line_points_.linears.push_back(signal_stop_line);
+    geometry_msgs::Vector3 signal_stop_line;
+    signal_stop_line.x = wp->pose.pose.position.x;
+    signal_stop_line.y = wp->pose.pose.position.y;
+    signal_stop_line.z = wp->pose.pose.position.z;
+    signal_stop_line_points_.linears.push_back(signal_stop_line);
   }
   if(wp->waypoint_param.temporary_stop_line != 0)
   {
-	  geometry_msgs::Vector3 temporary_stop_line;
+	  /*geometry_msgs::Vector3 temporary_stop_line;
 	  temporary_stop_line.x = wp->pose.pose.position.x;
 	  temporary_stop_line.y = wp->pose.pose.position.y;
 	  temporary_stop_line.z = wp->pose.pose.position.z;
-	  temporary_stop_line_points_.linears.push_back(temporary_stop_line);
+	  temporary_stop_line_points_.linears.push_back(temporary_stop_line);*/
+    
+    autoware_msgs::TemporaryStopperInfo info;
+    info.header = temporary_list_.header;
+    info.linears.x = wp->pose.pose.position.x;
+    info.linears.y = wp->pose.pose.position.y;
+    info.linears.z = wp->pose.pose.position.z;
+    info.waypoint_id = id_counter_;
+    info.stop_flag = false;
+    temporary_list_.list.push_back(info);
   }
+  id_counter_++;
 
   for(int cou=1; cou<=3; cou++)
   {

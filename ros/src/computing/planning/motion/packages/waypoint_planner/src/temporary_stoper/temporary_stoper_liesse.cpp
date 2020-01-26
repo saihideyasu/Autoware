@@ -7,17 +7,19 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/Imu.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
+#include <autoware_can_msgs/MicroBusCan503.h>
 #include <visualization_msgs/MarkerArray.h>
 
 class TemporaryStopper
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
-	ros::Subscriber sub_waypoint_, sub_waypoint_param_, sub_can_, sub_current_velocity_, sub_distance_, sub_config_;
+	ros::Subscriber sub_waypoint_, sub_waypoint_param_, sub_can502_, sub_can503_, sub_current_velocity_, sub_distance_, sub_config_;
 	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_;
 
 	autoware_config_msgs::ConfigTemporaryStopper config_;
-	autoware_can_msgs::MicroBusCan502 can_;
+	autoware_can_msgs::MicroBusCan502 can502_;
+	autoware_can_msgs::MicroBusCan503 can503_;
 	geometry_msgs::TwistStamped current_velocity_;
 
 	double front_bumper_to_baselink_;
@@ -188,6 +190,8 @@ private:
 				pub_temporari_flag_.publish(flag);
 			}
 		}
+		else if(can503_.clutch == false) timer_ = ros::Time(0);//停止状態でクラッチが切れている（手動）場合、停止処理を強制終了
+
 		// front バンパーが一時停止線にあるときに、ベースリンクに一番近い2個のwaypointのうち前のもの。
 		// ≒ stop_index - 5
 		double stop_line_to_baselink = 0;
@@ -278,9 +282,14 @@ private:
 		return l;
 	}
 
-	void callbackCan(const autoware_can_msgs::MicroBusCan502& msg)
+	void callbackCan502(const autoware_can_msgs::MicroBusCan502& msg)
 	{
-		can_ = msg;
+		can502_ = msg;
+	}
+
+	void callbackCan503(const autoware_can_msgs::MicroBusCan503& msg)
+	{
+		can503_ = msg;
 	}
 
 	void callbackDistance(const std_msgs::Float64& msg)
@@ -325,7 +334,7 @@ public:
 		config_.stop_speed_threshold = 0.018;*/
 
 		timer_ = ros::Time::now();
-		can_.velocity_actual = 0;
+		can502_.velocity_actual = 0;
 
 		nh_.param<double>("/vehicle_info/front_bumper_to_baselink", front_bumper_to_baselink_, 4.55);
 		pub_waypoint_ = nh_.advertise<autoware_msgs::Lane>("/temporary_stop_waypoints", 1);
@@ -334,7 +343,8 @@ public:
 		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStopper::callbackWaypoint, this);
 		sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &TemporaryStopper::callbackWaypointParam, this);
-		sub_can_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan, this);
+		sub_can502_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan502, this);
+		sub_can503_ = nh_.subscribe("/microbus/can_receive503", 1, &TemporaryStopper::callbackCan503, this);
 		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStopper::callbackCurrentVelocity, this);
 		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
 		sub_config_ = nh_.subscribe("/config/temporary_stopper", 1, &TemporaryStopper::callbackConfig, this);

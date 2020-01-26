@@ -296,7 +296,7 @@ private:
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
 	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_;
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_;
-	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_;//sub_interface_config_;
+	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -353,7 +353,12 @@ private:
 	double accel_avoidance_distance_min_, stop_stroke_max_;
 	bool in_accel_mode_, in_brake_mode_;
 	std_msgs::String routine_;
-	bool use_stopper_distance_;
+	bool use_stopper_distance_, interface_lock_;
+
+	void callbackInterfaceLock(const std_msgs::BoolConstPtr &msg)
+	{
+		interface_lock_ = msg->data;
+	}
 
 	const int LOCALIZER_SELECT_NDT = 0;
 	const int LOCALIZER_SELECT_GNSS = 1;
@@ -2028,6 +2033,7 @@ std::cout << "auto_mode" << std::endl;
 			if(time > drive_clutch_timer_) drive_clutch_ = true;
 			else drive_clutch_ = false;
 		}
+		else if(interface_lock_ == true) buf[6] |= 0x20;
 		if(steer_clutch_ == false)
 		{
 			buf[6] |= 0x10;
@@ -2035,6 +2041,7 @@ std::cout << "auto_mode" << std::endl;
 			if(time > steer_clutch_timer_) steer_clutch_ = true;
 			else steer_clutch_ = false;
 		}
+		else if(interface_lock_ == true) buf[6] |= 0x10;
 		if(automatic_door_ != 0x0)
 		{
 			if(automatic_door_ == 0x2) {buf[6] |= 0x08;}
@@ -2129,6 +2136,7 @@ public:
 		, in_accel_mode_(true)
 		, in_brake_mode_(true)
 		, use_stopper_distance_(true)
+		, interface_lock_(false)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2219,6 +2227,7 @@ public:
 		sub_difference_to_waypoint_distance_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceNdt, this);
 		sub_difference_to_waypoint_distance_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceGnss, this);
 		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);
+		sub_interface_lock_ = nh_.subscribe("/microbus/interface_lock", 10, &kvaser_can_sender::callbackInterfaceLock, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);

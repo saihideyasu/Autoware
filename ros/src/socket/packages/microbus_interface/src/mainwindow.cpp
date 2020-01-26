@@ -19,6 +19,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_localizer_select_ok_ = ui->tx_localizer_select->palette();
     palette_gnss_deviation_ok_ = ui->tx_lat->palette();
     palette_score_ok_ = ui->tx_ndt_score->palette();
+    palette_lb_normal_ = ui->lb2_ndt->palette();
     palette_drive_mode_error_ = palette_drive_mode_ok_;
     palette_steer_mode_error_ = palette_steer_mode_ok_;
     palette_drive_clutch_cut_ = palette_drive_clutch_connect_;
@@ -28,6 +29,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_gnss_deviation_error_ = palette_gnss_deviation_ok_;
     palette_score_error_ = palette_score_ok_;
     palette_current_localizer_ = palette_localizer_select_ok_;
+    palette_lb_localize_ = palette_lb_normal_;
     palette_drive_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_drive_clutch_cut_.setColor(QPalette::Base, QColor("#FF0000"));
@@ -38,6 +40,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_gnss_deviation_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_score_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_current_localizer_.setColor(QPalette::Base, QColor("#00FF00"));
+    palette_lb_localize_.setColor(QPalette::Base, QColor("#00FF00"));
 
     connect(ui->bt_emergency_clear, SIGNAL(clicked()), this, SLOT(publish_emergency_clear()));
     connect(ui->bt_drive_mode_manual, SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
@@ -81,6 +84,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     pub_blinker_left_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_left", 1);
     pub_blinker_right_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_right", 1);
     pub_blinker_stop_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_stop", 1);
+    pub_error_lock_ = nh_.advertise<std_msgs::Bool>("/microbus/interface_lock", 1);
 
     sub_can501_ = nh_.subscribe("/microbus/can_receive501", 10, &MainWindow::callbackCan501, this);
     sub_can502_ = nh_.subscribe("/microbus/can_receive502", 10, &MainWindow::callbackCan502, this);
@@ -406,6 +410,10 @@ void MainWindow::window_updata()
 
     if(can_status_.safety_error_message != "" && error_text_lock_ == false)
     {
+        std_msgs::Bool msg;
+        msg.data = true;
+        pub_error_lock_.publish(msg);
+
         ui->tx_error_text->setText(can_status_.safety_error_message.c_str());
         ui->tx2_error_text->setText(can_status_.safety_error_message.c_str());
         error_text_lock_ = true;
@@ -437,9 +445,9 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_distance;
         ui->tx2_ndt_distance->setText(str2.str().c_str());
-        if(localizer_select_ == 0 || localizer_select_ == 10)
-            ui->tx2_ndt_distance->setPalette(palette_current_localizer_);
-        else
+        //if(localizer_select_ == 0 || localizer_select_ == 10)
+        //    ui->tx2_ndt_distance->setPalette(palette_current_localizer_);
+        //else
             ui->tx2_ndt_distance->setPalette(palette_distance_angular_ok_);
     }
     else
@@ -490,9 +498,9 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_gnss_.baselink_distance;
         ui->tx2_gnss_distance->setText(str2.str().c_str());
-        if(localizer_select_ == 1 || localizer_select_ == 11)
-            ui->tx2_gnss_distance->setPalette(palette_current_localizer_);
-        else
+        //if(localizer_select_ == 1 || localizer_select_ == 11)
+        //    ui->tx2_gnss_distance->setPalette(palette_current_localizer_);
+        //else
             ui->tx2_gnss_distance->setPalette(palette_distance_angular_ok_);
     }
     else
@@ -544,9 +552,9 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << distance_angular_check_ndt_.baselink_angular;
         ui->tx2_ndt_angular->setText(str2.str().c_str());
-        if(localizer_select_ == 0 || localizer_select_ == 10)
-            ui->tx2_ndt_angular->setPalette(palette_current_localizer_);
-        else
+        //if(localizer_select_ == 0 || localizer_select_ == 10)
+        //    ui->tx2_ndt_angular->setPalette(palette_current_localizer_);
+        //else
             ui->tx2_ndt_angular->setPalette(palette_distance_angular_ok_);
     }
     else
@@ -597,9 +605,9 @@ void MainWindow::window_updata()
         std::stringstream str2;
         str2 << std::fixed << std::setprecision(keta) << angular_deg_gnss;
         ui->tx2_gnss_angular->setText(str2.str().c_str());
-        if(localizer_select_ == 1 || localizer_select_ == 11)
-            ui->tx2_gnss_angular->setPalette(palette_current_localizer_);
-        else
+        //if(localizer_select_ == 1 || localizer_select_ == 11)
+        //    ui->tx2_gnss_angular->setPalette(palette_current_localizer_);
+        //else
             ui->tx2_gnss_angular->setPalette(palette_distance_angular_ok_);
     }
     else
@@ -622,22 +630,37 @@ void MainWindow::window_updata()
             case 0:
                 ui->tx_localizer_select->setText("NDT+ODOM");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                ui->lb2_ndt->setPalette(palette_lb_normal_);
+                ui->lb2_ekf->setPalette(palette_lb_localize_);
+                ui->lb2_gnss->setPalette(palette_lb_normal_);
                 break;
             case 10:
                 ui->tx_localizer_select->setText("GNSS+GYLO->NDT+ODOM");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                ui->lb2_ndt->setPalette(palette_lb_normal_);
+                ui->lb2_ekf->setPalette(palette_lb_localize_);
+                ui->lb2_gnss->setPalette(palette_lb_normal_);
                 break;
             case 1:
                 ui->tx_localizer_select->setText("GNSS+GYLO");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                ui->lb2_ndt->setPalette(palette_lb_normal_);
+                ui->lb2_ekf->setPalette(palette_lb_normal_);
+                ui->lb2_gnss->setPalette(palette_lb_localize_);
                 break;
             case 11:
                 ui->tx_localizer_select->setText("NDT+ODOM->GNSS+GYLO");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_ok_);
+                ui->lb2_ndt->setPalette(palette_lb_normal_);
+                ui->lb2_ekf->setPalette(palette_lb_normal_);
+                ui->lb2_gnss->setPalette(palette_lb_localize_);
                 break;
             default:
                 ui->tx_localizer_select->setText("distance too large");
                 ui->tx_localizer_select->setPalette(palette_localizer_select_error_);
+                ui->lb2_ndt->setPalette(palette_lb_normal_);
+                ui->lb2_ekf->setPalette(palette_lb_normal_);
+                ui->lb2_gnss->setPalette(palette_lb_normal_);
         }
         
     }
@@ -886,7 +909,6 @@ void MainWindow::callbackStrokeRoutine(const std_msgs::String &msg)
 
 void MainWindow::publish_emergency_clear()
 {
-    //std::cout << "aaa" << std::endl;
     std_msgs::Empty msg;
     pub_unlock_.publish(msg);
 }
@@ -1012,6 +1034,10 @@ void MainWindow::publish_blinker_stop()
 
 void MainWindow::click_error_text_reset()
 {
+    std_msgs::Bool msg;
+    msg.data = false;
+    pub_error_lock_.publish(msg);
+
     error_text_lock_ = false;
     ui->tx_error_text->setText("");
     ui->tx2_error_text->setText("");

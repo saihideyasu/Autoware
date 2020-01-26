@@ -54,7 +54,8 @@ private:
     ros::Publisher pub_drive_input_, pub_steer_input_;//programモード時の自動入力と手動入力の切り替え
     ros::Publisher pub_drive_clutch_, pub_steer_clutch_;//クラッチの状態変更フラグ
     ros::Publisher pub_blinker_right_, pub_blinker_left_, pub_blinker_stop_; //ウィンカー
-
+    ros::Publisher pub_error_lock_;//エラーがでている場合、canアプリにロック情報を送る
+    
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
     ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_ekf_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
@@ -118,7 +119,7 @@ private:
     QPalette palette_localizer_select_ok_, palette_localizer_select_error_;//localizerの遷移状態のテキストボックスパレット
     QPalette palette_gnss_deviation_ok_, palette_gnss_deviation_error_;
     QPalette palette_score_ok_, palette_score_error_;
-    QPalette palette_current_localizer_;
+    QPalette palette_current_localizer_, palette_lb_normal_, palette_lb_localize_;
 
 private slots:
     void publish_emergency_clear();

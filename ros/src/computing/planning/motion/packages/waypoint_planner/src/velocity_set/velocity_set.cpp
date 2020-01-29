@@ -537,7 +537,9 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
                          const ros::Publisher mobileye_velocity_pub, const ros::Publisher detection_mobileye_pub)
 {
   // no input for detection || no closest waypoint
-  if ((points.empty() == true && vs_info.getDetectionResultByOtherNodes() == -1 && vs_info.getMobileyeObstacle().size() == 0) ||
+  //std::cout << vs_info.getDetectionResultByOtherNodes() << "," << vs_info.getMobileyeObstacle().size() << "," << closest_waypoint << std::endl;
+  if ((points.empty() == true && vs_info.getDetectionResultByOtherNodes() == -1
+       && object_tracker.objects.size() == 0 && vs_info.getMobileyeObstacle().size() == 0) ||
        closest_waypoint < 0)
 	  return EControl::KEEP;
   int ob_type = (int)EObstacleType::NONE;
@@ -888,7 +890,7 @@ int main(int argc, char** argv)
           crosswalk.findClosestCrosswalk(closest_waypoint, vs_path.getPrevWaypoints(), STOP_SEARCH_DISTANCE));
 
     int obstacle_waypoint = -1;
-	EControl detection_result = obstacleDetection(closest_waypoint, vs_path.getPrevWaypoints(), crosswalk, vs_path, vs_info,
+	  EControl detection_result = obstacleDetection(closest_waypoint, vs_path.getPrevWaypoints(), crosswalk, vs_path, vs_info,
 	                                              detection_range_pub, obstacle_pub, detection_mobileye_pub,
                                                 pillar_velocity_pub, mobileye_velocity_pub ,&obstacle_waypoint, enableMobileye, obstacle_type_pub);
 

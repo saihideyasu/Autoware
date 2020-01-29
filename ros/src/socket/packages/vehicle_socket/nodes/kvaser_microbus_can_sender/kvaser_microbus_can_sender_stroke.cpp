@@ -294,7 +294,7 @@ private:
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
 	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
-	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_;
+	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_, sub_ekf_pose_;
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 
@@ -335,9 +335,9 @@ private:
 	bool angle_limit_over_;
 	double steer_correction_;
 	std::string ndt_stat_string_;
-	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_;
+	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_, ekf_pose_;
 	unsigned char gnss_stat_;
-	autoware_msgs::DifferenceToWaypointDistance difference_toWaypoint_distance_, difference_toWaypoint_distance_ndt_, difference_toWaypoint_distance_gnss_;
+	autoware_msgs::DifferenceToWaypointDistance difference_toWaypoint_distance_, difference_toWaypoint_distance_ndt_, difference_toWaypoint_distance_gnss_, difference_toWaypoint_distance_ekf_;
 	autoware_msgs::GnssStandardDeviation gnss_deviation_;
 	autoware_msgs::NDTStat ndt_stat_;
 	double ndt_reliability_;
@@ -354,6 +354,7 @@ private:
 	bool in_accel_mode_, in_brake_mode_;
 	std_msgs::String routine_;
 	bool use_stopper_distance_, interface_lock_;
+	unsigned int loop_counter_;
 
 	void callbackInterfaceLock(const std_msgs::BoolConstPtr &msg)
 	{
@@ -423,9 +424,15 @@ private:
 		if(config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2)
 			waypointDistanceCheck(msg, std::string("gnss"));
 		difference_toWaypoint_distance_gnss_ = *msg;
-
 	}
 
+	void callbackDifferenceToWaypointDistanceEkf(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
+	{
+		//if(config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2)
+		//	waypointDistanceCheck(msg, std::string("gnss"));
+		difference_toWaypoint_distance_ekf_ = *msg;
+	}
+	
 	void NdtGnssCheck()
 	{
 		bool flag = true;
@@ -583,6 +590,12 @@ private:
 	void callbackGnssPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
 	{
 		gnss_pose_ = *msg;
+		NdtGnssCheck();
+	}
+
+	void callbackEkfPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	{
+		ekf_pose_ = *msg;
 		NdtGnssCheck();
 	}
 
@@ -858,11 +871,16 @@ private:
 		
 		double gnssx = gnss_pose_.pose.position.x;//21
 		double gnssy = gnss_pose_.pose.position.y;
+
+		double ekfx = ekf_pose_.pose.position.x;
+		double ekfy = ekf_pose_.pose.position.y;
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
 		str <<","<<ndtx 
 		    <<"," <<ndty
 			<<"," << gnssx
 			<<"," << gnssy//26
+			<<"," << ekfx
+			<<"," << ekfy
 			<<"," << distance;
 		double roll, pitch, yaw;
 		tf::Matrix3x3 wla(waypoint_localizer_angle_);
@@ -870,6 +888,31 @@ private:
 		str << "," <<  waypoint_angle_ 
 			<<"," << ndt_gnss_angle_ 
 			<< "," << yaw;
+
+
+		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance
+		    << "," << difference_toWaypoint_distance_gnss_.baselink_distance
+			<< "," << difference_toWaypoint_distance_ekf_.baselink_distance;
+		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;
+		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_ekf_.baselink_distance;
+		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;
+
+		tf::Quaternion ndt_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ndt_.baselink_angular);
+		tf::Quaternion ekf_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ekf_.baselink_angular);
+		tf::Quaternion gnss_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_gnss_.baselink_angular);
+		tf::Quaternion q_ndt_ekf = ndt_q * ekf_q.inverse();
+		tf::Quaternion q_ndt_gnss = ndt_q * gnss_q.inverse();
+		tf::Quaternion q_ekf_gnss = ekf_q * gnss_q.inverse();
+		tf::Matrix3x3 s_ndt_ekf(q_ndt_ekf);
+		tf::Matrix3x3 s_ndt_gnss(q_ndt_gnss);
+		tf::Matrix3x3 s_ekf_gnss(q_ekf_gnss);
+		double getyaw, getroll, getpitch;
+		s_ndt_gnss.getRPY(getroll, getpitch, getyaw);
+		str << "," << getyaw;
+		s_ndt_ekf.getRPY(getroll, getpitch, getyaw);
+		str << "," << getyaw;
+		s_ekf_gnss.getRPY(getroll, getpitch, getyaw);
+		str << "," << getyaw;
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
 		pub_acceleration_write_.publish(aw_msg);
@@ -1119,9 +1162,9 @@ private:
 
 		if(msg->use_stopper_distance == 0) use_stopper_distance_ = false;
 		else use_stopper_distance_ = true;
-		if(msg->stopper_distance1 < 0) setting_.stopper_distance1 = msg->stopper_distance1;
-		if(msg->stopper_distance2 < 0) setting_.stopper_distance2 = msg->stopper_distance2;
-		if(msg->stopper_distance3 < 0) setting_.stopper_distance3 = msg->stopper_distance3;
+		if(msg->stopper_distance1 > 0) setting_.stopper_distance1 = msg->stopper_distance1;
+		if(msg->stopper_distance2 > 0) setting_.stopper_distance2 = msg->stopper_distance2;
+		if(msg->stopper_distance3 > 0) setting_.stopper_distance3 = msg->stopper_distance3;
 		
 		waypoint_param_ = *msg;
 	}
@@ -1560,11 +1603,12 @@ private:
 */
 
 		//const double stop_stroke = 340.0;
-		if(use_stopper_distance_ == true)
+		if(use_stopper_distance_ = true)
 		{
+			std::cout << "stopper list : "<< setting_.stopper_distance1 << "," << setting_.stopper_distance2 << "," << setting_.stopper_distance3 << std::endl;
 			std::cout << "kkk stop_stroke_max : " << stop_stroke_max_ << std::endl;
 			if(stopper_distance_ >= setting_.stopper_distance2 && stopper_distance_ <= setting_.stopper_distance1)
-			{
+			{std::cout << loop_counter_ << " : stopD1" << std::endl;
 				/*std::cout << "tbs," << target_brake_stroke;
 				double d = stop_stroke - target_brake_stroke;
 				if(d < 0) d = 0;
@@ -1572,7 +1616,7 @@ private:
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;*/
 			}
 			else if(stopper_distance_ >= setting_.stopper_distance3 && stopper_distance_ <= setting_.stopper_distance2)
-			{
+			{std::cout << loop_counter_ << "stopD2" << std::endl;
 				/*if(current_velocity > 5.0)
 				{
 					std::cout << "tbs," << target_brake_stroke;
@@ -1586,7 +1630,7 @@ private:
 				}
 			}
 			else if(stopper_distance_ >= 0 && stopper_distance_ <= setting_.stopper_distance3)
-			{
+			{std::cout << loop_counter_ << "stopD3" << std::endl;
 				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 				step = 0.5;
 				target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_)/2.0;
@@ -1902,21 +1946,7 @@ private:
 			double cv_s = current_velocity /3.6;
 			if(acceleration <= 0 && stopper_distance_ >= 0)
 				std::cout << "teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_ <<  std::endl;
-			//AUTOモードじゃない場合、stroke値0をcanに送る
-			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
-			        can_receive_503_.clutch == false)
-			{
-				pid_params.clear_diff_velocity();
-				pid_params.clear_diff_acceleration();
-				pid_params.clear_diff_distance();
-				pid_params.set_stop_stroke_prev(0);
-				pid_params.set_stroke_prev(0);
-				short drive_val = 0;
-				unsigned char *drive_point = (unsigned char*)&drive_val;
-				buf[4] = drive_point[1];  buf[5] = drive_point[0];
-				std::cout << "manual_mode" << std::endl;
-				return;
-			}
+
 std::cout << "auto_mode" << std::endl;
 			double new_stroke = 0;
 			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
@@ -2013,6 +2043,22 @@ std::cout << "auto_mode" << std::endl;
 				if(new_stroke < setting_.pedal_stroke_min) new_stroke = setting_.pedal_stroke_min;
 			}
 			pid_params.set_stroke_prev(new_stroke);*/
+
+			//AUTOモードじゃない場合、stroke値0をcanに送る
+			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
+			        can_receive_503_.clutch == false)
+			{
+				pid_params.clear_diff_velocity();
+				pid_params.clear_diff_acceleration();
+				pid_params.clear_diff_distance();
+				pid_params.set_stop_stroke_prev(0);
+				pid_params.set_stroke_prev(0);
+				short drive_val = 0;
+				unsigned char *drive_point = (unsigned char*)&drive_val;
+				buf[4] = drive_point[1];  buf[5] = drive_point[0];
+				std::cout << "manual_mode" << std::endl;
+				return;
+			}
 
 			short input_stroke = (short)new_stroke;
 			if(input_drive_mode_ == true) input_stroke = input_drive_;
@@ -2138,6 +2184,7 @@ public:
 		, in_brake_mode_(true)
 		, use_stopper_distance_(true)
 		, interface_lock_(false)
+		, loop_counter_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2224,6 +2271,7 @@ public:
 		sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &kvaser_can_sender::callbackGnssStat, this);
 		sub_ndt_pose_ = nh_.subscribe("/ndt_pose", 10, &kvaser_can_sender::callbackNdtPose, this);
 		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
+		sub_ekf_pose_ = nh_.subscribe("/ekf_pose", 10, &kvaser_can_sender::callbackEkfPose, this);
 		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);
 		sub_difference_to_waypoint_distance_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceNdt, this);
 		sub_difference_to_waypoint_distance_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceGnss, this);
@@ -2319,6 +2367,7 @@ public:
 			pub_vehicle_status_.publish(status);
 			
 			kc.write(0x100, (char*)buf, SEND_DATA_SIZE);
+			loop_counter_++;
 		}
 	}
 };

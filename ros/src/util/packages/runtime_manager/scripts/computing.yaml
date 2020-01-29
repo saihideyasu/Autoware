@@ -7258,3 +7258,30 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : stopper_distance1
+      desc : stopper_distance1
+      label: stopper_distance1
+      min  : 0.0
+      max  : 50.0
+      v    : 20.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : stopper_distance2
+      desc : stopper_distance2
+      label: stopper_distance2
+      min  : 0.0
+      max  : 10.0
+      v    : 8.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : stopper_distance3
+      desc : stopper_distance3
+      label: stopper_distance3
+      min  : 0.0
+      max  : 5.0
+      v    : 2.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='

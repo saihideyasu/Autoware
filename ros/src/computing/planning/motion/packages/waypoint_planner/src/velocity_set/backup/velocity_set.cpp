@@ -264,7 +264,7 @@ EControl crossWalkDetection(const pcl::PointCloud<pcl::PointXYZ>& points, const 
 }
 
 int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
-                       const autoware_msgs::MobileyeObstacle& mobileye_obstacle, const int closest_waypoint,
+                       const std::vector<mobileye_560_660_msgs::ObstacleData>& mobileye_obstacle, const int closest_waypoint,
                        const autoware_msgs::Lane& lane, const CrossWalk& crosswalk, double stop_range,
                        double points_threshold, const geometry_msgs::PoseStamped& localizer_pose,
                        ObstaclePoints* obstacle_points, int* obstacle_type,
@@ -428,60 +428,10 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
             break;
           }
         }*/
-
-      for(int obj_i=0; obj_i<mobileye_obstacle.data.size(); obj_i++)
+      
+      for(int obj_i=0; obj_i<mobileye_obstacle.size(); obj_i++)
       {
-        mobileye_560_660_msgs::ObstacleData mobileye_obj = mobileye_obstacle.data[obj_i];
-        for(int wid=0; wid<3; wid++)
-        {
-          tf::Transform tf_detction;
-          tf::Vector3 xyz;
-          //xyz.setX(mobileye_obj.obstacle_pos_x); xyz.setY(mobileye_obj.obstacle_pos_y + wid*mobileye_obj.obstacle_width/2.0);
-          tf_detction.setOrigin(tf::Vector3(mobileye_obj.obstacle_pos_x,
-                                            mobileye_obj.obstacle_pos_y + wid*mobileye_obj.obstacle_width/2.0 -mobileye_obj.obstacle_width/2.0,
-                                            0));
-          tf_detction.setRotation(tf::Quaternion::getIdentity());
-
-          std::stringstream str;
-          str << "m_detect" << obj_i << "_" << wid;
-          br->sendTransform(tf::StampedTransform(tf_detction, nowtime, "me_viz", str.str().c_str()));
-
-          tf::StampedTransform tf_detect;
-          ros::Time t = ros::Time::now();
-          listener->waitForTransform("map", str.str().c_str(), nowtime, ros::Duration(3.0));
-          listener->lookupTransform("map", str.str().c_str(), nowtime, tf_detect);
-
-          tf::Vector3 pm(tf_detect.getOrigin().getX(), tf_detect.getOrigin().getY(), 0);
-          double dt = tf::tfDistance(pm, tf_waypoint);
-          if (dt < stop_range)
-          {
-            ob_type |= (int)EObstacleType::ON_MOBILEYE;
-            *mobileye_velocity = mobileye_obj.obstacle_rel_vel_x;
-            if(!check_point) stop_obstacle_waypoint = i;
-            check_mobileye = true;
-            end_waypoint = i + 1;
-            if(end_waypoint > closest_waypoint + STOP_SEARCH_DISTANCE)
-              end_waypoint = closest_waypoint + STOP_SEARCH_DISTANCE;
-            goto MOBILEYE_JUMP;
-          }
-        }
-        MOBILEYE_JUMP:;
-        /*tf::Transform tf_detction;
-        tf::Vector3 xyz;
-        xyz.setX(mobileye_obj.obstacle_pos_x); xyz.setY(mobileye_obj.obstacle_pos_y);
-        tf_detction.setOrigin(tf::Vector3(mobileye_obj.obstacle_pos_x, mobileye_obj.obstacle_pos_y, 0));
-        tf_detction.setRotation(tf::Quaternion::getIdentity());
-
-        std::stringstream str;
-        str << "m_detect" << obj_i;
-        br->sendTransform(tf::StampedTransform(tf_detction, nowtime, "me_viz", str.str().c_str()));
-
-        tf::StampedTransform tf_detect;
-        ros::Time t = ros::Time::now();
-        listener->waitForTransform("map", str.str().c_str(), nowtime, ros::Duration(3.0));
-        listener->lookupTransform("map", str.str().c_str(), nowtime, tf_detect);*/
-        
-        /*std::cout << "obj_i," << obj_i << std::endl;
+        std::cout << "obj_i," << obj_i << std::endl;
         mobileye_560_660_msgs::ObstacleData mobileye_obj = mobileye_obstacle[obj_i];
         tf::Transform tf_detction;
         tf::Vector3 xyz;
@@ -496,7 +446,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
         tf::StampedTransform tf_detect;
         ros::Time t = ros::Time::now();
         listener->waitForTransform("map", str.str().c_str(), nowtime, ros::Duration(3.0));
-        listener->lookupTransform("map", str.str().c_str(), nowtime, tf_detect);*/
+        listener->lookupTransform("map", str.str().c_str(), nowtime, tf_detect);
       
         /*if(ob_type & (int)EObstacleType::ON_MOBILEYE)
         {
@@ -603,7 +553,7 @@ int detectDecelerateObstacle(const pcl::PointCloud<pcl::PointXYZ>& points, const
 
 // Detect an obstacle by using pointcloud
 EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
-                         const autoware_msgs::MobileyeObstacle& mobileye_obstacle, const int closest_waypoint,
+                         const std::vector<mobileye_560_660_msgs::ObstacleData>& mobileye_obstacle, const int closest_waypoint,
                          const autoware_msgs::Lane& lane, const CrossWalk& crosswalk, const VelocitySetInfo& vs_info,
                          int* obstacle_waypoint, ObstaclePoints* obstacle_points, int *obstacle_type, bool enableMobileye,
                          const VelocitySetPath vs_path, double *pillar_velocity, double *mobileye_velocity ,const ros::Publisher& pillar_velocity_pub,
@@ -613,7 +563,7 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
   //std::cout << vs_info.getDetectionResultByOtherNodes() << "," << vs_info.getMobileyeObstacle().size() << "," << closest_waypoint << std::endl;
   if ((points.empty() == true && vs_info.getDetectionResultByOtherNodes() == -1
         && (object_tracker.objects.size() == 0 || vs_info.getUsePointPillar() == false)
-        && (vs_info.getMobileyeObstacle().data.size() == 0 || vs_info.getUseMobileye() == false))
+        && (vs_info.getMobileyeObstacle().size() == 0 || vs_info.getUseMobileye() == false))
         || closest_waypoint < 0)
 	  return EControl::KEEP;
   int ob_type = (int)EObstacleType::NONE;
@@ -916,7 +866,7 @@ int main(int argc, char** argv)
   ros::Subscriber localizer_sub = nh.subscribe("localizer_pose", 1, &VelocitySetInfo::localizerPoseCallback, &vs_info);
   ros::Subscriber control_pose_sub = nh.subscribe("current_pose", 1, &VelocitySetInfo::controlPoseCallback, &vs_info);
   ros::Subscriber detectionresult_sub = nh.subscribe("/state/stopline_wpidx", 1, &VelocitySetInfo::detectionCallback, &vs_info);
-  ros::Subscriber mobileye_obstacle_sub = nh.subscribe("/mobileye_obstacle", 1, &VelocitySetInfo::mobileyeObstacleCallback, &vs_info);
+  ros::Subscriber mobileye_obstacle_sub = nh.subscribe("/parsed_tx/obstacle_data", 1, &VelocitySetInfo::mobileyeObstacleCallback, &vs_info);
   ros::Subscriber sub_waypoint_param = nh.subscribe("/waypoint_param", 1, &VelocitySetInfo::waypointParamCallback, &vs_info);
 
   // vector map subscriber
@@ -977,7 +927,7 @@ int main(int argc, char** argv)
 	econtrol_pub.publish(econtrol_msg);
 
 	vs_info.clearPoints();
-	//vs_info.clearMobileyeObstacle();
+	vs_info.clearMobileyeObstacle();
 
     // publish obstacle waypoint index
     std_msgs::Int32 obstacle_waypoint_index;

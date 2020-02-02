@@ -1,11 +1,11 @@
 <launch>
-    <arg name="kvaser_channel" default="0"/>
+    <arg name="kvaser_channel" default="1"/>
     <arg name="can_hardware_id" default="59879" />
-    <arg name="can_bit_rate" default="500000" />
+    <arg name="can_bit_rate" default="5000000" />
 
     <include file="$(find kvaser_interface)/launch/kvaser_can_bridge_bus_me.launch">
-        <param name="can_hardware_id" value="$(arg kvaser_channel)" />
-        <param name="can_circuit_id" value="$(arg can_circuit_id)" />
+        <param name="can_hardware_id" value="$(arg can_hardware_id)" />
+        <param name="can_circuit_id" value="$(arg kvaser_channel)" />
         <param name="can_bit_rate" value="$(arg can_bit_rate)" />
     </include>
 

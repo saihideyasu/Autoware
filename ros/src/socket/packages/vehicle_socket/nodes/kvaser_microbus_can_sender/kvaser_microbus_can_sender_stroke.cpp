@@ -14,6 +14,7 @@
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
 #include <autoware_msgs/VehicleCmd.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
@@ -297,6 +298,7 @@ private:
 	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_, sub_ekf_pose_;
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
+	ros::Subscriber sub_ekf_covariance_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -355,6 +357,8 @@ private:
 	std_msgs::String routine_;
 	bool use_stopper_distance_, interface_lock_;
 	unsigned int loop_counter_;
+	geometry_msgs::PoseWithCovarianceStamped ekf_covariance_;
+	int ndt_warning_count_;
 
 	void callbackInterfaceLock(const std_msgs::BoolConstPtr &msg)
 	{
@@ -518,7 +522,16 @@ private:
 		{
 			case 0://ndt only
 			{
-				if(ndt_stat_string_ == "NDT_OK") lms.localizer_stat = true;
+				if(ndt_stat_string_ == "NDT_OK")
+				{
+					ndt_warning_count_ = 0;
+					lms.localizer_stat = true;
+				}
+				if(ndt_stat_string_ == "NDT_WARNING")
+				{
+					ndt_warning_count_++;
+					if(ndt_warning_count_ < 50) lms.localizer_stat = true;
+				}
 				break;
 			}
 			case 1://gnss only
@@ -584,19 +597,24 @@ private:
 	void callbackNdtPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
 	{
 		ndt_pose_ = *msg;
-		NdtGnssCheck();
+		//NdtGnssCheck();
 	}
 
 	void callbackGnssPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
 	{
 		gnss_pose_ = *msg;
-		NdtGnssCheck();
+		//NdtGnssCheck();
 	}
 
 	void callbackEkfPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
 	{
 		ekf_pose_ = *msg;
-		NdtGnssCheck();
+		//NdtGnssCheck();
+	}
+
+	void callbackEkfCovariance(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg)
+	{
+		ekf_covariance_ = *msg;
 	}
 
 	void callbackNdtStatString(const std_msgs::String::ConstPtr &msg)
@@ -875,12 +893,14 @@ private:
 		double ekfx = ekf_pose_.pose.position.x;
 		double ekfy = ekf_pose_.pose.position.y;
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
-		str <<","<<ndtx 
+		str <<"," <<ndtx 
 		    <<"," <<ndty
 			<<"," << gnssx
 			<<"," << gnssy//26
 			<<"," << ekfx
 			<<"," << ekfy
+			<<"," << ekf_covariance_.pose.covariance[0]
+			<<"," << ekf_covariance_.pose.covariance[6*1+1]
 			<<"," << distance;
 		double roll, pitch, yaw;
 		tf::Matrix3x3 wla(waypoint_localizer_angle_);
@@ -1897,6 +1917,7 @@ private:
 		}
 		else if(routine_.data == "keep")
 		{
+			pid_params.clear_diff_velocity();
 			double acc = pid_params.get_stroke_prev();
 			double brake = pid_params.get_stroke_prev();
 			brake -= 2;
@@ -2185,6 +2206,7 @@ public:
 		, use_stopper_distance_(true)
 		, interface_lock_(false)
 		, loop_counter_(0)
+		, ndt_warning_count_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2272,6 +2294,7 @@ public:
 		sub_ndt_pose_ = nh_.subscribe("/ndt_pose", 10, &kvaser_can_sender::callbackNdtPose, this);
 		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
 		sub_ekf_pose_ = nh_.subscribe("/ekf_pose", 10, &kvaser_can_sender::callbackEkfPose, this);
+		sub_ekf_covariance_ = nh_.subscribe("/ekf_pose_with_covariance", 10, &kvaser_can_sender::callbackEkfCovariance, this);
 		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);
 		sub_difference_to_waypoint_distance_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceNdt, this);
 		sub_difference_to_waypoint_distance_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceGnss, this);
@@ -2312,6 +2335,8 @@ public:
 	{
 		//if(can_receive_501_.emergency == false)
 		{
+			NdtGnssCheck();
+
 			double current_velocity = 0;// = can_receive_502_.velocity_average / 100.0;
 
 			switch(use_velocity_data_)

@@ -137,6 +137,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(novatel_oem7 nodes/nmea_serial.cpp)
+add_executable(novatel_oem7_tcp nodes/nmea_tcp.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,7 +153,9 @@ add_executable(novatel_oem7 nodes/nmea_serial.cpp)
  target_link_libraries(novatel_oem7
    ${catkin_LIBRARIES}
  )
-
+ target_link_libraries(novatel_oem7_tcp
+   ${catkin_LIBRARIES}
+ )
 #############
 ## Install ##
 #############
@@ -201,7 +204,7 @@ add_executable(novatel_oem7 nodes/nmea_serial.cpp)
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-install(TARGETS novatel_oem7
+install(TARGETS novatel_oem7 novatel_oem7_tcp
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

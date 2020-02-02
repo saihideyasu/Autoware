@@ -58,10 +58,10 @@ void VelocitySetInfo::clearPoints()
   points_.clear();
 }
 
-/*void VelocitySetInfo::clearMobileyeObstacle()
+void VelocitySetInfo::clearMobileyeObstacle()
 {
   mobileye_obstacle_.clear();
-}*/
+}
 
 void VelocitySetInfo::configCallback(const autoware_config_msgs::ConfigVelocitySetConstPtr &config)
 {
@@ -125,14 +125,9 @@ void VelocitySetInfo::localizerPoseCallback(const geometry_msgs::PoseStampedCons
   localizer_pose_ = *msg;
 }
 
-/*void VelocitySetInfo::mobileyeObstacleCallback(const mobileye_560_660_msgs::ObstacleData &msg)
+void VelocitySetInfo::mobileyeObstacleCallback(const mobileye_560_660_msgs::ObstacleData &msg)
 {
 	mobileye_obstacle_.push_back(msg);
-}*/
-
-void VelocitySetInfo::mobileyeObstacleCallback(const autoware_msgs::MobileyeObstacle &msg)
-{
-  mobileye_obstacle_ = msg;
 }
 
 void VelocitySetInfo::waypointParamCallback(const autoware_msgs::WaypointParam &msg)

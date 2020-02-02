@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         sensor_msgs
         jsk_recognition_msgs
+        mobileye_560_660_msgs
         )
 
 
@@ -84,6 +85,7 @@ add_message_files(
             LocalizerMatchStat.msg
             TemporaryStopperInfo.msg
             TemporaryStopperInfoList.msg
+            MobileyeObstacle.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -93,6 +95,7 @@ generate_messages(
         geometry_msgs
         sensor_msgs
         jsk_recognition_msgs
+        mobileye_560_660_msgs
 )
 
 catkin_package(

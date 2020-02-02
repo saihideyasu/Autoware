@@ -117,6 +117,10 @@ subs :
         probe:
         run  : roslaunch novatel_oem7 novatel_oem7.launch nodename:=novatel_oem7_1
         param: novatel
+      - name : novatel_oem7_tcp
+        desc : novatel_oem7_tcp desc sample
+        probe:
+        run  : rosrun novatel_oem7 novatel_oem7_tcp
 
   - name : IMU
     desc : IMU desc sample

@@ -19,18 +19,15 @@ enum class EControl
   STOP = 1,
   STOPLINE = 2,
   DECELERATE = 3,
-  DECELERATE_CRUSE = 4,
-  OTHERS = 5,
+  OTHERS = 4,
 };
 
 enum class EObstacleType
 {
-  NONE = 0x00,
-  ON_WAYPOINTS = 0x01,
-  ON_CROSSWALK = 0x02,
-  STOPLINE = 0x04,
-  ON_POINT_PILLAR = 0x08,
-  ON_MOBILEYE = 0x10
+  NONE = -1,
+  ON_WAYPOINTS = 1,
+  ON_CROSSWALK = 2,
+  STOPLINE = 3,
 };
 
 struct CrossWalkPoints

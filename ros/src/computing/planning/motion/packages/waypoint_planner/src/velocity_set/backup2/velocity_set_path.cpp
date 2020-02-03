@@ -91,32 +91,7 @@ void VelocitySetPath::changeWaypointsForDeceleration(double deceleration, int cl
       new_waypoints_.waypoints[index].twist.twist.linear.x = changed_vel;
     }
   }
-}
 
-void VelocitySetPath::changeWaypointsForDecelerationCruse(double deceleration, int closest_waypoint, int obstacle_waypoint,
-                                                          double velocity_plus, double front_bumper_length)
-{
-  double square_vel_min = velocity_plus * velocity_plus;
-
-    // decelerate with constant deceleration
-  for (int index = obstacle_waypoint; index >= closest_waypoint; index--)
-  {
-    if (!checkWaypoint(index, __FUNCTION__))
-      continue;
-
-    // v = sqrt( (v0)^2 + 2ax )
-    double changed_vel = std::sqrt(square_vel_min + 2.0 * deceleration * calcInterval(index, obstacle_waypoint));
-
-    double prev_vel = prev_waypoints_.waypoints[index].twist.twist.linear.x;
-    if (changed_vel > prev_vel)
-    {
-      new_waypoints_.waypoints[index].twist.twist.linear.x = prev_vel;
-    }
-    else
-    {
-      new_waypoints_.waypoints[index].twist.twist.linear.x = changed_vel;
-    }
-  }
 }
 
 void VelocitySetPath::avoidSuddenAcceleration(double deceleration, int closest_waypoint)

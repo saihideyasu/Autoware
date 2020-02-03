@@ -20,7 +20,6 @@
 #include <ros/ros.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
 //#include <mobileye_560_660_msgs/ObstacleData.h>
 #include <autoware_msgs/MobileyeObstacle.h>
 #include <std_msgs/Int32.h>
@@ -49,7 +48,6 @@ class VelocitySetInfo
   double temporal_waypoints_size_;  // (meter)
   int	wpidx_detectionResultByOtherNodes_; // waypoints index@finalwaypoints
   bool use_point_cloud_, use_point_pillar_, use_mobileye_; //use detection
-  geometry_msgs::TwistStamped can_velocity_;
 
   // ROS param
   double remove_points_upto_;
@@ -76,7 +74,6 @@ class VelocitySetInfo
   //void mobileyeObstacleCallback(const mobileye_560_660_msgs::ObstacleData &msg);
   void mobileyeObstacleCallback(const autoware_msgs::MobileyeObstacle &msg);
   void waypointParamCallback(const autoware_msgs::WaypointParam &msg);
-  void canVelocityCallback(const geometry_msgs::TwistStamped &msg);
 
   void clearPoints();
   //void clearMobileyeObstacle();
@@ -181,11 +178,6 @@ class VelocitySetInfo
     return localizer_pose_;
   }
 
-  double getCanVelocity() const
-  {
-    return can_velocity_.twist.linear.x;
-  }
-  
   bool getSetPose() const
   {
     return set_pose_;

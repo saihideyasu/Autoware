@@ -144,8 +144,3 @@ void VelocitySetInfo::waypointParamCallback(const autoware_msgs::WaypointParam &
   if(msg.detection_use_mobileye == 0) use_mobileye_ = false;
   else if(msg.detection_use_mobileye == 1) use_mobileye_ = true;
 }
-
-void VelocitySetInfo::canVelocityCallback(const geometry_msgs::TwistStamped &msg)
-{
-  can_velocity_ = msg;
-}

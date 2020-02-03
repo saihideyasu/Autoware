@@ -19,8 +19,7 @@ enum class EControl
   STOP = 1,
   STOPLINE = 2,
   DECELERATE = 3,
-  DECELERATE_CRUSE = 4,
-  OTHERS = 5,
+  OTHERS = 4,
 };
 
 enum class EObstacleType

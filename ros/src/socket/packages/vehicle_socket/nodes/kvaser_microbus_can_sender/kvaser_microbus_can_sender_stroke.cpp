@@ -501,7 +501,7 @@ private:
 				safety_error_message << "not difference_toWaypoint\ndistance_gnss\n" << difference_toWaypoint_distance_ndt_.front_baselink_distance << "," << difference_toWaypoint_distance_gnss_.baselink_distance;
 				publishStatus(safety_error_message.str());
 				//system("aplay -D plughw:PCH /home/autoware/one33.wav");
-				can_send();
+				//can_send();
 			}
 		}
 		/*if(setting_.ndt_gnss_min_distance_limit <= distance)
@@ -570,7 +570,7 @@ private:
 			safety_error_message << "not OK : " << ndt_stat_string_ << "," << gnss_stat_string;
 			publishStatus(safety_error_message.str());
 			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
-			can_send();
+			//can_send();
 			//lms.localizer_stat = false;
 			//lms.localizer_distance = distance;
 		}
@@ -1645,9 +1645,16 @@ private:
 					target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 					std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;
 				}
-				else*/ {
+				else {
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
+				}*/
+				target_brake_stroke = pid_params.get_stop_stroke_prev();
+				if(current_velocity <= 2)
+				{
+					target_brake_stroke -= step;
+					if(target_brake_stroke < 0) target_brake_stroke = 0;
 				}
+				
 			}
 			else if(stopper_distance_ >= 0 && stopper_distance_ <= setting_.stopper_distance3)
 			{std::cout << loop_counter_ << "stopD3" << std::endl;
@@ -1905,29 +1912,29 @@ private:
 		}
 		else if(routine_.data == "brake")
 		{
-			double acc = pid_params.get_stroke_prev();
-			double brake = pid_params.get_stroke_prev();
-			brake -= 2;
-			if(brake < 0)
-			{
-				pid_params.set_stop_stroke_prev(brake);
-				return brake;
-			}
-			else return 0;
+			pid_params.set_stroke_prev(0);
+			return -pid_params.get_stop_stroke_prev();
 		}
 		else if(routine_.data == "keep")
 		{
-			pid_params.clear_diff_velocity();
-			double acc = pid_params.get_stroke_prev();
-			double brake = pid_params.get_stroke_prev();
-			brake -= 2;
-			if(brake < 0)
+			if(pid_params.get_stroke_prev() > 0)
 			{
-				pid_params.set_stop_stroke_prev(brake);
-				return brake;
+				double accel = pid_params.get_stroke_prev();
+				accel -= 2;
+				if(accel < 0) accel = 0;
+				pid_params.set_stroke_prev(accel);
+				return accel;
 			}
-			else return 0;
+			else
+			{
+				double brake = pid_params.get_stop_stroke_prev();
+				brake -= 2;
+				if(brake < 0) brake = 0;
+				pid_params.set_stop_stroke_prev(brake);
+				return -brake;
+			}
 		}
+		return 0;
 	}
 
 	void bufset_drive(unsigned char *buf, double current_velocity, double acceleration, double stroke_speed)
@@ -2316,10 +2323,6 @@ public:
 		        blinker_stop_time_ = ros::Time::now();
 
 		pid_params.init(0.0);
-
-		setting_.stopper_distance1 = 20;
-		setting_.stopper_distance2 = 8;
-		setting_.stopper_distance3 = 2;
 	}
 
 	~kvaser_can_sender()

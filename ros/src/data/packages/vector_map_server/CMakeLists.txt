@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
         vector_map
         autoware_msgs
         vector_map_msgs
+		mobileye_560_660_msgs
         )
 
 find_package(autoware_build_flags REQUIRED)

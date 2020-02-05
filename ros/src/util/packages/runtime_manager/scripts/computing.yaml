@@ -217,6 +217,10 @@ subs :
             depend : alignment_mechanism2
             depend_bool : 'lambda v : v == 1'
             flags : [ nl ]
+      - name : current_velocity_conversion
+        desc : current_velocity_conversion desc sample
+        cmd  : roslaunch autoware_connector current_velocity_conversion.launch
+        param: current_velocity_conversion
 
   - name : Detection
     desc : Detection desc sample
@@ -6809,6 +6813,29 @@ params :
       min   : 10.0
       max   : 45.0
       v     : 35.0
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+
+  - name  : current_velocity_conversion
+    topic : /config/current_velocity_conversion
+    msg   : ConfigCurrentVelocityConversion
+    vars  :
+    - name    : enable
+      desc    : enable_smoothing
+      label   : 'enable'
+      kind    : checkbox
+      v       : False
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : use_velocity
+      desc  : use_velocity desc sample
+      label : use_velocity
+      kind    : menu
+      choices : [ '0', '1' ]
+      choices_type : str
+      v       : '0'
       cmd_param :
         dash        : ''
         delim       : ':='

@@ -5336,7 +5336,7 @@
         <rect>
          <x>90</x>
          <y>80</y>
-         <width>351</width>
+         <width>341</width>
          <height>71</height>
         </rect>
        </property>
@@ -5367,7 +5367,7 @@
       <widget class="QPushButton" name="bt2_error_clear">
        <property name="geometry">
         <rect>
-         <x>450</x>
+         <x>440</x>
          <y>80</y>
          <width>121</width>
          <height>71</height>
@@ -5390,8 +5390,8 @@ CLEAR</string>
       <widget class="QCheckBox" name="cb_use_clutch">
        <property name="geometry">
         <rect>
-         <x>590</x>
-         <y>100</y>
+         <x>580</x>
+         <y>80</y>
          <width>92</width>
          <height>23</height>
         </rect>
@@ -5403,6 +5403,28 @@ CLEAR</string>
        </property>
        <property name="text">
         <string>clutch</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="cb_use_localizer_safety">
+       <property name="geometry">
+        <rect>
+         <x>580</x>
+         <y>110</y>
+         <width>101</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>localizer
+safety</string>
        </property>
        <property name="checked">
         <bool>true</bool>

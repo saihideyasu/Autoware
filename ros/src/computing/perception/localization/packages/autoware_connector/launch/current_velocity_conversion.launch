@@ -1,0 +1,9 @@
+<launch>
+  <arg name="enable" default="0" />
+  <arg name="use_velocity" default="0" />
+
+  <node pkg="autoware_connector" type="current_velocity_conversion" name="current_velocity_conversion" output="log">
+    <param name="enable" value="$(arg enable)" />
+    <param name="use_velocity" value="$(arg use_velocity)" />
+  </node>
+</launch>

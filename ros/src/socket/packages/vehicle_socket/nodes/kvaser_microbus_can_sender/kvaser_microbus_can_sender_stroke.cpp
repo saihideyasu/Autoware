@@ -26,6 +26,7 @@
 #include <autoware_config_msgs/ConfigMicroBusCan.h>
 #include <autoware_config_msgs/ConfigVelocitySet.h>
 #include <autoware_config_msgs/ConfigLocalizerSwitchFusion.h>
+#include <autoware_config_msgs/ConfigCurrentVelocityConversion.h>
 //#include <autoware_config_msgs/ConfigMicrobusInterface.h>
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/PositionChecker.h>
@@ -298,7 +299,8 @@ private:
 	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_, sub_ekf_pose_;
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
-	ros::Subscriber sub_ekf_covariance_;
+	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
+	ros::Subscriber sub_cruse_velocity_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -359,6 +361,26 @@ private:
 	unsigned int loop_counter_;
 	geometry_msgs::PoseWithCovarianceStamped ekf_covariance_;
 	int ndt_warning_count_;
+	bool use_safety_localizer_;
+	autoware_config_msgs::ConfigCurrentVelocityConversion config_current_velocity_conversion_;
+	double cruse_velocity_;
+
+	void callbackCurrentVelocityConversion(const autoware_config_msgs::ConfigCurrentVelocityConversion::ConstPtr &msg)
+	{
+		config_current_velocity_conversion_ = *msg;
+	}
+
+	void callbackCruseVelocity(const std_msgs::Float64::ConstPtr &msg)
+	{
+		cruse_velocity_ = msg->data;
+	}
+
+	void callbackUseSafetyLocalizer(const std_msgs::Bool::ConstPtr &msg)
+	{
+		use_safety_localizer_ = msg->data;
+		steer_clutch_ = false;
+		//std::cout << "use_safety : " << (int)use_safety_localizer_ << std::endl;
+	}
 
 	void callbackInterfaceLock(const std_msgs::BoolConstPtr &msg)
 	{
@@ -371,7 +393,7 @@ private:
 	{
 		localizer_select_num_ = msg->data;
 
-		if(localizer_select_num_ < 0)
+		if(localizer_select_num_ < 0 && use_safety_localizer_ == true)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -391,8 +413,9 @@ private:
 
 	void waypointDistanceCheck(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg, std::string pose_name)
 	{
-		if(fabs(msg->baselink_distance) > setting_.check_distance_th ||//setting_.difference_to_waypoint_distance ||
-			fabs(msg->baselink_angular) > setting_.check_angular_th)
+		if((fabs(msg->baselink_distance) > setting_.check_distance_th ||//setting_.difference_to_waypoint_distance ||
+			fabs(msg->baselink_angular) > setting_.check_angular_th) &&
+			use_safety_localizer_ == true)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -487,7 +510,8 @@ private:
 
 		if(config_localizer_switch_.localizer_check == 2)
 		{
-			if(fabs(difference_toWaypoint_distance_gnss_.baselink_distance - difference_toWaypoint_distance_ndt_.baselink_distance) > setting_.ndt_gnss_max_distance_limit)
+			if(fabs(difference_toWaypoint_distance_gnss_.baselink_distance - difference_toWaypoint_distance_ndt_.baselink_distance) > setting_.ndt_gnss_max_distance_limit &&
+			   use_safety_localizer_ == true)
 			{
 				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 					drive_clutch_ = false;
@@ -556,7 +580,7 @@ private:
 			lms.localizer_stat = true;
 		}
 		else*/
-		if(lms.localizer_stat == false)
+		if(lms.localizer_stat == false && use_safety_localizer_ == true)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
 				drive_clutch_ = false;
@@ -645,9 +669,10 @@ private:
 
 		if((config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2) && localizer_select_num_ == 1)
 		{
-			if(msg->lat_std > setting_.gnss_lat_limit ||
+			if((msg->lat_std > setting_.gnss_lat_limit ||
 		        msg->lon_std > setting_.gnss_lon_limit ||
-		        msg->alt_std > setting_.gnss_alt_limit && localizer_select_num_ == LOCALIZER_SELECT_GNSS)
+		        msg->alt_std > setting_.gnss_alt_limit && localizer_select_num_ == LOCALIZER_SELECT_GNSS) &&
+				use_safety_localizer_ == true)
 			{
 				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
 					drive_clutch_ = false;
@@ -986,7 +1011,7 @@ private:
 
 		//クラッチが入っている(autoモードである)場合だけエラー判定を出す
 		std::stringstream safety_error_message;
-		if(flag == true && can_receive_502_.clutch == true)
+		if(flag == true && can_receive_502_.clutch == true && use_safety_localizer_ == true)
 		{
 			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
 				steer_clutch_ = false;
@@ -1207,7 +1232,7 @@ private:
 	void callbackPositionChecker(const autoware_msgs::PositionChecker::ConstPtr &msg)
 	{
 		position_checker_ = *msg;
-		if(setting_.use_position_checker == true)
+		if(setting_.use_position_checker == true && use_safety_localizer_ == true)
 		{
 			if(msg->stop_flag != 0)// && can_receive_502_.clutch == true)
 			{
@@ -1649,7 +1674,7 @@ private:
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
 				}*/
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
-				if(current_velocity <= 2)
+				if(current_velocity <= 0.5)
 				{
 					target_brake_stroke -= step;
 					if(target_brake_stroke < 0) target_brake_stroke = 0;
@@ -1970,12 +1995,15 @@ private:
 			double cmd_velocity = twist_.ctrl_cmd.linear_velocity * 3.6;
 			if(input_drive_mode_ == true && can_receive_501_.drive_auto)
 				cmd_velocity = input_drive_ / 100.0;
+			if(config_current_velocity_conversion_.enable == true && can_receive_502_.clutch == false && can_receive_503_.clutch == true)
+				cmd_velocity = cruse_velocity_;
+
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 			double cv_s = current_velocity /3.6;
 			if(acceleration <= 0 && stopper_distance_ >= 0)
 				std::cout << "teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_ <<  std::endl;
 
-std::cout << "auto_mode" << std::endl;
+			std::cout << "auto_mode" << std::endl;
 			double new_stroke = 0;
 			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
 			//std::cout << "if : " << cmd_velocity << " > " << current_velocity << std::endl;
@@ -2074,7 +2102,7 @@ std::cout << "auto_mode" << std::endl;
 
 			//AUTOモードじゃない場合、stroke値0をcanに送る
 			if(can_receive_501_.drive_auto != autoware_can_msgs::MicroBusCan501::DRIVE_AUTO ||
-			        can_receive_503_.clutch == false)
+			    can_receive_503_.clutch == false)
 			{
 				pid_params.clear_diff_velocity();
 				pid_params.clear_diff_acceleration();
@@ -2109,7 +2137,8 @@ std::cout << "auto_mode" << std::endl;
 			else drive_clutch_ = false;
 		}
 		else if(interface_lock_ == true) buf[6] |= 0x20;
-		if(steer_clutch_ == false)
+		if(use_safety_localizer_ == false) buf[6] |= 0x10;
+		else if(steer_clutch_ == false)
 		{
 			buf[6] |= 0x10;
 			ros::Time time = ros::Time::now();
@@ -2214,6 +2243,8 @@ public:
 		, interface_lock_(false)
 		, loop_counter_(0)
 		, ndt_warning_count_(0)
+		, use_safety_localizer_(true)
+		, cruse_velocity_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2306,8 +2337,11 @@ public:
 		sub_difference_to_waypoint_distance_ndt_ = nh_.subscribe("/difference_to_waypoint_distance_ndt", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceNdt, this);
 		sub_difference_to_waypoint_distance_gnss_ = nh_.subscribe("/difference_to_waypoint_distance_gnss", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceGnss, this);
 		sub_difference_to_waypoint_distance_ekf_ = nh_.subscribe("/difference_to_waypoint_distance_ekf", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistanceEkf, this);
-		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);
+		sub_localizer_select_num_ = nh_.subscribe("/localizer_select_num", 10, &kvaser_can_sender::callbackLocalizerSelectNum, this);                
 		sub_interface_lock_ = nh_.subscribe("/microbus/interface_lock", 10, &kvaser_can_sender::callbackInterfaceLock, this);
+		sub_use_safety_localizer_ = nh_.subscribe("/microbus/use_safety_localizer", 10, &kvaser_can_sender::callbackUseSafetyLocalizer, this);
+		sub_config_current_velocity_conversion_ = nh_.subscribe("/config/current_velocity_conversion", 10, &kvaser_can_sender::callbackCurrentVelocityConversion, this);
+		sub_cruse_velocity_ = nh_.subscribe("/cruse_velocity", 10, &kvaser_can_sender::callbackCruseVelocity, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);

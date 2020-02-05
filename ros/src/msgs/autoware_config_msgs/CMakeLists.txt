@@ -54,6 +54,7 @@ add_message_files(
   ConfigLookAheadRatioMagn.msg
   ConfigRayGroundFilterBox.msg
   ConfigMicrobusInterface.msg
+  ConfigCurrentVelocityConversion.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

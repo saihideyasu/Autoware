@@ -55,7 +55,8 @@ private:
     ros::Publisher pub_drive_clutch_, pub_steer_clutch_;//クラッチの状態変更フラグ
     ros::Publisher pub_blinker_right_, pub_blinker_left_, pub_blinker_stop_; //ウィンカー
     ros::Publisher pub_error_lock_;//エラーがでている場合、canアプリにロック情報を送る
-    
+    ros::Publisher pub_use_safety_localizer_;//localizer関連のセーフティのチェック
+
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
     ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_ekf_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
@@ -140,6 +141,7 @@ private slots:
     void publish_blinker_right();
     void publish_blinker_left();
     void publish_blinker_stop();
+    void publish_use_safety_localizer();
     void click_error_text_reset();
 };
 

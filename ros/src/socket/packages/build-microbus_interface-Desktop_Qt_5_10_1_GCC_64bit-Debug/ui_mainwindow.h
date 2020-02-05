@@ -201,6 +201,7 @@ public:
     QTextEdit *tx2_error_text;
     QPushButton *bt2_error_clear;
     QCheckBox *cb_use_clutch;
+    QCheckBox *cb_use_localizer_safety;
     QGroupBox *gb2_blinker;
     QPushButton *bt2_blinker_right;
     QPushButton *bt2_blinker_left;
@@ -1503,7 +1504,7 @@ public:
         lb2_error->setAlignment(Qt::AlignCenter);
         tx2_error_text = new QTextEdit(gb2_autoware_info);
         tx2_error_text->setObjectName(QStringLiteral("tx2_error_text"));
-        tx2_error_text->setGeometry(QRect(90, 80, 351, 71));
+        tx2_error_text->setGeometry(QRect(90, 80, 341, 71));
         QFont font4;
         font4.setPointSize(12);
         tx2_error_text->setFont(font4);
@@ -1515,17 +1516,22 @@ public:
         tx2_error_text->setTextInteractionFlags(Qt::TextSelectableByMouse);
         bt2_error_clear = new QPushButton(gb2_autoware_info);
         bt2_error_clear->setObjectName(QStringLiteral("bt2_error_clear"));
-        bt2_error_clear->setGeometry(QRect(450, 80, 121, 71));
+        bt2_error_clear->setGeometry(QRect(440, 80, 121, 71));
         bt2_error_clear->setCheckable(false);
         bt2_error_clear->setAutoRepeat(false);
         bt2_error_clear->setAutoExclusive(false);
         cb_use_clutch = new QCheckBox(gb2_autoware_info);
         cb_use_clutch->setObjectName(QStringLiteral("cb_use_clutch"));
-        cb_use_clutch->setGeometry(QRect(590, 100, 92, 23));
+        cb_use_clutch->setGeometry(QRect(580, 80, 92, 23));
         QFont font5;
         font5.setPointSize(15);
         cb_use_clutch->setFont(font5);
         cb_use_clutch->setChecked(true);
+        cb_use_localizer_safety = new QCheckBox(gb2_autoware_info);
+        cb_use_localizer_safety->setObjectName(QStringLiteral("cb_use_localizer_safety"));
+        cb_use_localizer_safety->setGeometry(QRect(580, 110, 101, 41));
+        cb_use_localizer_safety->setFont(font5);
+        cb_use_localizer_safety->setChecked(true);
         gb2_blinker = new QGroupBox(tab_2);
         gb2_blinker->setObjectName(QStringLiteral("gb2_blinker"));
         gb2_blinker->setEnabled(true);
@@ -1851,6 +1857,8 @@ public:
         bt2_error_clear->setText(QApplication::translate("MainWindow", "ERROR\n"
 "CLEAR", nullptr));
         cb_use_clutch->setText(QApplication::translate("MainWindow", "clutch", nullptr));
+        cb_use_localizer_safety->setText(QApplication::translate("MainWindow", "localizer\n"
+"safety", nullptr));
         gb2_blinker->setTitle(QApplication::translate("MainWindow", "BLINKER", nullptr));
         bt2_blinker_right->setText(QApplication::translate("MainWindow", "RIGHT", nullptr));
         bt2_blinker_left->setText(QApplication::translate("MainWindow", "LEFT", nullptr));

@@ -50,6 +50,18 @@ add_dependencies(can_odometry
         ${catkin_EXPORTED_TARGETS}
         )
 
+add_executable(current_velocity_conversion
+        nodes/current_velocity_conversion/current_velocity_conversion.cpp
+        )
+
+target_link_libraries(current_velocity_conversion
+        ${catkin_LIBRARIES}
+        )
+
+add_dependencies(current_velocity_conversion
+        ${catkin_EXPORTED_TARGETS}
+        )
+
 add_executable(localizer_switch nodes/localizer_switch/localizer_switch.cpp)
 target_link_libraries(localizer_switch ${catkin_LIBRARIES})
 add_dependencies(localizer_switch ${catkin_EXPORTED_TARGETS})
@@ -65,6 +77,11 @@ install(TARGETS can_odometry
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(TARGETS localizer_switch
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(TARGETS current_velocity_conversion
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

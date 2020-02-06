@@ -20,16 +20,20 @@ find_package(autoware_msgs REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  can_msgs
+  mobileye_560_660_msgs
   autoware_msgs
   autoware_can_msgs
   autoware_config_msgs
 )
 
-set(CMAKE_CXX_FLAGS "-O2 -Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O2 -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
 
 catkin_package(CATKIN_DEPENDS
   roscpp
   std_msgs
+  can_msgs
+  mobileye_560_660_msgs
   autoware_can_msgs
   autoware_msgs
 )

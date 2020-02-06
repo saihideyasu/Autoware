@@ -11,6 +11,8 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
+#include <can_msgs/Frame.h>
+#include <mobileye_560_660_msgs/AftermarketLane.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/Imu.h>
@@ -69,6 +71,7 @@ private:
     ros::Subscriber sub_imu_;//IMU情報
     ros::Subscriber sub_gnss_pose_, sub_gnss_deviation_, sub_ndt_stat_, sub_gnss_stat_, sub_ndt_stat_string_;
     ros::Subscriber sub_stroke_routine_;
+    ros::Subscriber sub_mobileye_frame_;//mobileyeからのcanの生データ
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
@@ -91,6 +94,7 @@ private:
     void callbackGnssStat(const std_msgs::UInt8 &msg);
     void callbackNdtStatString(const std_msgs::String &msg);
     void callbackStrokeRoutine(const std_msgs::String &msg);
+    void callbackMobileyeCan(const can_msgs::Frame &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
@@ -111,6 +115,7 @@ private:
     unsigned char gnss_stat_;
     std::string ndt_stat_string_, stroke_routine_;
     sensor_msgs::Imu imu_;
+    mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
 
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror

@@ -159,6 +159,10 @@ public:
     QTextEdit *tx2_ekf_distance;
     QTextEdit *tx2_ekf_angular;
     QLabel *lb2_ekf;
+    QLabel *lb2_left_lane;
+    QTextEdit *tx2_left_lane;
+    QLabel *lb2_right_lane;
+    QTextEdit *tx2_right_lane;
     QGroupBox *gb2_can_value;
     QLabel *lb2_steer_angle;
     QTextEdit *tx2_drive_stroke_actual;
@@ -1033,7 +1037,7 @@ public:
         gb2_localizer = new QGroupBox(tab_2);
         gb2_localizer->setObjectName(QStringLiteral("gb2_localizer"));
         gb2_localizer->setEnabled(true);
-        gb2_localizer->setGeometry(QRect(330, 0, 351, 181));
+        gb2_localizer->setGeometry(QRect(330, 0, 351, 221));
         QPalette palette7;
         palette7.setBrush(QPalette::Active, QPalette::Base, brush);
         palette7.setBrush(QPalette::Active, QPalette::Window, brush1);
@@ -1153,6 +1157,40 @@ public:
         lb2_ekf->setFont(font1);
         lb2_ekf->setScaledContents(false);
         lb2_ekf->setAlignment(Qt::AlignCenter);
+        lb2_left_lane = new QLabel(gb2_localizer);
+        lb2_left_lane->setObjectName(QStringLiteral("lb2_left_lane"));
+        lb2_left_lane->setGeometry(QRect(0, 190, 61, 31));
+        QFont font4;
+        font4.setPointSize(12);
+        lb2_left_lane->setFont(font4);
+        lb2_left_lane->setScaledContents(false);
+        lb2_left_lane->setAlignment(Qt::AlignCenter);
+        tx2_left_lane = new QTextEdit(gb2_localizer);
+        tx2_left_lane->setObjectName(QStringLiteral("tx2_left_lane"));
+        tx2_left_lane->setGeometry(QRect(60, 180, 111, 41));
+        tx2_left_lane->setFont(font1);
+        tx2_left_lane->setAutoFillBackground(true);
+        tx2_left_lane->setLineWidth(0);
+        tx2_left_lane->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx2_left_lane->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx2_left_lane->setReadOnly(true);
+        tx2_left_lane->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        lb2_right_lane = new QLabel(gb2_localizer);
+        lb2_right_lane->setObjectName(QStringLiteral("lb2_right_lane"));
+        lb2_right_lane->setGeometry(QRect(160, 190, 61, 31));
+        lb2_right_lane->setFont(font4);
+        lb2_right_lane->setScaledContents(false);
+        lb2_right_lane->setAlignment(Qt::AlignCenter);
+        tx2_right_lane = new QTextEdit(gb2_localizer);
+        tx2_right_lane->setObjectName(QStringLiteral("tx2_right_lane"));
+        tx2_right_lane->setGeometry(QRect(220, 180, 111, 41));
+        tx2_right_lane->setFont(font1);
+        tx2_right_lane->setAutoFillBackground(true);
+        tx2_right_lane->setLineWidth(0);
+        tx2_right_lane->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx2_right_lane->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx2_right_lane->setReadOnly(true);
+        tx2_right_lane->setTextInteractionFlags(Qt::TextSelectableByMouse);
         gb2_can_value = new QGroupBox(tab_2);
         gb2_can_value->setObjectName(QStringLiteral("gb2_can_value"));
         gb2_can_value->setEnabled(true);
@@ -1368,7 +1406,7 @@ public:
         gb2_ndt_info = new QGroupBox(tab_2);
         gb2_ndt_info->setObjectName(QStringLiteral("gb2_ndt_info"));
         gb2_ndt_info->setEnabled(true);
-        gb2_ndt_info->setGeometry(QRect(340, 210, 181, 121));
+        gb2_ndt_info->setGeometry(QRect(340, 230, 181, 121));
         QPalette palette10;
         palette10.setBrush(QPalette::Active, QPalette::Base, brush);
         palette10.setBrush(QPalette::Active, QPalette::Window, brush1);
@@ -1505,8 +1543,6 @@ public:
         tx2_error_text = new QTextEdit(gb2_autoware_info);
         tx2_error_text->setObjectName(QStringLiteral("tx2_error_text"));
         tx2_error_text->setGeometry(QRect(90, 80, 341, 71));
-        QFont font4;
-        font4.setPointSize(12);
         tx2_error_text->setFont(font4);
         tx2_error_text->setAutoFillBackground(true);
         tx2_error_text->setLineWidth(0);
@@ -1535,7 +1571,7 @@ public:
         gb2_blinker = new QGroupBox(tab_2);
         gb2_blinker->setObjectName(QStringLiteral("gb2_blinker"));
         gb2_blinker->setEnabled(true);
-        gb2_blinker->setGeometry(QRect(530, 210, 151, 131));
+        gb2_blinker->setGeometry(QRect(530, 230, 151, 131));
         QPalette palette12;
         palette12.setBrush(QPalette::Active, QPalette::Base, brush);
         palette12.setBrush(QPalette::Active, QPalette::Window, brush1);
@@ -1832,6 +1868,10 @@ public:
         lb2_gnss->setText(QApplication::translate("MainWindow", "GNSS", nullptr));
         lb2_localizer_difference->setText(QApplication::translate("MainWindow", "difference", nullptr));
         lb2_ekf->setText(QApplication::translate("MainWindow", "EKF", nullptr));
+        lb2_left_lane->setText(QApplication::translate("MainWindow", "left\n"
+"Lane", nullptr));
+        lb2_right_lane->setText(QApplication::translate("MainWindow", "right\n"
+"Lane", nullptr));
         gb2_can_value->setTitle(QApplication::translate("MainWindow", "CAN_VALUE", nullptr));
         lb2_steer_angle->setText(QApplication::translate("MainWindow", "ANGLE", nullptr));
         lb2_drive_stroke->setText(QApplication::translate("MainWindow", "STROKE", nullptr));

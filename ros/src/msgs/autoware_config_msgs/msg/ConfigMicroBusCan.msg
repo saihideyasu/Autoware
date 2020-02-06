@@ -46,3 +46,7 @@ float64 check_angular_th
 float64 stopper_distance1
 float64 stopper_distance2
 float64 stopper_distance3
+bool use_lane_left
+bool use_lane_right
+float64 lane_th_left
+float64 lane_th_right

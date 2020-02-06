@@ -16,6 +16,8 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
+#include <can_msgs/Frame.h>
+#include <mobileye_560_660_msgs/AftermarketLane.h>
 #include <autoware_msgs/VehicleCmd.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -300,7 +302,7 @@ private:
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
-	ros::Subscriber sub_cruse_velocity_;
+	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -364,6 +366,64 @@ private:
 	bool use_safety_localizer_;
 	autoware_config_msgs::ConfigCurrentVelocityConversion config_current_velocity_conversion_;
 	double cruse_velocity_;
+	mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
+
+	const bool getMessage_bool(const unsigned char *buf, unsigned int bit)
+	{
+		unsigned long long mask=1;
+		mask<<=bit;
+		unsigned long long *msgL=(unsigned long long)buf;
+		if((*msgL & mask)) return true;
+		else return false;
+	}
+
+	template<typename T>
+	const T getMessage_bit(const unsigned char *buf, const unsigned int lowBit, const unsigned int highBit)
+	{
+		const unsigned int maxBitSize=sizeof(unsigned long long)*8;
+		unsigned long long *msgL=(unsigned long long)buf;
+		unsigned long long val=(*msgL)<<maxBitSize-highBit-1;
+		unsigned int lowPos=lowBit+(maxBitSize-highBit-1);
+		val>>=lowPos;
+		return (T)val;
+	}
+
+	void callbackMobileyeCan(const can_msgs::Frame &frame)
+	{
+		switch(frame.id)
+		{
+		case 0x669:
+			{
+				if(frame.is_error == false && frame.dlc == 8)
+				{
+					const unsigned char *buf = (unsigned char*)frame.data.data();
+					//Lane type
+					mobileye_lane_.lane_type_left = getMessage_bit<unsigned char>(&buf[0], 4, 7);
+					mobileye_lane_.lane_type_right = getMessage_bit<unsigned char>(&buf[5], 4, 7);
+					//ldw_available
+					mobileye_lane_.ldw_available_left = getMessage_bool(&buf[0], 2);
+					mobileye_lane_.ldw_available_right = getMessage_bool(&buf[5], 2);
+					//lane_confidence
+					mobileye_lane_.lane_confidence_left = getMessage_bit<unsigned char>(&buf[0], 0, 1);
+					mobileye_lane_.lane_confidence_right = getMessage_bit<unsigned char>(&buf[5], 0, 1);
+					//distance_to lane
+					int16_t distL;
+					unsigned char* distL_p = (unsigned char*)&distL;
+					distL_p[1] = getMessage_bit<unsigned char>(&buf[2], 4, 7);
+					distL_p[0] = getMessage_bit<unsigned char>(&buf[2], 0, 3) << 4;
+					distL_p[0] |= getMessage_bit<unsigned char>(&buf[1], 4, 7);
+					if(distL_p[1] & 0x8)//12bitのマイナスか
+					{
+						distL--;
+						distL = ~distL;
+						distL_p[1] &= 0x0F;
+						distL = -distL;
+					}
+				}
+				break;
+			}
+		}
+	}
 
 	void callbackCurrentVelocityConversion(const autoware_config_msgs::ConfigCurrentVelocityConversion::ConstPtr &msg)
 	{
@@ -616,6 +676,40 @@ private:
 			publishStatus(safety_error_message.str());
 			can_send();
 		}*/
+
+		if(mobileye_lane_.lane_type_left != mobileye_560_660_msgs::AftermarketLane::LANE_TYPE_NONE &&
+           mobileye_lane_.lane_confidence_left >= 2 && use_safety_localizer_ == true && setting_.use_lane_left == true)
+		{
+			if(mobileye_lane_.distance_to_left_lane < setting_.lane_th_left)
+			{
+				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+					drive_clutch_ = false;
+				if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+					steer_clutch_ = false;
+				shift_auto_ = false;
+				std::cout << "Denger! left lane : " << "," << mobileye_lane_.distance_to_left_lane << std::endl;
+				std::stringstream safety_error_message;
+				safety_error_message << "left lane : " << setting_.lane_th_left << "," << mobileye_lane_.distance_to_left_lane;
+				publishStatus(safety_error_message.str());
+			}
+		}
+
+		if(mobileye_lane_.lane_type_right != mobileye_560_660_msgs::AftermarketLane::LANE_TYPE_NONE &&
+           mobileye_lane_.lane_confidence_right >= 2 && use_safety_localizer_ == true && setting_.use_lane_right == true)
+		{
+			if(mobileye_lane_.distance_to_right_lane > setting_.lane_th_right)
+			{
+				if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+					drive_clutch_ = false;
+				if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+					steer_clutch_ = false;
+				shift_auto_ = false;
+				std::cout << "Denger! right lane : " << "," << mobileye_lane_.distance_to_right_lane << std::endl;
+				std::stringstream safety_error_message;
+				safety_error_message << "right lane : " << setting_.lane_th_right << "," << mobileye_lane_.distance_to_right_lane;
+				publishStatus(safety_error_message.str());
+			}
+		}
 	}
 
 	void callbackNdtPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -2342,6 +2436,7 @@ public:
 		sub_use_safety_localizer_ = nh_.subscribe("/microbus/use_safety_localizer", 10, &kvaser_can_sender::callbackUseSafetyLocalizer, this);
 		sub_config_current_velocity_conversion_ = nh_.subscribe("/config/current_velocity_conversion", 10, &kvaser_can_sender::callbackCurrentVelocityConversion, this);
 		sub_cruse_velocity_ = nh_.subscribe("/cruse_velocity", 10, &kvaser_can_sender::callbackCruseVelocity, this);
+		sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &kvaser_can_sender::callbackMobileyeCan, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);

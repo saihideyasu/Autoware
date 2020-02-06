@@ -112,6 +112,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &MainWindow::callbackGnssStat, this);
     sub_ndt_stat_string_ = nh.subscribe("/ndt_monitor/ndt_status", 10 , &MainWindow::callbackNdtStatString, this);
     sub_stroke_routine_ = nh.subscribe("/microbus/stroke_routine", 10 , &MainWindow::callbackStrokeRoutine, this);
+    sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &MainWindow::callbackMobileyeCan, this);
 
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
@@ -807,6 +808,26 @@ void MainWindow::window_updata()
         ui->tx_pitch->setText(str_pitch.str().c_str());
         ui->tx2_gnss_pitch->setText(str_pitch.str().c_str());
     }
+
+    {
+        if(mobileye_lane_.lane_type_left != mobileye_560_660_msgs::AftermarketLane::LANE_TYPE_NONE &&
+           mobileye_lane_.lane_confidence_left >= 2)
+        {
+            std::stringstream str_left;
+            str_left << std::fixed << std::setprecision(keta) << mobileye_lane_.distance_to_left_lane;
+            ui->tx2_left_lane->setText(str_left.str().c_str());
+        }
+        else ui->tx2_left_lane->setText("NONE");
+
+        if(mobileye_lane_.lane_type_right != mobileye_560_660_msgs::AftermarketLane::LANE_TYPE_NONE &&
+           mobileye_lane_.lane_confidence_right >= 2)
+        {
+            std::stringstream str_right;
+            str_right << std::fixed << std::setprecision(keta) << mobileye_lane_.distance_to_right_lane;
+            ui->tx2_right_lane->setText(str_right.str().c_str());
+        }
+        else ui->tx2_right_lane->setText("NONE");
+    }
 }
 
 void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg)
@@ -916,6 +937,64 @@ void MainWindow::callbackNdtStatString(const std_msgs::String &msg)
 void MainWindow::callbackStrokeRoutine(const std_msgs::String &msg)
 {
     stroke_routine_ = msg.data;
+}
+
+const bool getMessage_bool(const unsigned char *buf, unsigned int bit)
+{
+    unsigned long long mask=1;
+    mask<<=bit;
+    unsigned long long *msgL=(unsigned long long)buf;
+    if((*msgL & mask)) return true;
+    else return false;
+}
+
+template<typename T>
+const T getMessage_bit(const unsigned char *buf, const unsigned int lowBit, const unsigned int highBit)
+{
+    const unsigned int maxBitSize=sizeof(unsigned long long)*8;
+    unsigned long long *msgL=(unsigned long long)buf;
+    unsigned long long val=(*msgL)<<maxBitSize-highBit-1;
+    unsigned int lowPos=lowBit+(maxBitSize-highBit-1);
+    val>>=lowPos;
+    return (T)val;
+}
+
+void MainWindow::callbackMobileyeCan(const can_msgs::Frame &frame)
+{
+    switch(frame.id)
+    {
+    case 0x669:
+        {
+            if(frame.is_error == false && frame.dlc == 8)
+            {
+                const unsigned char *buf = (unsigned char*)frame.data.data();
+                //Lane type
+                mobileye_lane_.lane_type_left = getMessage_bit<unsigned char>(&buf[0], 4, 7);
+                mobileye_lane_.lane_type_right = getMessage_bit<unsigned char>(&buf[5], 4, 7);
+                //ldw_available
+                mobileye_lane_.ldw_available_left = getMessage_bool(&buf[0], 2);
+                mobileye_lane_.ldw_available_right = getMessage_bool(&buf[5], 2);
+                //lane_confidence
+                mobileye_lane_.lane_confidence_left = getMessage_bit<unsigned char>(&buf[0], 0, 1);
+                mobileye_lane_.lane_confidence_right = getMessage_bit<unsigned char>(&buf[5], 0, 1);
+                //distance_to lane
+                int16_t distL;
+                unsigned char* distL_p = (unsigned char*)&distL;
+                distL_p[1] = getMessage_bit<unsigned char>(&buf[2], 4, 7);
+                distL_p[0] = getMessage_bit<unsigned char>(&buf[2], 0, 3) << 4;
+                distL_p[0] |= getMessage_bit<unsigned char>(&buf[1], 4, 7);
+                if(distL_p[1] & 0x8)//12bitのマイナスか
+                {
+                    distL--;
+                    distL = ~distL;
+                    distL_p[1] &= 0x0F;
+                    distL = -distL;
+                }
+                //std::cout << "aaa : " << (int)distL << std::endl;
+            }
+            break;
+        }
+    }
 }
 
 void MainWindow::publish_emergency_clear()

@@ -7312,3 +7312,37 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name    : use_lane_left
+      desc    : use_lane_left
+      label   : 'use_lane_left'
+      kind    : checkbox
+      v       : True
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name    : use_lane_right
+      desc    : use_lane_right
+      label   : 'use_lane_right'
+      kind    : checkbox
+      v       : True
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name : lane_th_left
+      desc : lane_th_left
+      label: lane_th_left
+      min  : -5.0
+      max  : 0.0
+      v    : -2
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : lane_th_right
+      desc : lane_th_right
+      label: lane_th_right
+      min  : 0.0
+      max  : 5.0
+      v    : 2.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='

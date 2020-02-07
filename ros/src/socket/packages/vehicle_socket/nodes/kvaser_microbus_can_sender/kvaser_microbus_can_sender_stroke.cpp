@@ -407,7 +407,7 @@ private:
 					mobileye_lane_.lane_confidence_left = getMessage_bit<unsigned char>(&buf[0], 0, 1);
 					mobileye_lane_.lane_confidence_right = getMessage_bit<unsigned char>(&buf[5], 0, 1);
 					//distance_to lane
-					int16_t distL;
+					int16_t distL, distR;
 					unsigned char* distL_p = (unsigned char*)&distL;
 					distL_p[1] = getMessage_bit<unsigned char>(&buf[2], 4, 7);
 					distL_p[0] = getMessage_bit<unsigned char>(&buf[2], 0, 3) << 4;
@@ -419,6 +419,21 @@ private:
 						distL_p[1] &= 0x0F;
 						distL = -distL;
 					}
+					mobileye_lane_.distance_to_left_lane = distL * 0.02;
+					//std::cout << "distL : " << (int)distL << std::endl;
+					unsigned char* distR_p = (unsigned char*)&distR;
+					distR_p[1] = getMessage_bit<unsigned char>(&buf[7], 4, 7);
+					distR_p[0] = getMessage_bit<unsigned char>(&buf[7], 0, 3) << 4;
+					distR_p[0] |= getMessage_bit<unsigned char>(&buf[6], 4, 7);
+					if(distR_p[1] & 0x8)//12bitのマイナスか
+					{
+						distR--;
+						distR = ~distR;
+						distR_p[1] &= 0x0F;
+						distR = -distR;
+					}
+					mobileye_lane_.distance_to_right_lane = distR * 0.02;
+					//std::cout << "distR : " << (int)distR << std::endl;
 				}
 				break;
 			}

@@ -271,6 +271,21 @@ target_link_libraries(label_maker
         ${OPENGL_LIBRARIES}
         )
 
+### period_signal ###
+include_directories(
+        ${catkin_INCLUDE_DIRS}
+        ${OpenCV_INCLUDE_DIRS}
+)
+
+add_executable(period_signal
+        nodes/period_signal/period_signal.cpp
+        )
+
+target_link_libraries(period_signal
+        ${catkin_LIBRARIES}
+        ${OpenCV_LIBS}
+        libcontext
+)
 
 install(TARGETS region_tlr feat_proj tlr_tuner roi_extractor roi_pub label_maker libcontext tl_switch
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

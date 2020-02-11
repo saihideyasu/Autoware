@@ -253,8 +253,8 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.minimum_lookahead_distance = ((map.find("minimum_lookahead_distance") != map.end()) ? std::stod(map["minimum_lookahead_distance"]) : 0.0);
   wp->waypoint_param.lookahead_ratio_magn = ((map.find("lookahead_ratio_magn") != map.end()) ? std::stod(map["lookahead_ratio_magn"]) : -1.0);
   wp->waypoint_param.steer_pid_on = ((map.find("steer_pid_on") != map.end()) ? std::stoi(map["steer_pid_on"]) : 1);
-  wp->waypoint_param.ndt_yaw_correction = ((map.find("ndt_yaw_correction") != map.end()) ? std::stod(map["ndt_yaw_correction"]) : 0);
-  wp->waypoint_param.gnss_yaw_correction = ((map.find("gnss_yaw_correction") != map.end()) ? std::stod(map["gnss_yaw_correction"]) : 0);
+  wp->waypoint_param.ndt_yaw_correction = ((map.find("ndt_yaw_correction") != map.end()) ? std::stod(map["ndt_yaw_correction"]) : -100);
+  wp->waypoint_param.gnss_yaw_correction = ((map.find("gnss_yaw_correction") != map.end()) ? std::stod(map["gnss_yaw_correction"]) : -100);
   wp->waypoint_param.localizer_check = ((map.find("localizer_check") != map.end()) ? std::stoi(map["localizer_check"]) : -1);
   wp->waypoint_param.accel_stroke_offset = ((map.find("accel_stroke_offset") != map.end()) ? std::stoi(map["accel_stroke_offset"]) : -1);
   wp->waypoint_param.temporary_acceleration = ((map.find("temporary_acceleration") != map.end()) ? std::stod(map["temporary_acceleration"]) : -1);

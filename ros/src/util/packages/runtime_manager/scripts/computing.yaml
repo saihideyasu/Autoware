@@ -7346,3 +7346,39 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
+    - name : accel_stroke_step_max
+      desc : accel_stroke_step_max
+      label: accel_stroke_step_max
+      min  : 0.0
+      max  : 5.0
+      v    : 2
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : brake_stroke_step_max
+      desc : brake_stroke_step_max
+      label: brake_stroke_step_max
+      min  : 0.0
+      max  : 5.0
+      v    : 2
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : accel_stroke_adjust_th
+      desc : accel_stroke_adjust_th
+      label: accel_stroke_adjust_th
+      min  : 0.0
+      max  : 20.0
+      v    : 5
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : brake_stroke_adjust_th
+      desc : brake_stroke_adjust_th
+      label: brake_stroke_adjust_th
+      min  : 0.0
+      max  : 20.0
+      v    : 5
+      cmd_param:
+        dash     : ''
+        delim    : ':='

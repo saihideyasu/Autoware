@@ -272,7 +272,8 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
                        const int wpidx_detection_result_by_other_nodes, bool enable_mobileye,
                        double *pillar_velocity, const ros::Publisher detection_moblieye_pub, double *mobileye_velocity,
                        double *mobileye_posx,
-                       const bool use_point_cloud, const bool use_point_pillar, const bool use_mobileye, int *mobileye_obstacle_status)
+                       const bool use_point_cloud, const bool use_point_pillar, const bool use_mobileye,
+                       int *mobileye_obstacle_status, ros::Publisher use_mobileye_obstacle_pub)
 {
   int stop_obstacle_waypoint = -1;
   int ob_type = (int)EObstacleType::NONE;
@@ -467,11 +468,17 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
             *mobileye_velocity = mobileye_obj.obstacle_rel_vel_x;
             *mobileye_posx = mobileye_obj.obstacle_pos_x;
             *mobileye_obstacle_status = mobileye_obj.obstacle_status;
-            if(!check_point) stop_obstacle_waypoint = i;
+            if(!check_point)
+            {
+              stop_obstacle_waypoint = i-2;
+              if(stop_obstacle_waypoint < 0) stop_obstacle_waypoint = 0;
+            }
             check_mobileye = true;
             end_waypoint = i + 1;
             if(end_waypoint > closest_waypoint + STOP_SEARCH_DISTANCE)
               end_waypoint = closest_waypoint + STOP_SEARCH_DISTANCE;
+
+            use_mobileye_obstacle_pub.publish(mobileye_obstacle.data[obj_i]);
             goto MOBILEYE_JUMP;
           }
         }
@@ -619,7 +626,7 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
                          const VelocitySetPath vs_path, double *pillar_velocity, double *mobileye_velocity ,
                          double *velocity_plus, const ros::Publisher& pillar_velocity_pub,
                          const ros::Publisher mobileye_velocity_pub, const ros::Publisher detection_mobileye_pub,
-                         double front_bumper_length, int *mobileye_obstacle_status)
+                         double front_bumper_length, int *mobileye_obstacle_status, const ros::Publisher use_mobileye_obstacle_pub)
 {
   // no input for detection || no closest waypoint
   //std::cout << vs_info.getDetectionResultByOtherNodes() << "," << vs_info.getMobileyeObstacle().size() << "," << closest_waypoint << std::endl;
@@ -635,7 +642,8 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
                          vs_info.getPointsThreshold(), vs_info.getLocalizerPose(),
                          obstacle_points, &ob_type, vs_info.getDetectionResultByOtherNodes(), enableMobileye,
                          pillar_velocity, detection_mobileye_pub, mobileye_velocity, &mobileye_posx,
-                         vs_info.getUsePointCloud(), vs_info.getUsePointPillar(), vs_info.getUseMobileye(), mobileye_obstacle_status);
+                         vs_info.getUsePointCloud(), vs_info.getUsePointPillar(), vs_info.getUseMobileye(),
+                         mobileye_obstacle_status, use_mobileye_obstacle_pub);
   *obstacle_type = ob_type;
 
   // skip searching deceleration range
@@ -664,17 +672,17 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
         {
           return EControl::STOP;
         }
-        else if(*mobileye_velocity > 0)
+        else if(*mobileye_velocity > 1)
         {
           //if(vs_path.getCurrentVelocity() > 0.020) 
            return EControl::KEEP;
         }
-        else if(*mobileye_velocity == 0)
+        else if(*mobileye_velocity == 1)
         {
           if(vehicle_vel > 0.020) return EControl::KEEP;
           else return EControl::STOP;
         }
-        else if(*mobileye_velocity < 0)
+        else if(*mobileye_velocity < 1)
         {
           *velocity_plus = vehicle_vel + *mobileye_velocity;
           std::cout << vehicle_vel << "," << *mobileye_velocity << "," << *velocity_plus << std::endl;
@@ -826,7 +834,7 @@ EControl obstacleDetection(int closest_waypoint, const autoware_msgs::Lane& lane
                            const ros::Publisher detection_mobileye_pub,
                            const ros::Publisher& pillar_velocity_pub, const ros::Publisher mobileye_velocity_pub,
                            int* obstacle_waypoint, bool enableMobileye, const ros::Publisher obstacle_type_pub,
-                           double *velocity_plus, double front_bumper_length)
+                           double *velocity_plus, double front_bumper_length, const ros::Publisher use_mobileye_obstacle_pub)
 {
   ObstaclePoints obstacle_points;
   int obstacle_type;
@@ -836,7 +844,8 @@ EControl obstacleDetection(int closest_waypoint, const autoware_msgs::Lane& lane
                                               closest_waypoint, lane, crosswalk, vs_info,
                                               obstacle_waypoint, &obstacle_points, &obstacle_type, enableMobileye,
                                               vs_path, &pillar_velocity, &mobileye_velocity, velocity_plus,
-                                              pillar_velocity_pub, mobileye_velocity_pub, detection_mobileye_pub, front_bumper_length, &mobileye_obstacle);
+                                              pillar_velocity_pub, mobileye_velocity_pub, detection_mobileye_pub,
+                                              front_bumper_length, &mobileye_obstacle, use_mobileye_obstacle_pub);
   displayDetectionRange(lane, crosswalk, closest_waypoint, detection_result, *obstacle_waypoint, vs_info.getStopRange(),
                         vs_info.getDecelerationRange(), detection_range_pub);
   obstacleTypeView(obstacle_type, obstacle_type_pub, pillar_velocity, mobileye_velocity, detection_result, *velocity_plus, mobileye_obstacle);
@@ -989,6 +998,7 @@ int main(int argc, char** argv)
   ros::Publisher pillar_velocity_pub = nh.advertise<std_msgs::Float64>("pillar_velocity", 1);
   ros::Publisher mobileye_velocity_pub = nh.advertise<std_msgs::Float64>("mobileye_velocity", 1);
   ros::Publisher detection_mobileye_pub = nh.advertise<mobileye_560_660_msgs::ObstacleData>("detection_mobileye", 1);
+  ros::Publisher use_mobileye_obstacle_pub = nh.advertise<mobileye_560_660_msgs::ObstacleData>("use_mobileye_obstacle", 1);
 
   ros::Publisher final_waypoints_pub;
   if(enablePlannerDynamicSwitch){
@@ -1024,7 +1034,7 @@ int main(int argc, char** argv)
 	  EControl detection_result = obstacleDetection(closest_waypoint, vs_path.getPrevWaypoints(), crosswalk, vs_path, vs_info,
 	                                              detection_range_pub, obstacle_pub, detection_mobileye_pub,
                                                 pillar_velocity_pub, mobileye_velocity_pub ,&obstacle_waypoint, enableMobileye,
-                                                obstacle_type_pub, &velocity_plus, vehicle_front_lenght);
+                                                obstacle_type_pub, &velocity_plus, vehicle_front_lenght, use_mobileye_obstacle_pub);
 
     changeWaypoints(vs_info, detection_result, closest_waypoint,
 	                obstacle_waypoint, final_waypoints_pub, &vs_path, velocity_plus, vehicle_front_lenght);

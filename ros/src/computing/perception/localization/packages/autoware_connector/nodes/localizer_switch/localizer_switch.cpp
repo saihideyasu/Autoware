@@ -76,6 +76,7 @@ private:
     {
         tf::Quaternion pose_orien;
         tf::quaternionMsgToTF(base_link_pose_msg->pose.orientation, pose_orien);
+        std::cout << "yaw col : " << yaw_correction_ << std::endl;
         tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
         tf::Quaternion math_orie = pose_orien * hosei;
 

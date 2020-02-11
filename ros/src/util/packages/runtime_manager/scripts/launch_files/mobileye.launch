@@ -11,4 +11,6 @@
 
     <include file="$(find mobileye_560_660)/launch/mobileye_560_660.launch">
     </include>
+
+	<node pkg="autoware_mobileye" type="mobileye_detect_sender" name="mobileye_detect_sender" output="log" />
 </launch>

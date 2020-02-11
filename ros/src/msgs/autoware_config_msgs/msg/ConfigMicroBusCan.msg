@@ -50,3 +50,7 @@ bool use_lane_left
 bool use_lane_right
 float64 lane_th_left
 float64 lane_th_right
+float64 accel_stroke_step_max
+float64 brake_stroke_step_max
+float64 accel_stroke_adjust_th
+float64 brake_stroke_adjust_th

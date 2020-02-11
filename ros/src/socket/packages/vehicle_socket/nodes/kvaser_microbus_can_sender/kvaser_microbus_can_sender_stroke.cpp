@@ -18,6 +18,7 @@
 #include <sensor_msgs/Imu.h>
 #include <can_msgs/Frame.h>
 #include <mobileye_560_660_msgs/AftermarketLane.h>
+#include <mobileye_560_660_msgs/ObstacleData.h>
 #include <autoware_msgs/VehicleCmd.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
@@ -302,7 +303,8 @@ private:
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
-	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_;
+	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_, sub_mobileye_obstacle_data_;
+	;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -367,6 +369,34 @@ private:
 	autoware_config_msgs::ConfigCurrentVelocityConversion config_current_velocity_conversion_;
 	double cruse_velocity_;
 	mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
+	mobileye_560_660_msgs::ObstacleData mobileye_obstacle_data_;
+
+	bool checkMobileyeObstacleStop(ros::Time nowtime)
+	{
+		ros::Duration t = nowtime - mobileye_obstacle_data_.header.stamp;
+		ros::Duration th = ros::Duration(1);
+		std::cout << "mobs : " << t << "," << th << "," << (int)mobileye_obstacle_data_.obstacle_status << std::endl;
+		if(t < th)
+		{
+			switch(mobileye_obstacle_data_.obstacle_status)
+			{
+				case 0://undefind
+				case 1://standing
+				case 2://stoped
+				case 5://parked
+					std::cout << "mobs" << std::endl;
+					return true;
+				default:
+					return false;
+			}
+		}
+		else return false;
+	}
+
+	void callbackMobileyeObstacleData(const mobileye_560_660_msgs::ObstacleData::ConstPtr &msg)
+	{
+		mobileye_obstacle_data_ = *msg;
+	}
 
 	const bool getMessage_bool(const unsigned char *buf, unsigned int bit)
 	{
@@ -1104,7 +1134,7 @@ private:
 		//double targetAngleTimeVal = fabs(deg - front_deg_)/time_sa;
 		std::cout << "time_sa," << time_sa << ",targetAngleTimeVal," << deg << std::endl;
 		double deg_th;
-		if(zisoku <= 20) deg_th = setting_.steer_speed_limit1;//100;
+		if(zisoku <= 10) deg_th = setting_.steer_speed_limit1;//100;
 		else deg_th = setting_.steer_speed_limit2;
 		if(deg > deg_th)// && strinf.mode == MODE_PROGRAM)
 		{
@@ -1582,7 +1612,14 @@ private:
 
 	double _accel_stroke_pid_control(double current_velocity, double cmd_velocity)
 	{
-		double step = 3;
+		double accle_stroke_step = setting_.accel_stroke_step_max;//3;
+		double vel_sa = cmd_velocity - current_velocity;
+		if(vel_sa < setting_.accel_stroke_adjust_th)
+		{
+			accle_stroke_step -= (setting_.accel_stroke_adjust_th-vel_sa)*setting_.accel_stroke_step_max/setting_.accel_stroke_adjust_th;
+			if(accle_stroke_step < 0.5) accle_stroke_step = 0.5;
+		}
+
 		//ブレーキからアクセルに変わった場合、Iの積算値をリセット
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
 		std::cout << "voltage stroke : " << stroke << std::endl;
@@ -1601,7 +1638,7 @@ private:
 		if(pid_params.get_stop_stroke_prev() > 0)
 		{
 			double ret = pid_params.get_stop_stroke_prev();
-			ret -= step;
+			ret -= accle_stroke_step;
 			if(ret < 0) ret = 0;
 			pid_params.set_stop_stroke_prev(ret);
 			return -ret;
@@ -1644,13 +1681,13 @@ private:
 
 		if(pid_params.get_stroke_prev() < 0 && ret >= 0)
 		{
-			double tmp = pid_params.get_stroke_prev() + step;
+			double tmp = pid_params.get_stroke_prev() + accle_stroke_step;
 			if(tmp < ret) ret = tmp;
 		}
 		//ブレーキをゆっくり踏む
 		/*if(pid_params.get_stroke_prev() < 0.0 && pid_params.get_stroke_prev() < ret)
 		{
-			double tmp = pid_params.get_stroke_prev() - step;
+			double tmp = pid_params.get_stroke_prev() - accle_stroke_step;
 			if(tmp > ret) ret = tmp;
 			if(ret < setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
 		}*/
@@ -1661,7 +1698,13 @@ private:
 
 	double _brake_stroke_pid_control(double current_velocity, double cmd_velocity, double acceleration)
 	{
-		double step = 2;
+		double brake_stroke_step = setting_.brake_stroke_step_max;//2;
+		double vel_sa = current_velocity - cmd_velocity;
+		if(vel_sa < setting_.brake_stroke_adjust_th)
+		{
+			brake_stroke_step -= (setting_.brake_stroke_adjust_th-vel_sa)*(setting_.accel_stroke_step_max-1)/setting_.brake_stroke_adjust_th;
+			if(brake_stroke_step < 0.5) brake_stroke_step = 0.5;
+		}
 		bool use_step_flag = true;
 
 		if(pid_params.get_stroke_prev() > 0)
@@ -1669,7 +1712,7 @@ private:
 			//if(current_velocity > cmd_velocity)
 			{
 				pid_params.set_stroke_prev(pid_params.get_stroke_prev()-5);
-				return pid_params.get_stroke_prev() - step;
+				return pid_params.get_stroke_prev() - brake_stroke_step;
 			}
 			//else return pid_params.get_stroke_prev();
 		}
@@ -1785,7 +1828,7 @@ private:
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 				if(current_velocity <= 0.5)
 				{
-					target_brake_stroke -= step;
+					target_brake_stroke -= brake_stroke_step;
 					if(target_brake_stroke < 0) target_brake_stroke = 0;
 				}
 				
@@ -1793,7 +1836,7 @@ private:
 			else if(stopper_distance_ >= 0 && stopper_distance_ <= setting_.stopper_distance3)
 			{std::cout << loop_counter_ << "stopD3" << std::endl;
 				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
-				step = 0.5;
+				brake_stroke_step = 0.5;
 				target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_)/2.0;
 				if(target_brake_stroke < pid_params.get_stop_stroke_prev())
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
@@ -1828,7 +1871,7 @@ private:
 			}
 			else if(stopper_distance_ >= 0 && stopper_distance_ <= 2)
 			{
-						step = 0.5;
+						brake_stroke_step = 0.5;
 						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
 			}
 		}
@@ -1873,7 +1916,7 @@ private:
 						target_brake_stroke_old = pid_params.get_stop_stroke_prev();
 						lessthan2 = true;
 					}
-					step = 0.5;
+					brake_stroke_step = 0.5;
 					//double d = (300 > target_brake_stroke_old) ? 300- target_brake_stroke_old:300;
 					//target_brake_stroke = target_brake_stroke_old +  d * (2.0 - stopper_distance_)/2.0;
 					target_brake_stroke = target_brake_stroke_old +  500 * (2.0 - stopper_distance_)/2.0;
@@ -1912,7 +1955,7 @@ private:
 				//		double e_a = cmd_acceralation - acceleration2_twist_ ;
 				//		double P_a = -1;
 				//		target_brake_stroke += e_a * P_a;
-						step = 0.5;
+						brake_stroke_step = 0.5;
 						if(fabs(jurk2_twist_) < 10) 
 						{
 							double d = 500 - target_brake_stroke;
@@ -1921,14 +1964,14 @@ private:
 					}
 					else if(current_velocity < 0.25 )
 					{
-						step = 0.5;
+						brake_stroke_step = 0.5;
 						target_brake_stroke = 0.0 + 500.0 * (2.0 - stopper_distance_)/2.0;
 					}
 			}
 			else if(stopper_distance_ >= 0 && stopper_distance_ <= 1)
 			{
 				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
-				//step = 2;
+				//brake_stroke_step = 2;
 				use_step_flag = false;
 				target_brake_stroke = 0.0 + 500 * (1.0 - stopper_distance_)/1.0;
 			}
@@ -1954,7 +1997,7 @@ private:
 			}
 			else if(stopper_distance_ >= 1)
 			{
-				step = 0.5;
+				brake_stroke_step = 0.5;
 				target_brake_stroke = pid_params.get_stop_stroke_prev() - 70;
 				//PID distance
 				double P_d = -13;
@@ -1968,7 +2011,7 @@ private:
 			}
 			else if(stopper_distance_ >= 0 && stopper_distance_ <= 1)
 			{
-				step = 0.1;
+				brake_stroke_step = 0.1;
 				//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 				target_brake_stroke = pid_params.get_stop_stroke_prev();
 				std::cout <<"get_stroke_prev" << target_brake_stroke << std::endl;
@@ -1992,21 +2035,21 @@ private:
 		{
 			/*if(pid_params.get_stop_stroke_prev() < 0 && ret >= 0)
 			{
-				double tmp = pid_params.get_stop_stroke_prev() + step;
+				double tmp = pid_params.get_stop_stroke_prev() + brake_stroke_step;
 				if(tmp < ret) ret = tmp;
 			}*/
 			
 			if(pid_params.get_stop_stroke_prev()-ret >= 50 && pid_params.get_stop_stroke_prev() >= 0)
 			{
 				ret = pid_params.get_stop_stroke_prev();
-				ret -= step;
+				ret -= brake_stroke_step;
 				if(ret < 0) ret = 0;
 				//std::cout << "brake_ret 1" << std::endl;
 			}
 			//ブレーキをゆっくり踏む
 			else if(pid_params.get_stop_stroke_prev() > 0.0 && pid_params.get_stop_stroke_prev() < ret)
 			{
-				double tmp = pid_params.get_stop_stroke_prev() - step;
+				double tmp = pid_params.get_stop_stroke_prev() - brake_stroke_step;
 				if(tmp > ret) ret = tmp;
 				if(-ret < setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 				//std::cout << "brake_ret 2" << std::endl;
@@ -2014,6 +2057,8 @@ private:
 			else std::cout << "brake_ret 3" << std::endl;
 		}
 
+		//if(ret < 0) ret = 0;
+		//if(ret > -setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 		pid_params.set_stop_stroke_prev(ret);
 		return -ret;
 	}
@@ -2073,6 +2118,7 @@ private:
 
 	void bufset_drive(unsigned char *buf, double current_velocity, double acceleration, double stroke_speed)
 	{
+		ros::Time nowtime = ros::Time::now();
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
 		{
 			/*short drive_val;
@@ -2121,7 +2167,8 @@ private:
 			//加速判定
 			std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
 			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity : accel_avoidance_distance_min_;
-			if (fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
+			if (checkMobileyeObstacleStop(nowtime) == false
+					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit
 			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance)
 					&& in_accel_mode_ == true)
@@ -2452,6 +2499,7 @@ public:
 		sub_config_current_velocity_conversion_ = nh_.subscribe("/config/current_velocity_conversion", 10, &kvaser_can_sender::callbackCurrentVelocityConversion, this);
 		sub_cruse_velocity_ = nh_.subscribe("/cruse_velocity", 10, &kvaser_can_sender::callbackCruseVelocity, this);
 		sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &kvaser_can_sender::callbackMobileyeCan, this);
+		sub_mobileye_obstacle_data_ = nh.subscribe("/use_mobileye_obstacle", 10 , &kvaser_can_sender::callbackMobileyeObstacleData, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);
@@ -2467,6 +2515,7 @@ public:
 		        blinker_stop_time_ = ros::Time::now();
 
 		pid_params.init(0.0);
+		mobileye_obstacle_data_.header.stamp = ros::Time(0);
 	}
 
 	~kvaser_can_sender()

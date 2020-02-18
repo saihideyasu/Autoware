@@ -81,6 +81,8 @@ install(FILES
         scripts/launch_files/velodyne_vlp16.launch
         scripts/launch_files/velodyne_vlp16_front_left.launch
         scripts/launch_files/velodyne_vlp16_front_right.launch
+        scripts/launch_files/velodyne_vlp16_back_left.launch
+        scripts/launch_files/velodyne_vlp16_back_right.launch
         scripts/launch_files/velodyne_vlp16_prius_right.launch
         scripts/launch_files/velodyne_vlp16_prius_left.launch
         scripts/launch_files/velodyne_vlp16_hires.launch

@@ -5182,7 +5182,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>40</y>
+         <y>50</y>
          <width>71</width>
          <height>31</height>
         </rect>
@@ -5209,7 +5209,7 @@
        <property name="geometry">
         <rect>
          <x>80</x>
-         <y>35</y>
+         <y>45</y>
          <width>101</width>
          <height>41</height>
         </rect>
@@ -5242,7 +5242,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>40</y>
+         <y>50</y>
          <width>51</width>
          <height>31</height>
         </rect>
@@ -5269,7 +5269,7 @@
        <property name="geometry">
         <rect>
          <x>380</x>
-         <y>35</y>
+         <y>45</y>
          <width>101</width>
          <height>41</height>
         </rect>
@@ -5302,7 +5302,7 @@
        <property name="geometry">
         <rect>
          <x>180</x>
-         <y>40</y>
+         <y>50</y>
          <width>51</width>
          <height>31</height>
         </rect>
@@ -5329,7 +5329,7 @@
        <property name="geometry">
         <rect>
          <x>230</x>
-         <y>35</y>
+         <y>45</y>
          <width>101</width>
          <height>41</height>
         </rect>
@@ -5362,7 +5362,7 @@
        <property name="geometry">
         <rect>
          <x>490</x>
-         <y>40</y>
+         <y>50</y>
          <width>51</width>
          <height>31</height>
         </rect>
@@ -5389,7 +5389,7 @@
        <property name="geometry">
         <rect>
          <x>540</x>
-         <y>35</y>
+         <y>45</y>
          <width>101</width>
          <height>41</height>
         </rect>
@@ -5422,7 +5422,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>100</y>
+         <y>110</y>
          <width>91</width>
          <height>31</height>
         </rect>
@@ -5449,7 +5449,7 @@
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>80</y>
+         <y>90</y>
          <width>341</width>
          <height>71</height>
         </rect>
@@ -5482,7 +5482,7 @@
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>80</y>
+         <y>90</y>
          <width>121</width>
          <height>71</height>
         </rect>
@@ -5505,7 +5505,7 @@ CLEAR</string>
        <property name="geometry">
         <rect>
          <x>580</x>
-         <y>80</y>
+         <y>90</y>
          <width>92</width>
          <height>23</height>
         </rect>
@@ -5526,7 +5526,7 @@ CLEAR</string>
        <property name="geometry">
         <rect>
          <x>580</x>
-         <y>110</y>
+         <y>120</y>
          <width>101</width>
          <height>41</height>
         </rect>
@@ -5542,6 +5542,126 @@ safety</string>
        </property>
        <property name="checked">
         <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lb2_stroke_routine">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>0</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>SplitVCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>routine</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QTextEdit" name="tx2_stroke_routine">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>0</y>
+         <width>101</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
+       <property name="lineWidth">
+        <number>0</number>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lb2_waypoint_num">
+       <property name="geometry">
+        <rect>
+         <x>460</x>
+         <y>0</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>SplitVCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>way_n</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QTextEdit" name="tx2_waypoint_num">
+       <property name="geometry">
+        <rect>
+         <x>550</x>
+         <y>0</y>
+         <width>101</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
+       <property name="lineWidth">
+        <number>0</number>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::TextSelectableByMouse</set>
        </property>
       </widget>
      </widget>

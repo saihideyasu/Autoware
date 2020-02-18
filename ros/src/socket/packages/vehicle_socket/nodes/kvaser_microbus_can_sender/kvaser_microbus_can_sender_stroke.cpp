@@ -483,7 +483,7 @@ private:
 	void callbackUseSafetyLocalizer(const std_msgs::Bool::ConstPtr &msg)
 	{
 		use_safety_localizer_ = msg->data;
-		steer_clutch_ = false;
+		//steer_clutch_ = false;
 		//std::cout << "use_safety : " << (int)use_safety_localizer_ << std::endl;
 	}
 
@@ -2293,8 +2293,9 @@ private:
 			else drive_clutch_ = false;
 		}
 		else if(interface_lock_ == true) buf[6] |= 0x20;
-		if(use_safety_localizer_ == false) buf[6] |= 0x10;
-		else if(steer_clutch_ == false)
+		//if(use_safety_localizer_ == false) buf[6] |= 0x10;
+		//else
+		if(steer_clutch_ == false)
 		{
 			buf[6] |= 0x10;
 			ros::Time time = ros::Time::now();

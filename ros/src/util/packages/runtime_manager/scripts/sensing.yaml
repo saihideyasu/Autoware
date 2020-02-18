@@ -242,6 +242,26 @@ subs :
           calibration :
             prop  : 0
             flags : [ center_v ]
+      - name : Velodyne VLP-16 liesse back left
+        desc : Launches the driver for the selected Velodyne sensor and publishes the pointcloud in points_raw. To select a custom calibration file press the [config] button.
+        probe:
+        run  : roslaunch runtime_manager velodyne_vlp16_back_left.launch
+        param: calibration_path
+        gui  :
+          flags : [ SIGTERM, kill_children ]
+          calibration :
+            prop  : 0
+            flags : [ center_v ]
+      - name : Velodyne VLP-16 liesse back right
+        desc : Launches the driver for the selected Velodyne sensor and publishes the pointcloud in points_raw. To select a custom calibration file press the [config] button.
+        probe:
+        run  : roslaunch runtime_manager velodyne_vlp16_back_right.launch
+        param: calibration_path
+        gui  :
+          flags : [ SIGTERM, kill_children ]
+          calibration :
+            prop  : 0
+            flags : [ center_v ]
       - name : Velodyne VLP-16 prius right
         desc : Launches the driver for the selected Velodyne sensor and publishes the pointcloud in points_raw. To select a custom calibration file press the [config] button.
         probe:

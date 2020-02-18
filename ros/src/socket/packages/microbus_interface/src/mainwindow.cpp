@@ -704,6 +704,7 @@ void MainWindow::window_updata()
         std::stringstream str_way_num;
         str_way_num << waypoint_param_.id;
         ui->tx_waypoint_num->setText(str_way_num.str().c_str());
+        ui->tx2_waypoint_num->setText(str_way_num.str().c_str());
     }
 
     {
@@ -788,6 +789,7 @@ void MainWindow::window_updata()
 
     {
         ui->tx_stroke_routine->setText(stroke_routine_.c_str());
+        ui->tx2_stroke_routine->setText(stroke_routine_.c_str());
     }
 
     {

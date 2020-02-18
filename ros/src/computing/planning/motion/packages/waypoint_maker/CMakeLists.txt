@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
         autoware_msgs
 		autoware_can_msgs
         vector_map
+        can_msgs
+        mobileye_560_660_msgs
         )
 
 find_package(Boost REQUIRED)
@@ -35,9 +37,11 @@ catkin_package(
         lane_planner
         autoware_msgs
 		autoware_can_msgs
+        can_msgs
+        mobileye_560_660_msgs
 )
 
-SET(CMAKE_CXX_FLAGS "-O2 -g -Wall ${CMAKE_CXX_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-O2 -g -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
 
 include_directories(
         ${catkin_INCLUDE_DIRS}
@@ -64,6 +68,11 @@ add_dependencies(waypoint_replanner
 add_executable(waypoint_saver nodes/waypoint_saver/waypoint_saver.cpp)
 target_link_libraries(waypoint_saver ${catkin_LIBRARIES})
 add_dependencies(waypoint_saver
+        ${catkin_EXPORTED_TARGETS})
+
+add_executable(waypoint_saver2 nodes/waypoint_saver/waypoint_saver2.cpp)
+target_link_libraries(waypoint_saver2 ${catkin_LIBRARIES})
+add_dependencies(waypoint_saver2
         ${catkin_EXPORTED_TARGETS})
 
 add_executable(waypoint_saver_stroke_plus nodes/waypoint_saver/waypoint_saver_stroke_plus.cpp)
@@ -117,6 +126,7 @@ install(TARGETS
         waypoint_loader_show_id
         waypoint_replanner
         waypoint_saver
+        waypoint_saver2
         waypoint_saver_stroke_plus
         waypoint_saver_microbus_stroke_plus
         waypoint_saver_RTKplus

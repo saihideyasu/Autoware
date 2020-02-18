@@ -760,6 +760,26 @@ subs :
            lane_topic    :
              depend      : input_type
              depend_bool : 'lambda v : v == 1'
+       - name : waypoint_saver2
+         desc : waypoint_saver2 desc sample
+         cmd  : roslaunch waypoint_maker waypoint_saver2.launch
+         param: waypoint_saver
+         gui  :
+           input_type    :
+             flags       : [ nl ]
+           save_filename :
+             prop        : 1
+             flags       : [ nl ]
+           save_velocity :
+             depend      : input_type
+             depend_bool : 'lambda v : v == 0'
+           interval      :
+             depend      : input_type
+             depend_bool : 'lambda v : v == 0'
+             flags       : [ nl ]
+           lane_topic    :
+             depend      : input_type
+             depend_bool : 'lambda v : v == 1'
        - name : waypoint_saver stroke plus
          desc : waypoint_saver stroke plus desc sample
          cmd  : roslaunch waypoint_maker waypoint_saver_stroke_plus.launch

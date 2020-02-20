@@ -246,6 +246,10 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.automatic_door = (char)((map.find("automatic_door") != map.end()) ? std::stoi(map["automatic_door"]) : 0);
   wp->waypoint_param.signal_stop_line = (char)((map.find("signal_stop_line") != map.end()) ? std::stoi(map["signal_stop_line"]) : 0);
   wp->waypoint_param.temporary_stop_line = ((map.find("temporary_stop_line") != map.end()) ? std::stod(map["temporary_stop_line"]) : 0);
+  wp->waypoint_param.period_signal_time_first = ((map.find("period_signal_time_first") != map.end()) ? map["period_signal_time_first"] : "");
+  wp->waypoint_param.period_signal_time_step_green = ((map.find("period_signal_time_step_green") != map.end()) ? std::stod(map["period_signal_time_step_green"]) : 0);
+  wp->waypoint_param.period_signal_time_step_yellow = ((map.find("period_signal_time_step_yellow") != map.end()) ? std::stod(map["period_signal_time_step_yellow"]) : 0);
+  wp->waypoint_param.period_signal_time_step_red = ((map.find("period_signal_time_step_red") != map.end()) ? std::stod(map["period_signal_time_step_red"]) : 0);
   wp->waypoint_param.fusion_select = (char)((map.find("fusion_select") != map.end()) ? std::stoi(map["fusion_select"]) : -1);
   wp->waypoint_param.liesse.shift = (char)((map.find("liesse_shift") != map.end()) ? std::stoi(map["liesse_shift"]) : -1);
   wp->waypoint_param.steer_correction = ((map.find("steer_correction") != map.end()) ? std::stod(map["steer_correction"]) : -1000.0);
@@ -276,6 +280,7 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
   wp->waypoint_param.detection_use_point_cloud = ((map.find("use_point_cloud") != map.end()) ? std::stoi(map["use_point_cloud"]) : -1);
   wp->waypoint_param.detection_use_point_pillar = ((map.find("use_point_pillar") != map.end()) ? std::stoi(map["use_point_pillar"]) : -1);
   wp->waypoint_param.detection_use_mobileye = ((map.find("use_mobileye") != map.end()) ? std::stoi(map["use_mobileye"]) : -1);
+  wp->waypoint_param.temporary_fixed_velocity = ((map.find("temporary_fixed_velocity") != map.end()) ? std::stod(map["temporary_fixed_velocity"]) : -1);
 
   if(wp->waypoint_param.signal_stop_line != 0)
   {

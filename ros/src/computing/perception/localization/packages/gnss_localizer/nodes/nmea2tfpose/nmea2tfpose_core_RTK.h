@@ -23,6 +23,7 @@
 
 // ROS includes
 #include <ros/ros.h>
+#include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nmea_msgs/Sentence.h>
 #include <tf/transform_broadcaster.h>
@@ -65,7 +66,7 @@ private:
 
   // publisher
   ros::Publisher pub1_;
-  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_imu_, pub_stat_;
+  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_imu_, pub_stat_, pub_time_;
 
   // subscriber
   ros::Subscriber sub1_;

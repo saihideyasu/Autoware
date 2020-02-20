@@ -26,6 +26,7 @@ private:
 	uint32_t stop_waypoint_id_;
 	ros::Time timer_;
 	double stop_time_, distance_;
+  double fixed_velocity_;
 
 	autoware_msgs::Lane apply_acceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
 	                                       size_t fixed_cnt, double fixed_vel)
@@ -92,8 +93,6 @@ private:
 
 	  return l;
 	}
-
-
 
 	int stop_line_search(const autoware_msgs::Lane& way)
 	{
@@ -218,10 +217,10 @@ private:
 		}
 		
 		autoware_msgs::Lane l;
-		l = apply_acceleration(lane, acceleration, stop_line_to_baselink_index /*stop_index*/, behind_cnt + 1, 0);
+		l = apply_acceleration(lane, acceleration, stop_line_to_baselink_index /*stop_index*/, behind_cnt + 1, fixed_velocity_);
 		std::reverse(l.waypoints.begin(), l.waypoints.end());
 		int reverse_stop_index = l.waypoints.size() - stop_line_to_baselink_index - 1;
-		l = apply_acceleration(l, acceleration, reverse_stop_index, ahead_cnt + 1, 0);
+		l = apply_acceleration(l, acceleration, reverse_stop_index, ahead_cnt + 1, fixed_velocity_);
 		std::reverse(l.waypoints.begin(), l.waypoints.end());
 		
 		//l = apply_decceleration(lane, -acceleration, stop_line_to_baselink_index /*stop_index*/, behind_cnt + 1, 0);
@@ -305,6 +304,7 @@ private:
 	void callbackConfig(const autoware_config_msgs::ConfigTemporaryStopper& msg)
 	{
 		config_ = msg;
+		fixed_velocity_ = config_.fixed_velocity;
 	}
 
 	void callbackWaypoint(const autoware_msgs::Lane& msg)
@@ -318,12 +318,15 @@ private:
 	{
 		if(msg.temporary_acceleration >= 0.0)
 			config_.acceleration = msg.temporary_acceleration;
+		if(msg.temporary_fixed_velocity >= 0.0)
+			fixed_velocity_ = msg.temporary_fixed_velocity;
 	}
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(100)//0
 	    , stop_time_(5.0)
 	    , distance_(1000.0)//0.0
+			, fixed_velocity_(0)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
 
@@ -348,7 +351,6 @@ public:
 		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStopper::callbackCurrentVelocity, this);
 		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
 		sub_config_ = nh_.subscribe("/config/temporary_stopper", 1, &TemporaryStopper::callbackConfig, this);
-
 	}
 };
 

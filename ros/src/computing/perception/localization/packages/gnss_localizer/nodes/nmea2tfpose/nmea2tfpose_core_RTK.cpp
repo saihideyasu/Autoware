@@ -90,6 +90,7 @@ void Nmea2TFPoseNode::initForROS()
   pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("/gnss_standard_deviation", 10);
   pub_imu_ = nh_.advertise<sensor_msgs::Imu>("/gnss_imu", 10);
   pub_stat_ = nh_.advertise<std_msgs::UInt8>("/gnss_stat", 10);
+  pub_time_ = nh_.advertise<std_msgs::Float64>("/gnss_time", 10);
 }
 
 void Nmea2TFPoseNode::run()
@@ -160,106 +161,118 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 {
   try
   {
-	if(nmea.at(0) == "#BESTPOSA")
-	{
-		if(nmea.size() == 30)
-		{
-			//std::cout << "aaa : " << nmea.at(16) << std::endl;
-			double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
-			double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
-			double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
-			geo_.set_llh_nmea_degrees(lat, lon, h);
-			ROS_INFO("BESTGNSSPOS is subscribed.");
+    if(nmea.at(0) == "#BESTPOSA")
+    {
+      if(nmea.size() == 30)
+      {
+        //std::cout << "aaa : " << nmea.at(16) << std::endl;
+        double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
+        double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
+        double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
+        geo_.set_llh_nmea_degrees(lat, lon, h);
+        ROS_INFO("BESTGNSSPOS is subscribed.");
 
-      geometry_msgs::PoseStamped pose;
-      pose.header.frame_id = MAP_FRAME_;
-      pose.header.stamp = current_time_;
-      pose.pose.position.x = geo_.y();
-      pose.pose.position.y = geo_.x();
-      pose.pose.position.z = geo_.z();
-      pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
-      pub1_.publish(pose);
+        geometry_msgs::PoseStamped pose;
+        pose.header.frame_id = MAP_FRAME_;
+        pose.header.stamp = current_time_;
+        pose.pose.position.x = geo_.y();
+        pose.pose.position.y = geo_.x();
+        pose.pose.position.z = geo_.z();
+        pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
+        pub1_.publish(pose);
 
 
-		}
-	}
-	else if(nmea.at(0) == "#INSPVAXA")
-	{
-		if(nmea.size() == 32)
-		{
-			double north_vel = stod(nmea.at(15));
-			double east_vel = stod(nmea.at(16));
-			double up_vel = stod(nmea.at(17));
-			this->surface_speed_ = sqrt(north_vel*north_vel + east_vel*east_vel + up_vel*up_vel);
+      }
+    }
+    else if(nmea.at(0) == "#INSPVAXA")
+    {
+      if(nmea.size() == 32)
+      {
+        double north_vel = stod(nmea.at(15));
+        double east_vel = stod(nmea.at(16));
+        double up_vel = stod(nmea.at(17));
+        this->surface_speed_ = sqrt(north_vel*north_vel + east_vel*east_vel + up_vel*up_vel);
 
-      autoware_msgs::GnssSurfaceSpeed gss;
-      gss.header.frame_id = MAP_FRAME_;
-      gss.header.stamp = current_time_;
-      gss.surface_speed = surface_speed_;
-      pub_surface_speed_.publish(gss);
+        autoware_msgs::GnssSurfaceSpeed gss;
+        gss.header.frame_id = MAP_FRAME_;
+        gss.header.stamp = current_time_;
+        gss.surface_speed = surface_speed_;
+        pub_surface_speed_.publish(gss);
 
-			roll_= dig2rad(stod(nmea.at(18)));
-			pitch_= -dig2rad(stod(nmea.at(19)));
-			yaw_ = dig2rad(stod(nmea.at(20)));
-			std::cout << "yaw  : " << yaw_ << std::endl;
-			std::cout << "roll : " << roll_ << std::endl;
-			std::cout << "pitch: " << pitch_ << std::endl;
-			double x = cos(yaw_), y = sin(yaw_);
-			yaw_ = atan2(x,y);
+        roll_= dig2rad(stod(nmea.at(18)));
+        pitch_= -dig2rad(stod(nmea.at(19)));
+        yaw_ = dig2rad(stod(nmea.at(20)));
+        std::cout << "yaw  : " << yaw_ << std::endl;
+        std::cout << "roll : " << roll_ << std::endl;
+        std::cout << "pitch: " << pitch_ << std::endl;
+        double x = cos(yaw_), y = sin(yaw_);
+        yaw_ = atan2(x,y);
 
-      lat_std_ = stod(nmea.at(21));
-			lon_std_ = stod(nmea.at(22));
-			alt_std_ = stod(nmea.at(23));
+        lat_std_ = stod(nmea.at(21));
+        lon_std_ = stod(nmea.at(22));
+        alt_std_ = stod(nmea.at(23));
 
-      autoware_msgs::GnssStandardDeviation gsd;
-      gsd.header.frame_id = MAP_FRAME_;
-      gsd.header.stamp = current_time_;
-      gsd.lat_std = lat_std_;
-      gsd.lon_std = lon_std_;
-      gsd.alt_std = alt_std_;
-      pub_std_dev_.publish(gsd);
+        autoware_msgs::GnssStandardDeviation gsd;
+        gsd.header.frame_id = MAP_FRAME_;
+        gsd.header.stamp = current_time_;
+        gsd.lat_std = lat_std_;
+        gsd.lon_std = lon_std_;
+        gsd.alt_std = alt_std_;
+        pub_std_dev_.publish(gsd);
 
-			//gnss_stat_ = stoi(nmea.at(9));
-      std::vector<std::string> vec = split(nmea.at(9), ';');
-      if(vec.size() < 2) gnss_stat_ = 0;
-      else if(vec[1] == "INS_SOLUTION_GOOD") gnss_stat_ = 3;
-      else gnss_stat_ = 0;
-      std_msgs::UInt8 stat;
-      stat.data = gnss_stat_;
-      pub_stat_.publish(stat);
+        //gnss_stat_ = stoi(nmea.at(9));
+        std::vector<std::string> vec = split(nmea.at(9), ';');
+        if(vec.size() < 2) gnss_stat_ = 0;
+        else if(vec[1] == "INS_SOLUTION_GOOD") gnss_stat_ = 3;
+        else gnss_stat_ = 0;
+        std_msgs::UInt8 stat;
+        stat.data = gnss_stat_;
+        pub_stat_.publish(stat);
 
-			ROS_INFO("INSPVAXA is subscribed.");
-		}
-	}
-	else if(nmea.at(0) == "#RAWIMUA")
-	{
-		if(nmea.size() == 18)
-		{
-			x_accel_ = stod(nmea.at(14)) * pow(2,-29) * 100;
-			y_accel_ = stod(nmea.at(13)) * pow(2,-29) * 100;
-			z_accel_ = stod(nmea.at(12)) * pow(2,-29) * 100;
-			y_gyro_ = stod(nmea.at(16)) * pow(2,-33) * 100;
-			z_gyro_ = stod(nmea.at(15)) * pow(2,-33) * 100;
-			std::vector<std::string> ss = split(nmea[17], '*');
-			x_gyro_ = stod(ss.at(0)) * pow(2,-33) * 100;
-			ROS_INFO("RAWIMU is subscribed.");
-			std::cout << "imu_acc : x," << stod(nmea.at(14)) << " y," << stod(nmea.at(13)) << " z," << stod(nmea.at(12)) << std::endl;
-			std::cout << "imu_acc : x," << x_accel_ << " y," << y_accel_ << " z," << z_accel_ << std::endl;
-			std::cout << "imu_gyro : x," << stod(nmea.at(17)) << " y," << stod(nmea.at(16)) << " z," << stod(nmea.at(15)) << std::endl;
-			std::cout << "imu_gyro : x," << x_gyro_ << " y," << y_gyro_ << " z," << z_gyro_ << std::endl;
+        ROS_INFO("INSPVAXA is subscribed.");
+      }
+    }
+    else if(nmea.at(0) == "#RAWIMUA")
+    {
+      if(nmea.size() == 18)
+      {
+        x_accel_ = stod(nmea.at(14)) * pow(2,-29) * 100;
+        y_accel_ = stod(nmea.at(13)) * pow(2,-29) * 100;
+        z_accel_ = stod(nmea.at(12)) * pow(2,-29) * 100;
+        y_gyro_ = stod(nmea.at(16)) * pow(2,-33) * 100;
+        z_gyro_ = stod(nmea.at(15)) * pow(2,-33) * 100;
+        std::vector<std::string> ss = split(nmea[17], '*');
+        x_gyro_ = stod(ss.at(0)) * pow(2,-33) * 100;
+        ROS_INFO("RAWIMU is subscribed.");
+        std::cout << "imu_acc : x," << stod(nmea.at(14)) << " y," << stod(nmea.at(13)) << " z," << stod(nmea.at(12)) << std::endl;
+        std::cout << "imu_acc : x," << x_accel_ << " y," << y_accel_ << " z," << z_accel_ << std::endl;
+        std::cout << "imu_gyro : x," << stod(nmea.at(17)) << " y," << stod(nmea.at(16)) << " z," << stod(nmea.at(15)) << std::endl;
+        std::cout << "imu_gyro : x," << x_gyro_ << " y," << y_gyro_ << " z," << z_gyro_ << std::endl;
 
-      sensor_msgs::Imu imu;
-      imu.header.frame_id = MAP_FRAME_;
-      imu.header.stamp = current_time_;
-      imu.linear_acceleration.x = x_accel_;
-      imu.linear_acceleration.y = y_accel_;
-      imu.linear_acceleration.z = z_accel_;
-      imu.angular_velocity.x = x_gyro_;
-      imu.angular_velocity.y = y_gyro_;
-      imu.angular_velocity.z = z_gyro_;
-      pub_imu_.publish(imu);
-		}
-	}
+        sensor_msgs::Imu imu;
+        imu.header.frame_id = MAP_FRAME_;
+        imu.header.stamp = current_time_;
+        imu.linear_acceleration.x = x_accel_;
+        imu.linear_acceleration.y = y_accel_;
+        imu.linear_acceleration.z = z_accel_;
+        imu.angular_velocity.x = x_gyro_;
+        imu.angular_velocity.y = y_gyro_;
+        imu.angular_velocity.z = z_gyro_;
+        pub_imu_.publish(imu);
+      }
+    }
+    else if(nmea.at(0) == "#TIMEA")
+    {
+      if(nmea.size() == 20)
+      {
+        unsigned int hour = stoi(nmea.at(16));
+        unsigned int min = stoi(nmea.at(17));
+        unsigned int msec = stoi(nmea.at(18));
+        std_msgs::Float64 date;
+        date.data = hour*60.0*60.0 + min*60.0 + msec/1000.0;
+        pub_time_.publish(date);
+      }
+    }
   }catch (const std::exception &e)
   {
 		ROS_WARN_STREAM("Message is invalid : " << e.what());

@@ -24,6 +24,10 @@ int16 microbus_angle
 int8 automatic_door
 int8 signal_stop_line
 float64 temporary_stop_line
+string period_signal_time_first
+float64 period_signal_time_step_green
+float64 period_signal_time_step_yellow
+float64 period_signal_time_step_red
 int8 fusion_select
 float64 steer_correction
 float32 lookahead_ratio
@@ -53,4 +57,5 @@ float64 stopper_distance3
 int8 detection_use_point_cloud
 int8 detection_use_point_pillar
 int8 detection_use_mobileye
+float64 temporary_fixed_velocity
 LiesseXZB70MParam liesse

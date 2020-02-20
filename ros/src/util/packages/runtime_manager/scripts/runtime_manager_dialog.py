@@ -78,6 +78,7 @@ from autoware_config_msgs.msg import ConfigRayGroundFilterBox
 from autoware_config_msgs.msg import ConfigMicrobusInterface
 from autoware_config_msgs.msg import ConfigTemporaryStopper
 from autoware_config_msgs.msg import ConfigCurrentVelocityConversion
+from autoware_config_msgs.msg import ConfigPeriodSignal
 from tablet_socket_msgs.msg import mode_cmd
 from tablet_socket_msgs.msg import gear_cmd
 from tablet_socket_msgs.msg import Waypoint

@@ -15,7 +15,7 @@ class TemporaryStopper
 private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_waypoint_, sub_waypoint_param_, sub_can502_, sub_can503_, sub_current_velocity_, sub_distance_, sub_config_;
-	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_;
+	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_, pub_temporary_fixed_velocity_;
 
 	autoware_config_msgs::ConfigTemporaryStopper config_;
 	autoware_can_msgs::MicroBusCan502 can502_;
@@ -26,7 +26,7 @@ private:
 	uint32_t stop_waypoint_id_;
 	ros::Time timer_;
 	double stop_time_, distance_;
-  double fixed_velocity_;
+	double fixed_velocity_;
 
 	autoware_msgs::Lane apply_acceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
 	                                       size_t fixed_cnt, double fixed_vel)
@@ -134,8 +134,9 @@ private:
 				array.markers.push_back(marker);
 				pub_temporary_line_.publish(array);
 
-				std_msgs::Int32 dis;
-				dis.data = i;
+				if(fixed_velocity_ <= 0) dis.data = i;
+				else dis.data = -1;
+				//dis.data = i;
 				pub_temporary_distance_.publish(dis);
 
 				return i;
@@ -209,7 +210,7 @@ private:
 				break;
 			}
 		}
-		if(stop_line_to_baselink < front_bumper_to_baselink_)
+		if(stop_line_to_baselink < front_bumper_to_baselink_ && fixed_velocity_ <= 0)
 		{
 			autoware_msgs::Lane l = lane;
 			l.waypoints[0].twist.twist.linear.x = 0;
@@ -305,6 +306,11 @@ private:
 	{
 		config_ = msg;
 		fixed_velocity_ = config_.fixed_velocity;
+		//std::cout << config_.fixed_velocity << std::endl;
+
+		std_msgs::Float64 fixed_vel;
+		fixed_vel.data = fixed_velocity_;
+		pub_temporary_fixed_velocity_.publish(fixed_velocity_);
 	}
 
 	void callbackWaypoint(const autoware_msgs::Lane& msg)
@@ -318,15 +324,21 @@ private:
 	{
 		if(msg.temporary_acceleration >= 0.0)
 			config_.acceleration = msg.temporary_acceleration;
+		//std::cout << "aaa : " << msg.temporary_fixed_velocity << std::endl;
 		if(msg.temporary_fixed_velocity >= 0.0)
+		{
 			fixed_velocity_ = msg.temporary_fixed_velocity;
+			std_msgs::Float64 fixed_vel;
+			fixed_vel.data = fixed_velocity_;
+			pub_temporary_fixed_velocity_.publish(fixed_velocity_);
+		}
 	}
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(100)//0
 	    , stop_time_(5.0)
 	    , distance_(1000.0)//0.0
-			, fixed_velocity_(0)
+		, fixed_velocity_(0)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
 
@@ -344,6 +356,7 @@ public:
 		pub_temporary_line_ = nh_.advertise<visualization_msgs::MarkerArray>("/temporary_line", 1);
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
 		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
+		pub_temporary_fixed_velocity_ = nh_.advertise<std_msgs::Float64>("/temporary_fixed_velocity", 1, true);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStopper::callbackWaypoint, this);
 		sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &TemporaryStopper::callbackWaypointParam, this);
 		sub_can502_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan502, this);
@@ -351,6 +364,10 @@ public:
 		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &TemporaryStopper::callbackCurrentVelocity, this);
 		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
 		sub_config_ = nh_.subscribe("/config/temporary_stopper", 1, &TemporaryStopper::callbackConfig, this);
+		
+		std_msgs::Float64 fixed_vel;
+		fixed_vel.data = fixed_velocity_;
+		pub_temporary_fixed_velocity_.publish(fixed_velocity_);
 	}
 };
 

@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="trafficlight_recognizer" type="period_signal" name="period_signal" output="log">
+  </node>
+</launch>

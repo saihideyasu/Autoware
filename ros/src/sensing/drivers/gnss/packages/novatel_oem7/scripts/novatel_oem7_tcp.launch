@@ -3,7 +3,7 @@
   <arg name="port" default="5001" />
   <arg name="nodename" default="novatel_oem7" />
 
-  <node pkg="novatel_oem7" type="novatel_oem7" name="$(arg nodename)">
+  <node pkg="novatel_oem7" type="novatel_oem7_tcp" name="$(arg nodename)" output="log">
     <param name="ip" value="$(arg ip)" />
     <param name="port" value="$(arg port)" />
   </node>

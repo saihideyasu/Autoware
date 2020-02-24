@@ -303,8 +303,8 @@ private:
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
-	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_, sub_mobileye_obstacle_data_;
-	;
+	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_, sub_mobileye_obstacle_data_, sub_temporary_fixed_velocity_;
+
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -370,6 +370,12 @@ private:
 	double cruse_velocity_;
 	mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
 	mobileye_560_660_msgs::ObstacleData mobileye_obstacle_data_;
+	double temporary_fixed_velocity_;
+
+	void callbackTemporaryFixedVelocity(const std_msgs::Float64::ConstPtr &msg)
+	{
+		temporary_fixed_velocity_ = msg->data;
+	}
 
 	bool checkMobileyeObstacleStop(ros::Time nowtime)
 	{
@@ -1703,7 +1709,7 @@ private:
 		if(vel_sa < setting_.brake_stroke_adjust_th)
 		{
 			brake_stroke_step -= (setting_.brake_stroke_adjust_th-vel_sa)*(setting_.accel_stroke_step_max-1)/setting_.brake_stroke_adjust_th;
-			if(brake_stroke_step < 0.5) brake_stroke_step = 0.5;
+			if(brake_stroke_step < 1) brake_stroke_step = 1;
 		}
 		bool use_step_flag = true;
 
@@ -1800,7 +1806,7 @@ private:
 */
 
 		//const double stop_stroke = 340.0;
-		if(use_stopper_distance_ = true)
+		if(use_stopper_distance_ = true && temporary_fixed_velocity_ <= 0)
 		{
 			std::cout << "stopper list : "<< setting_.stopper_distance1 << "," << setting_.stopper_distance2 << "," << setting_.stopper_distance3 << std::endl;
 			std::cout << "kkk stop_stroke_max : " << stop_stroke_max_ << std::endl;
@@ -2402,6 +2408,7 @@ public:
 		, ndt_warning_count_(0)
 		, use_safety_localizer_(true)
 		, cruse_velocity_(0)
+		, temporary_fixed_velocity_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2501,6 +2508,7 @@ public:
 		sub_cruse_velocity_ = nh_.subscribe("/cruse_velocity", 10, &kvaser_can_sender::callbackCruseVelocity, this);
 		sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &kvaser_can_sender::callbackMobileyeCan, this);
 		sub_mobileye_obstacle_data_ = nh.subscribe("/use_mobileye_obstacle", 10 , &kvaser_can_sender::callbackMobileyeObstacleData, this);
+		sub_temporary_fixed_velocity_ = nh.subscribe("/temporary_fixed_velocity", 10 , &kvaser_can_sender::callbackTemporaryFixedVelocity, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);

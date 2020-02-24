@@ -287,7 +287,7 @@ target_link_libraries(period_signal
         libcontext
 )
 
-install(TARGETS region_tlr feat_proj tlr_tuner roi_extractor roi_pub label_maker libcontext tl_switch
+install(TARGETS region_tlr feat_proj tlr_tuner roi_extractor roi_pub label_maker libcontext tl_switch period_signal
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

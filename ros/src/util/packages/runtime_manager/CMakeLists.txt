@@ -74,6 +74,7 @@ install(FILES
         scripts/launch_files/sensor.launch
         scripts/launch_files/set.launch
 
+        scripts/launch_files/VLS128_points.launch
         scripts/launch_files/velodyne_hdl64e_s2.launch
         scripts/launch_files/velodyne_hdl64e_s3.launch
         scripts/launch_files/velodyne_hdl32e.launch

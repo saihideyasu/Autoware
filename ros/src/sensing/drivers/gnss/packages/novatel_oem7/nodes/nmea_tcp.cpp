@@ -88,7 +88,7 @@ void publish(const char buf[], const int bufSize)
 
 int main(int argc, char** argv)
 {
-    ros::init(argc,argv,"nmea_serial");
+    ros::init(argc,argv,"nmea_tcp");
     ros::NodeHandle nh;
 
     int sock = socket(PF_INET, SOCK_STREAM, 0);//ソケットの作成

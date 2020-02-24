@@ -78,6 +78,7 @@ private:
                     std::cerr << "[" << num << "]: " << "out of range" << std::endl;
                 }
             }
+            else first_time_ = -1;
 
             geometry_msgs::Point pose = lane.waypoints[num].pose.pose.position;
             if(num > 1)
@@ -106,7 +107,7 @@ public:
 
         sub_config_ = nh_.subscribe("/config/period_signal", 1, &PeriodSignal::callbackConfig, this);
         sub_local_waypoints_ = nh_.subscribe("/final_waypoints", 1, &PeriodSignal::callbackLocalWaypoints, this);
-        sub_gnss_time_ = nh_.subscribe("/gnss_times_of_day", 1, &PeriodSignal::callbackGnssTimesOfDay, this);
+        sub_gnss_time_ = nh_.subscribe("/gnss_time", 1, &PeriodSignal::callbackGnssTimesOfDay, this);
 
         pub_signal_stat_ = nh_.advertise<autoware_msgs::TrafficLight>("/light_color", 10, true);
         pub_signal_stat_string_ = nh_.advertise<std_msgs::String>("/sound_player", 10);
@@ -117,7 +118,7 @@ public:
         autoware_msgs::TrafficLight traffic_light_msg;
         std_msgs::String state_string_msg;
 
-        if(first_time_ == 0 || time_step_.time_step_green_ == 0 || time_step_.time_step_yellow_ == 0 || time_step_.time_step_red_ == 0)
+        if(first_time_ < 0 || time_step_.time_step_green_ == 0 || time_step_.time_step_yellow_ == 0 || time_step_.time_step_red_ == 0)
         {
             if(prev_traffic_ != TRAFFIC_LIGHT_UNKNOWN)
             {
@@ -179,7 +180,7 @@ public:
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "kvaser_microbus_can_sender_stroke");
+    ros::init(argc, argv, "period_signal");
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 

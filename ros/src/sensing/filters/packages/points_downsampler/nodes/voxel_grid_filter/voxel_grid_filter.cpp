@@ -68,6 +68,7 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
   sensor_msgs::PointCloud2 filtered_msg;
 
+
   filter_start = std::chrono::system_clock::now();
 
   // if voxel_leaf_size < 0.1 voxel_grid_filter cannot down sample (It is specification in PCL)

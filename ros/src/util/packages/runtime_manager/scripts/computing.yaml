@@ -19,9 +19,15 @@ subs :
         param: gnss
         gui  :
           stat_topic : [ gnss ]
-      - name : nmea2tfpose_RTK
-        desc : nmea2tfpose_RTK desc sample
-        cmd  : roslaunch gnss_localizer nmea2tfpose_RTK.launch
+      - name : nmea2tfpose_RTK_1
+        desc : nmea2tfpose_RTK_1 desc sample
+        cmd  : roslaunch gnss_localizer nmea2tfpose_RTK1.launch
+        param: gnss
+        gui  :
+          stat_topic : [ gnss ]
+      - name : nmea2tfpose_RTK_2
+        desc : nmea2tfpose_RTK_2 desc sample
+        cmd  : roslaunch gnss_localizer nmea2tfpose_RTK2.launch
         param: gnss
         gui  :
           stat_topic : [ gnss ]
@@ -174,6 +180,7 @@ subs :
       - name : can2odom
         desc : can2odom desc sample
         cmd  : roslaunch autoware_connector can2odom.launch
+        param: can2odom
       - name : vel_pose_connect
         desc : vel_pose_connect desc sample
         cmd  : roslaunch autoware_connector vel_pose_connect.launch
@@ -1639,6 +1646,23 @@ params :
       cmd_param :
         dash        : ''
         delim       : ':='
+    - name    : nmea_topic
+      desc    : nmea topic
+      label   : nmea_topic
+      v       : /nmea_sentence
+      kind    : topic
+      topic_type : nmea_msgs/Sentence
+      cmd_param :
+        dash      : ''
+        delim     : ':='
+    - name      : name_space
+      desc      : name_space
+      label     : name_space
+      kind      : checkbox
+      v         : False
+      cmd_param :
+        dash      : ''
+        delim     : ':='
 
   - name  : ndt
     topic : /config/ndt
@@ -6886,6 +6910,20 @@ params :
       cmd_param :
         dash        : ''
         delim       : ':='
+
+  - name  : can2odom
+    topic : /config/can2odom
+    msg   : ConfigCanOdometry
+    vars  :
+    - name : kmph_th
+      desc : kmph_th
+      label: kmph_th
+      min  : 0.0
+      max  : 1.0
+      v    : 0.1
+      cmd_param:
+        dash     : ''
+        delim    : ':='
 
   - name  : microbus_can
     topic : /config/microbus_can

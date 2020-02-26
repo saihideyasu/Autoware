@@ -19,7 +19,9 @@
 namespace autoware_connector
 {
 // Constructor
-CanOdometryNode::CanOdometryNode() : private_nh_("~"), v_info_(), odom_(ros::Time::now())
+CanOdometryNode::CanOdometryNode()
+  : private_nh_("~"), v_info_()
+  , odom_(ros::Time::now())
 {
   initForROS();
 }
@@ -55,9 +57,12 @@ void CanOdometryNode::initForROS()
   // setup subscriber
   sub1_ = nh_.subscribe("vehicle_status", 10, &CanOdometryNode::callbackFromVehicleStatus, this);
   sub_bus_ = nh_.subscribe("/microbus/can_receive502", 10, &CanOdometryNode::callbackFromVehicleStatus_microbus, this);
+  sub_config_ = nh_.subscribe("/config/can2odom", 10, &CanOdometryNode::callbackConfig, this);
   // setup publisher
   pub1_ = nh_.advertise<nav_msgs::Odometry>("/vehicle/odom", 10);
   pub_can_velocity_ = nh_.advertise<geometry_msgs::TwistStamped>("/can_velocity", 10);
+
+  config_.kmph_th = 0.1;
 }
 
 void CanOdometryNode::run()
@@ -109,6 +114,11 @@ void CanOdometryNode::publishOdometry(const autoware_msgs::VehicleStatusConstPtr
   pub1_.publish(odom);
 }
 
+void CanOdometryNode::callbackConfig(const autoware_config_msgs::ConfigCanOdometry &msg)
+{
+  config_ = msg;
+}
+
 void CanOdometryNode::callbackFromVehicleStatus(const autoware_msgs::VehicleStatusConstPtr &msg)
 {
   publishOdometry(msg);
@@ -117,7 +127,7 @@ void CanOdometryNode::callbackFromVehicleStatus(const autoware_msgs::VehicleStat
 void CanOdometryNode::callbackFromVehicleStatus_microbus(const autoware_can_msgs::MicroBusCan502ConstPtr &msg)
 {
 	double vx = kmph2mps(msg->velocity_mps);
-  if(vx < 0.1) vx = 0;
+  if(vx < config_.kmph_th / 3.6) vx = 0;
   double vth = v_info_.convertSteeringAngleToAngularVelocity_microbus(vx, msg->angle_actual);
 	odom_.updateOdometry(vx, vth, msg->header.stamp);
 

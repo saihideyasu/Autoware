@@ -28,6 +28,7 @@
 #include "autoware_can_msgs/CANInfo.h"
 #include "autoware_msgs/VehicleStatus.h"
 #include "autoware_can_msgs/MicroBusCan502.h"
+#include "autoware_config_msgs/ConfigCanOdometry.h"
 
 namespace autoware_connector
 {
@@ -155,18 +156,20 @@ private:
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
 
+  autoware_config_msgs::ConfigCanOdometry config_;
   // publisher
   ros::Publisher pub1_, pub_can_velocity_;
 
   // subscriber
   ros::Subscriber sub1_;
-  ros::Subscriber sub_bus_;
+  ros::Subscriber sub_bus_, sub_config_;
 
   // variables
   VehicleInfo v_info_;
   Odometry odom_;
 
   // callbacks
+  void callbackConfig(const autoware_config_msgs::ConfigCanOdometry &msg);
   void callbackFromVehicleStatus(const autoware_msgs::VehicleStatusConstPtr &msg);
   void callbackFromVehicleStatus_microbus(const autoware_can_msgs::MicroBusCan502ConstPtr &msg);
 

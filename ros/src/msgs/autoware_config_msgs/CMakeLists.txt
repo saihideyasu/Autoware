@@ -56,6 +56,7 @@ add_message_files(
   ConfigMicrobusInterface.msg
   ConfigCurrentVelocityConversion.msg
   ConfigPeriodSignal.msg
+  ConfigCanOdometry.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

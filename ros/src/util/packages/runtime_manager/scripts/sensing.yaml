@@ -117,11 +117,16 @@ subs :
         probe:
         run  : roslaunch novatel_oem7 novatel_oem7.launch nodename:=novatel_oem7_1
         param: novatel
-      - name : novatel_oem7_tcp
+      - name : novatel_oem7_tcp1
         desc : novatel_oem7_tcp desc sample
         probe:
-        run  : rosrun novatel_oem7 novatel_oem7_tcp
-
+        run  : roslaunch novatel_oem7 novatel_oem7_tcp.launch __ns:=novatel_oem7_1
+        param: novatel_oem7_tcp
+      - name : novatel_oem7_tcp2
+        desc : novatel_oem7_tcp desc sample
+        probe:
+        run  : roslaunch novatel_oem7 novatel_oem7_tcp.launch __ns:=novatel_oem7_2
+        param: novatel_oem7_tcp
   - name : IMU
     desc : IMU desc sample
     subs :
@@ -1981,6 +1986,17 @@ params :
       desc  : can_bit_rate
       kind  : str
       v     : '50000'
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+
+  - name  : novatel_oem7_tcp
+    vars  :
+    - name  : ip
+      label : ip
+      desc  : ip
+      kind  : str
+      v     : '192.168.1.150'
       cmd_param :
         dash        : ''
         delim       : ':='

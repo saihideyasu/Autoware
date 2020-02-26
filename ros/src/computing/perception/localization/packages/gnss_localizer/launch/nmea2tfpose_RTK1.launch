@@ -1,0 +1,23 @@
+<!-- -->
+<launch>
+
+  <arg name="plane" default="9"/>
+  <arg name="nmea_topic" default="/novatel_oem7_1/nmea_sentence"/>
+
+  <arg name="use_format" default="0"/>
+  <arg name="name_space" default="true"/>
+
+  <group unless="$(arg name_space)">
+    <node pkg="gnss_localizer" type="nmea2tfpose_RTK" name="nmea2tfpose_RTK" output="log">
+      <param name="plane" value="$(arg plane)"/>
+      <param name="nmea_topic" value="$(arg nmea_topic)"/>
+    </node>
+  </group>
+
+  <group if="$(arg name_space)">
+    <node pkg="gnss_localizer" type="nmea2tfpose_RTK" name="nmea2tfpose_RTK" output="log" ns="nmea2tfpose_RTK1">
+      <param name="plane" value="$(arg plane)"/>
+      <param name="nmea_topic" value="$(arg nmea_topic)"/>
+    </node>
+  </group>
+</launch>

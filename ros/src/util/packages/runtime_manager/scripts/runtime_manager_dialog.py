@@ -42,6 +42,7 @@ import std_msgs.msg
 from std_msgs.msg import Empty
 from std_msgs.msg import Bool
 from decimal import Decimal
+from nmea_msgs.msg import Sentence
 from autoware_config_msgs.msg import ConfigSSD
 from autoware_config_msgs.msg import ConfigCarDPM
 from autoware_config_msgs.msg import ConfigPedestrianDPM
@@ -79,6 +80,7 @@ from autoware_config_msgs.msg import ConfigMicrobusInterface
 from autoware_config_msgs.msg import ConfigTemporaryStopper
 from autoware_config_msgs.msg import ConfigCurrentVelocityConversion
 from autoware_config_msgs.msg import ConfigPeriodSignal
+from autoware_config_msgs.msg import ConfigCanOdometry
 from tablet_socket_msgs.msg import mode_cmd
 from tablet_socket_msgs.msg import gear_cmd
 from tablet_socket_msgs.msg import Waypoint

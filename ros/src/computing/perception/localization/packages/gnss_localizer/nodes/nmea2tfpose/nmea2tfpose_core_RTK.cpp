@@ -80,17 +80,22 @@ void Nmea2TFPoseNode::initForROS()
 {
   // ros parameter settings
   private_nh_.getParam("plane", plane_number_);
+  std::string nmea_topic;
+  if(private_nh_.getParam("nmea_topic", nmea_topic) == false)
+  {
+    std::cerr << "error : not nmea_topic" << std::endl;
+  }
 
   // setup subscriber
-  sub1_ = nh_.subscribe("nmea_sentence", 100, &Nmea2TFPoseNode::callbackFromNmeaSentence, this);
+  sub1_ = nh_.subscribe(nmea_topic, 100, &Nmea2TFPoseNode::callbackFromNmeaSentence, this);
 
   // setup publisher
-  pub1_ = nh_.advertise<geometry_msgs::PoseStamped>("/gnss_pose", 10);
-  pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("/gnss_surface_speed", 10);
-  pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("/gnss_standard_deviation", 10);
-  pub_imu_ = nh_.advertise<sensor_msgs::Imu>("/gnss_imu", 10);
-  pub_stat_ = nh_.advertise<std_msgs::UInt8>("/gnss_stat", 10);
-  pub_time_ = nh_.advertise<std_msgs::Float64>("/gnss_time", 10);
+  pub1_ = nh_.advertise<geometry_msgs::PoseStamped>("gnss_pose", 10);
+  pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("gnss_surface_speed", 10);
+  pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("gnss_standard_deviation", 10);
+  pub_imu_ = nh_.advertise<sensor_msgs::Imu>("gnss_imu", 10);
+  pub_stat_ = nh_.advertise<std_msgs::UInt8>("gnss_stat", 10);
+  pub_time_ = nh_.advertise<std_msgs::Float64>("gnss_time", 10);
 }
 
 void Nmea2TFPoseNode::run()

@@ -33,7 +33,7 @@ SET(CMAKE_CXX_FLAGS "-O2 -g -Wall ${CMAKE_CXX_FLAGS}")
 
 # MultiLidar Calibrator
 add_library(multi_lidar_calibrator_lib SHARED
-        src/multi_lidar_calibrator.cpp
+        src/multi_lidar_calibrator/multi_lidar_calibrator.cpp
         include/multi_lidar_calibrator.h)
 
 target_include_directories(multi_lidar_calibrator_lib PRIVATE
@@ -45,7 +45,7 @@ target_link_libraries(multi_lidar_calibrator_lib
         )
 
 add_executable(multi_lidar_calibrator
-        src/multi_lidar_calibrator_node.cpp
+        src/multi_lidar_calibrator/multi_lidar_calibrator_node.cpp
         )
 
 target_include_directories(multi_lidar_calibrator PRIVATE
@@ -54,8 +54,12 @@ target_include_directories(multi_lidar_calibrator PRIVATE
 target_link_libraries(multi_lidar_calibrator
         multi_lidar_calibrator_lib)
 
+add_executable(lidar_gnss_calibrator src/lidar_gnss_calibrator/lidar_gnss_calibrator.cpp)
+target_link_libraries(lidar_gnss_calibrator ${catkin_LIBRARIES})
+add_dependencies(lidar_gnss_calibrator ${catkin_EXPORTED_TARGETS})
+
 install(TARGETS
-        multi_lidar_calibrator multi_lidar_calibrator_lib
+        multi_lidar_calibrator multi_lidar_calibrator_lib lidar_gnss_calibrator
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

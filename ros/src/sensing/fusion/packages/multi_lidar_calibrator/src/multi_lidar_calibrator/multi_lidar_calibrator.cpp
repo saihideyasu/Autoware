@@ -82,11 +82,40 @@ void ROSMultiLidarCalibratorApp::PointsCallback(const sensor_msgs::PointCloud2::
 
 	// Transforming unfiltered, input cloud using found transform.
 	pcl::transformPointCloud (*in_child_cloud, *output_cloud, ndt.getFinalTransformation());
-
 	current_guess_ = ndt.getFinalTransformation();
 
-	Eigen::Matrix3f rotation_matrix = current_guess_.block(0,0,3,3);
 	Eigen::Vector3f translation_vector = current_guess_.block(0,3,3,1);
+	Eigen::Matrix3f rotation_matrix = current_guess_.block(0,0,3,3);
+
+	Eigen::Vector3f vector_transpose = translation_vector.transpose();
+	tf_diff_average_.x_ += vector_transpose(0);  tf_diff_average_.y_ += vector_transpose(1);  tf_diff_average_.z_ += vector_transpose(2);
+	Eigen::Vector3f angle_transpose = rotation_matrix.eulerAngles(2,1,0).transpose();
+	//tf_diff_average_.roll_ += angle_transpose(2);  tf_diff_average_.pitch_ += angle_transpose(1);  tf_diff_average_.yaw_ += angle_transpose(0);
+	double roll_diff = angle_transpose(2);
+	double pitch_diff = angle_transpose(1);
+	double yaw_diff = angle_transpose(0);
+	tf_diff_average_.roll_sin_ += sin(roll_diff);  tf_diff_average_.roll_cos_ += cos(roll_diff);
+	tf_diff_average_.pitch_sin_ += sin(pitch_diff);  tf_diff_average_.pitch_cos_ += cos(pitch_diff);
+	tf_diff_average_.yaw_sin_ += sin(yaw_diff);  tf_diff_average_.yaw_cos_ += cos(yaw_diff);
+	tf_diff_average_.count_++;
+	double roll_ave = atan2(tf_diff_average_.roll_sin_/tf_diff_average_.count_, tf_diff_average_.roll_cos_/tf_diff_average_.count_);
+	double pitch_ave = atan2(tf_diff_average_.pitch_sin_/tf_diff_average_.count_, tf_diff_average_.pitch_cos_/tf_diff_average_.count_);
+	double yaw_ave = atan2(tf_diff_average_.yaw_sin_/tf_diff_average_.count_, tf_diff_average_.yaw_cos_/tf_diff_average_.count_);
+
+	std::stringstream tf_str;
+	tf_str << R"(<node pkg="tf" type="static_transform_publisher" name=")";
+	tf_str << parent_frame_ << "_to_" << child_frame_ << R"("  args=")";
+	tf_str << tf_diff_average_.x_/tf_diff_average_.count_ << " ";
+	tf_str << tf_diff_average_.y_/tf_diff_average_.count_ << " ";
+	tf_str << tf_diff_average_.z_/tf_diff_average_.count_ << " ";
+	tf_str << yaw_ave << " ";//tf_diff_average_.yaw_/tf_diff_average_.count_ << " ";
+	tf_str << pitch_ave << " ";//tf_diff_average_.pitch_/tf_diff_average_.count_ << " ";
+	tf_str << roll_ave << " ";//tf_diff_average_.roll_/tf_diff_average_.count_ << " ";
+	tf_str << parent_frame_ << " " << child_frame_ << R"( 10"/>)";
+	std_msgs::String diff_msg;
+	diff_msg.data = tf_str.str();
+	tf_diff_publisher_.publish(diff_msg);
+
 	std::cout << "This transformation can be replicated using:" << std::endl;
 	std::cout << "rosrun tf static_transform_publisher " << translation_vector.transpose()
 	          << " " << rotation_matrix.eulerAngles(2,1,0).transpose() << " /" << parent_frame_
@@ -186,6 +215,7 @@ void ROSMultiLidarCalibratorApp::InitializeROSIo(ros::NodeHandle &in_private_han
 
 	calibrated_cloud_publisher_ = node_handle_.advertise<sensor_msgs::PointCloud2>(calibrated_points_topic_str, 1);
 	ROS_INFO("[%s] Publishing PointCloud to... %s",__APP_NAME__, calibrated_points_topic_str.c_str());
+	tf_diff_publisher_ = node_handle_.advertise<std_msgs::String>("point_diffrence", 1);
 
 	cloud_synchronizer_ =
 			new message_filters::Synchronizer<SyncPolicyT>(SyncPolicyT(100),
@@ -193,6 +223,7 @@ void ROSMultiLidarCalibratorApp::InitializeROSIo(ros::NodeHandle &in_private_han
 			                                               *cloud_child_subscriber_);
 	cloud_synchronizer_->registerCallback(boost::bind(&ROSMultiLidarCalibratorApp::PointsCallback, this, _1, _2));
 
+	tf_diff_average_.zero();
 }
 
 

@@ -172,6 +172,16 @@ subs :
           calibration :
             prop  : 0
             flags : [ center_v ]
+      - name : Velodyne VLS-128 single
+        desc : Launches the driver for the selected Velodyne sensor and publishes the pointcloud in points_raw. To select a custom calibration file press the [config] button.
+        probe: 'ifconfig eth0 | grep "192.168.1.105" > /dev/null'
+        run  : roslaunch runtime_manager VLS128_points_single.launch
+        param: calibration_path
+        gui  :
+          flags : [ SIGTERM, kill_children ]
+          calibration :
+            prop  : 0
+            flags : [ center_v ]
       - name : Velodyne HDL-64E-S2
         desc : Launches the driver for the selected Velodyne sensor and publishes the pointcloud in points_raw. To select a custom calibration file press the [config] button.
         probe: 'ifconfig eth0 | grep "192.168.1.105" > /dev/null'

@@ -28,6 +28,7 @@
 #include <vector>
 #include <chrono>
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -43,16 +44,29 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
-
 #include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+#include <tf_conversions/tf_eigen.h>
 
 #define __APP_NAME__ "multi_lidar_calibrator"
+
+struct TfDiffAverage
+{
+	unsigned int count_;
+	double x_, y_, z_, roll_sin_, roll_cos_, pitch_sin_, pitch_cos_ ,yaw_sin_ ,yaw_cos_;
+
+	void zero()
+	{
+		x_ = y_ = z_ = roll_sin_ = roll_cos_ = pitch_sin_ = pitch_cos_ = yaw_sin_ = yaw_cos_;
+		count_ = 0;
+	}
+};
 
 class ROSMultiLidarCalibratorApp
 
 {
 	ros::NodeHandle                     node_handle_;
-	ros::Publisher                      calibrated_cloud_publisher_;
+	ros::Publisher                      calibrated_cloud_publisher_, tf_diff_publisher_;
 
 	ros::Subscriber                     initialpose_subscriber_;
 
@@ -69,6 +83,8 @@ class ROSMultiLidarCalibratorApp
 	double                              initial_yaw_;
 
 	int                                 ndt_iterations_;
+
+	TfDiffAverage tf_diff_average_;
 
 	//tf::Quaternion                      initialpose_quaternion_;
 	//tf::Vector3                         initialpose_position_;

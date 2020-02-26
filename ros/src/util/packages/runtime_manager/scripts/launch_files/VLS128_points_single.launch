@@ -17,12 +17,12 @@
   <arg name="read_once" default="false" />
   <arg name="repeat_delay" default="0.0" />
   <arg name="rpm" default="600.0" />
-  <arg name="frame_id" default="velodyne8" />
+  <arg name="frame_id" default="velodyne" />
   <arg name="manager" default="$(arg frame_id)_nodelet_manager" />
   <arg name="topic_name" default="points_raw"/>
 
   <!-- start nodelet manager and driver nodelets -->
-  <include file="$(find velodyne_driver)/launch/nodelet_manager.launch" ns="$(arg frame_id)">
+  <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
     <arg name="device_ip" value="$(arg device_ip)"/>
     <arg name="frame_id" value="$(arg frame_id)"/>
     <arg name="manager" value="$(arg manager)" />
@@ -37,7 +37,7 @@
 
   <!-- start cloud nodelet -->
   <node pkg="nodelet" type="nodelet" name="$(arg frame_id)_nodelet"
-        args="load velodyne_pointcloud/CloudNodelet $(arg frame_id)_nodelet_manager" ns="$(arg frame_id)">
+        args="load velodyne_pointcloud/CloudNodelet $(arg frame_id)_nodelet_manager">
     <param name="calibration" value="$(arg calibration)"/>
     <param name="min_range" value="$(arg min_range)"/>
     <param name="max_range" value="$(arg max_range)"/>

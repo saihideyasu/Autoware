@@ -27,6 +27,10 @@ private:
     void callbackConfig(const autoware_config_msgs::ConfigPeriodSignal &msg)
     {
         config_ = msg;
+        first_time_ = config_.first_hour*60.0*60.0 + config_.first_min*60.0 + config_.first_sec;
+        time_step_.time_step_green_ = config_.step_green;
+        time_step_.time_step_yellow_ = config_.step_yellow;
+        time_step_.time_step_red_ = config_.step_red;
     }
 
     std::vector<std::string> split(const std::string &string, const char sep)
@@ -131,7 +135,14 @@ public:
             return;
         }
 
-        double time_sa = gnss_time_ - first_time_;
+        double time_sa;
+        if(config_.use_time_flag == 0) time_sa = gnss_time_ - first_time_;
+        else
+        {
+            //ros::Time rostime = ros::Time::now();
+            //rostime.
+        }
+        
         double step_all = time_step_.time_step_green_ + time_step_.time_step_yellow_ + time_step_.time_step_red_;
         double time_range = time_sa - std::floor(time_sa / step_all) * step_all;
 

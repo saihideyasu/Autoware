@@ -447,9 +447,20 @@ cmds:
       gui  :
         dialog_height : 450
 
-    - name : points_concat_filter
-      desc : points_concat_filter filter performs merging multiple lidar inputs
-      cmd  : roslaunch points_preprocessor points_concat_filter.launch node_name:=points_concat_filter
+    - name : points_concat_filter1
+      desc : points_concat_filter1 filter performs merging multiple lidar inputs
+      cmd  : roslaunch points_preprocessor points_concat_filter1.launch node_name:=points_concat_filter1
+      param: points_concat_filter
+      gui  :
+        dialog_width : 300
+        input_topics :
+          flags : [nl ]
+        output_topic :
+          flags : [nl ]
+
+    - name : points_concat_filter2
+      desc : points_concat_filter2 filter performs merging multiple lidar inputs
+      cmd  : roslaunch points_preprocessor points_concat_filter2.launch node_name:=points_concat_filter2
       param: points_concat_filter
       gui  :
         dialog_width : 300

@@ -42,8 +42,9 @@ private:
                                                           PointCloudMsgT, PointCloudMsgT>
       SyncPolicyT;
 
+  static const int concat_max_num_ = 8;
   ros::NodeHandle node_handle_, private_node_handle_;
-  message_filters::Subscriber<PointCloudMsgT> *cloud_subscribers_[8];
+  message_filters::Subscriber<PointCloudMsgT> *cloud_subscribers_[concat_max_num_];
   message_filters::Synchronizer<SyncPolicyT> *cloud_synchronizer_;
   ros::Subscriber config_subscriber_;
   ros::Publisher cloud_publisher_;
@@ -66,12 +67,12 @@ PointsConcatFilter::PointsConcatFilter() : node_handle_(), private_node_handle_(
 
   YAML::Node topics = YAML::Load(input_topics_);
   input_topics_size_ = topics.size();
-  if (input_topics_size_ < 2 || 8 < input_topics_size_)
+  if (input_topics_size_ < 2 || concat_max_num_ < input_topics_size_)
   {
     ROS_ERROR("The size of input_topics must be between 2 and 8");
     ros::shutdown();
   }
-  for (size_t i = 0; i < 8; ++i)
+  for (size_t i = 0; i < concat_max_num_; ++i)
   {
     if (i < input_topics_size_)
     {
@@ -97,10 +98,10 @@ void PointsConcatFilter::pointcloud_callback(const PointCloudMsgT::ConstPtr &msg
                                              const PointCloudMsgT::ConstPtr &msg5, const PointCloudMsgT::ConstPtr &msg6,
                                              const PointCloudMsgT::ConstPtr &msg7, const PointCloudMsgT::ConstPtr &msg8)
 {
-  assert(2 <= input_topics_size_ && input_topics_size_ <= 8);
+  assert(2 <= input_topics_size_ && input_topics_size_ <= concat_max_num_);
 
-  PointCloudMsgT::ConstPtr msgs[8] = { msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8 };
-  PointCloudT::Ptr cloud_sources[8];
+  PointCloudMsgT::ConstPtr msgs[concat_max_num_] = { msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8 };
+  PointCloudT::Ptr cloud_sources[concat_max_num_];
   PointCloudT::Ptr cloud_concatenated(new PointCloudT);
 
   // transform points

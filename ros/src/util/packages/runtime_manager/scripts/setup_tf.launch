@@ -26,6 +26,8 @@
 
   <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne7" args="-5.26547 -1.18868 -1.71513 0.853431 3.11806 -3.11745 velodyne8 velodyne7 10"/>
 
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne9" args="-4.87014 -0.0623637 -0.138453 3.13484 0.00145343 0.00178374 velodyne8 velodyne9 10"/>
+
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer" args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg frame_id) $(arg child_frame_id) $(arg period_in_ms)"/>
 
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="6.31 0.0 1.43 0.0 0.0 0.0 base_link me_viz 10"/>

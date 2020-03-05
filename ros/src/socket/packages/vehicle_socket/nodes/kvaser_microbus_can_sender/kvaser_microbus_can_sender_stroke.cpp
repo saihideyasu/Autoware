@@ -371,6 +371,7 @@ private:
 	mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
 	mobileye_560_660_msgs::ObstacleData mobileye_obstacle_data_;
 	double temporary_fixed_velocity_;
+	unsigned char micon_steer_value_, micon_drive_value_;;
 
 	void callbackTemporaryFixedVelocity(const std_msgs::Float64::ConstPtr &msg)
 	{
@@ -1085,7 +1086,7 @@ private:
 			<< "," << difference_toWaypoint_distance_ekf_.baselink_distance;
 		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;
 		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_ekf_.baselink_distance;
-		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;
+		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;//40
 
 		tf::Quaternion ndt_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ndt_.baselink_angular);
 		tf::Quaternion ekf_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ekf_.baselink_angular);
@@ -1103,6 +1104,12 @@ private:
 		str << "," << getyaw;
 		s_ekf_gnss.getRPY(getroll, getpitch, getyaw);
 		str << "," << getyaw;
+
+		str << "," << can_receive_502_.clutch;
+		str << "," << can_receive_503_.clutch;
+		str << "," << micon_drive_value_;
+		str << "," << micon_steer_value_;
+
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
 		pub_acceleration_write_.publish(aw_msg);
@@ -1574,6 +1581,7 @@ private:
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
 
 		unsigned char *steer_pointer = (unsigned char*)&steer_val;
+		micon_steer_value_ = steer_val;
 		buf[2] = steer_pointer[1];  buf[3] = steer_pointer[0];
 	}
 
@@ -2281,6 +2289,7 @@ private:
 			short input_stroke = (short)new_stroke;
 			if(input_drive_mode_ == true) input_stroke = input_drive_;
 			unsigned char *drive_point = (unsigned char*)&input_stroke;
+			micon_drive_value_ = input_stroke;
 			buf[4] = drive_point[1];  buf[5] = drive_point[0];
 		}
 	}

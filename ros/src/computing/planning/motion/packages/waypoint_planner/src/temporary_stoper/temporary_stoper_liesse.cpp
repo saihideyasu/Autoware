@@ -33,6 +33,7 @@ private:
 	{
 	  autoware_msgs::Lane l = lane;
 
+	  fixed_vel /= 3.6;
 	  if (fixed_cnt == 0)
 		return l;
 
@@ -111,6 +112,7 @@ private:
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
 			{
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;
+				fixed_velocity_ = way.waypoints[i].waypoint_param.temporary_fixed_velocity;
 
 				visualization_msgs::Marker marker;
 				marker.header.frame_id = "/map";
@@ -216,7 +218,7 @@ private:
 			l.waypoints[0].twist.twist.linear.x = 0;
 			return l;
 		}
-		
+
 		autoware_msgs::Lane l;
 		l = apply_acceleration(lane, acceleration, stop_line_to_baselink_index /*stop_index*/, behind_cnt + 1, fixed_velocity_);
 		std::reverse(l.waypoints.begin(), l.waypoints.end());
@@ -325,13 +327,13 @@ private:
 		if(msg.temporary_acceleration >= 0.0)
 			config_.acceleration = msg.temporary_acceleration;
 		//std::cout << "aaa : " << msg.temporary_fixed_velocity << std::endl;
-		if(msg.temporary_fixed_velocity >= 0.0)
+		/*if(msg.temporary_fixed_velocity >= 0.0)
 		{
 			fixed_velocity_ = msg.temporary_fixed_velocity;
 			std_msgs::Float64 fixed_vel;
 			fixed_vel.data = fixed_velocity_;
 			pub_temporary_fixed_velocity_.publish(fixed_velocity_);
-		}
+		}*/
 	}
 public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)

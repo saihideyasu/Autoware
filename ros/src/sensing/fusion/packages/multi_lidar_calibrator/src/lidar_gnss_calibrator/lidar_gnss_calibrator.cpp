@@ -43,7 +43,7 @@ public:
                                                     ros::Time::now(), ros::Duration(1.0));
         if(wait_flag == true)
         { 
-            listener_.lookupTransform("ndt_base_link", "rtk_base_link", ros::Time(0), tf_getter_);
+            listener_.lookupTransform("rtk_base_link", "ndt_base_link", ros::Time(0), tf_getter_);
             diff_sum_.x_ += tf_getter_.getOrigin().getX();
             diff_sum_.y_ += tf_getter_.getOrigin().getY();
             diff_sum_.z_ += tf_getter_.getOrigin().getZ();

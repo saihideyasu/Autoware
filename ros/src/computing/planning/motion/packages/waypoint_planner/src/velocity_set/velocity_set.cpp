@@ -479,10 +479,10 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
               end_waypoint = closest_waypoint + STOP_SEARCH_DISTANCE;
 
             use_mobileye_obstacle_pub.publish(mobileye_obstacle.data[obj_i]);
-            goto MOBILEYE_JUMP;
+            break;
           }
         }
-        MOBILEYE_JUMP:;
+
         /*tf::Transform tf_detction;
         tf::Vector3 xyz;
         xyz.setX(mobileye_obj.obstacle_pos_x); xyz.setY(mobileye_obj.obstacle_pos_y);

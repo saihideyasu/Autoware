@@ -10,6 +10,14 @@ private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Publisher pub_microbus_can_501_, pub_microbus_can_502_, pub_microbus_can_503_;
 
+	//stroke params
+	const short PEDAL_VOLTAGE_CENTER_ = 1024;//1052;//計測値は1025;
+	const short PEDAL_DISPLACEMENT_CENTER_ = 1024;//計測値は1029;
+	const short PEDAL_VOLTAGE_MAX_ = 161;
+	const short PEDAL_DISPLACEMENT_MAX_ = 1161;
+	const short PEDAL_VOLTAGE_MIN_ = 1533;
+	const short PEDAL_DISPLACEMENT_MIN_ = 849;
+
 	//liesse params
 	double handle_angle_right_max = 730;
 	double handle_angle_left_max = 765;
@@ -223,6 +231,7 @@ public:
 
 					can.read_counter = kc.get_read_counter();
 
+					can.stroke_actual = PEDAL_VOLTAGE_CENTER_ - can.pedal_voltage;
 					pub_microbus_can_503_.publish(can);
 					std::cout << "pedal_voltage : " << can.pedal_voltage << std::endl;
 					std::cout << "pedal_displacement : " << can.pedal_displacement << std::endl;

@@ -9,7 +9,7 @@ class StopperDistance
 {
 private:
 	ros::NodeHandle nh_, private_nh_;
-	ros::Subscriber sub_waypoint_, sub_camera_light_color_, sub_temporari_flag_;
+	ros::Subscriber sub_waypoint_, sub_light_color_, sub_camera_light_color_, sub_temporari_flag_;
 	ros::Subscriber sub_obstacle_waypoint_;
 	ros::Publisher pub_stopline_distance_;
 
@@ -17,6 +17,11 @@ private:
 
 	int light_color_ = 1;
 	void callbackCameraLightColor(const autoware_msgs::TrafficLight& msg)
+	{
+		light_color_ = msg.traffic_light;
+		std::cout << light_color_ << std::endl;
+	}
+	void callbackLightColor(const autoware_msgs::TrafficLight& msg)
 	{
 		light_color_ = msg.traffic_light;
 		std::cout << light_color_ << std::endl;
@@ -86,6 +91,7 @@ public:
 
 		pub_stopline_distance_ = nh_.advertise<std_msgs::Float64>("/stopper_distance", 1);
 		sub_waypoint_ = nh_.subscribe("/final_waypoints", 1, &StopperDistance::waypointCallback, this);
+		sub_light_color_ = nh_.subscribe("/light_color", 1, &StopperDistance::callbackLightColor, this);
 		sub_camera_light_color_ = nh_.subscribe("/camera_light_color", 1, &StopperDistance::callbackCameraLightColor, this);
 		sub_temporari_flag_ = nh_.subscribe("/temporary_flag", 1, &StopperDistance::callbackTemporaryFlag, this);
 		sub_obstacle_waypoint_ = nh_.subscribe("/obstacle_waypoint", 1, &StopperDistance::callbackObstacleWaypoint, this);

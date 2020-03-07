@@ -47,13 +47,22 @@
   <!-- param name="/ay" value="0.0"/ -->
   <!-- param name="/az" value="0.0"/ -->
 
-  <param name="/gx" value="1.5633310795"/>
-  <param name="/gy" value="-0.1874881414"/>
-  <param name="/gz" value="2.9422340836"/>
-  <param name="/ax" value="0.0046677941"/>
-  <param name="/ay" value="-0.0124095540"/>
-  <param name="/az" value="-0.0088106334"/>
-  
+  <!-- span cpt7 -->
+  <!-- param name="/gy" value="1.5633310795"/ -->
+  <!-- param name="/gx" value="-0.1874881414"/ -->
+  <!-- param name="/gz" value="2.9422340836"/ -->
+  <!-- param name="/ay" value="0.0046677941"/ -->
+  <!-- param name="/ax" value="-0.0124095540"/ -->
+  <!-- param name="/az" value="-0.0088106334"/ -->
+
+  <!-- pwrpak7 -->
+  <param name="/gx" value="1.2274298036"/>
+  <param name="/gy" value="-0.1670757574"/>
+  <param name="/gz" value="2.5328792686"/>
+  <param name="/ax" value="0.0273402224"/>
+  <param name="/ay" value="-0.0228358888"/>
+  <param name="/az" value="-0.0"/>
+
   <!-- param name="/gx" value="1.695"/ -->
   <!-- param name="/gy" value="0.0"/ -->
   <!-- param name="/gz" value="2.64"/ -->

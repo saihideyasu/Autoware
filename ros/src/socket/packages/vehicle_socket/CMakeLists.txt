@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   autoware_can_msgs
   autoware_config_msgs
   tablet_socket_msgs
+  microbus_interface
 )
 
 set(CMAKE_CXX_FLAGS "-O2 -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
@@ -30,6 +31,7 @@ catkin_package(CATKIN_DEPENDS
   autoware_can_msgs
   autoware_msgs
   tablet_socket_msgs
+  microbus_interface
 )
 
 include_directories(

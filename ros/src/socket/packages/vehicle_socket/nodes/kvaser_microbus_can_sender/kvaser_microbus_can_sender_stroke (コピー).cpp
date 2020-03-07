@@ -1025,14 +1025,13 @@ private:
 //		str << x << "," << v0 << "," << v << "," << v_sa;
 		str << std::setprecision(10) 
 			<< waypoint_id_ 
-			<< "," << twist_.ctrl_cmd.linear_velocity * 3.6
-			<< "," << cruse_velocity_
-			<< "," << current_velocity_.twist.linear.x * 3.6
+			<< twist_.ctrl_cmd.linear_velocity
+			<< cruse_velocity_
 			<< "," << twist_msg->twist.linear.x 
-			<< "," << acc2 
+			<<"," << acc2 
 			<< "," << jurk2 
 			<< "," << difference_toWaypoint_distance_.baselink_angular
-			<< "," << difference_toWaypoint_distance_.baselink_distance;//9
+			<< "," << difference_toWaypoint_distance_.baselink_distance;
 		//str << difference_toWaypoint_distance_.front_baselink_distance <<",";
 		//str << _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance) ;
 	
@@ -1040,56 +1039,56 @@ private:
 		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
 
 		std::string gnss_stat_string = (gnss_stat_ == 3) ? "GNSS_OK" : "GNSS_ERROR";
-		str << "," << stopper_distance_//10
+		str << "," << stopper_distance_
 			<< "," << estimated_stopping_distance 
 			<< "," << ndt_stat_.score 
 			<< "," << ndt_reliability_ 
 			<< "," << ndt_stat_.exe_time
-			<< "," << ndt_stat_string_  //15
+			<< "," << ndt_stat_string_  //13
 			<< "," << gnss_stat_string
 			<< "," << gnss_deviation_.lat_std
 			<< "," << gnss_deviation_.lon_std
-			<< "," << gnss_deviation_.alt_std;//19
+			<< "," << gnss_deviation_.alt_std;
 		tf::Quaternion gnss_qua;
 		tf::quaternionMsgToTF(gnss_pose_.pose.orientation, gnss_qua);
 		tf::Matrix3x3 gnss_mat(gnss_qua);
 		double gnss_roll, gnss_pitch, gnss_yaw;
 		gnss_mat.getRPY(gnss_roll, gnss_pitch, gnss_yaw);
-		str << "," << gnss_roll //20
+		str << "," << gnss_roll //18
 		    << "," << gnss_pitch 
 			<< "," << gnss_yaw;
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
 		
-		double gnssx = gnss_pose_.pose.position.x;
+		double gnssx = gnss_pose_.pose.position.x;//23
 		double gnssy = gnss_pose_.pose.position.y;
 
 		double ekfx = ekf_pose_.pose.position.x;
 		double ekfy = ekf_pose_.pose.position.y;
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
-		str <<"," <<ndtx//23
+		str <<"," <<ndtx 
 		    <<"," <<ndty
 			<<"," << gnssx
-			<<"," << gnssy//26
+			<<"," << gnssy//28
 			<<"," << ekfx
 			<<"," << ekfy
 			<<"," << ekf_covariance_.pose.covariance[0]
 			<<"," << ekf_covariance_.pose.covariance[6*1+1]
-			<<"," << distance;//31
+			<<"," << distance;
 		double roll, pitch, yaw;
 		tf::Matrix3x3 wla(waypoint_localizer_angle_);
 		wla.getRPY(roll, pitch, yaw);
-		str << "," <<  waypoint_angle_//32 
+		str << "," <<  waypoint_angle_ 
 			<<"," << ndt_gnss_angle_ 
-			<< "," << yaw;//34
+			<< "," << yaw;
 
 
-		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance//35
+		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance
 		    << "," << difference_toWaypoint_distance_gnss_.baselink_distance
 			<< "," << difference_toWaypoint_distance_ekf_.baselink_distance;
 		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;
 		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_ekf_.baselink_distance;
-		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;//40
+		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;//42
 
 		tf::Quaternion ndt_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ndt_.baselink_angular);
 		tf::Quaternion ekf_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ekf_.baselink_angular);
@@ -1102,7 +1101,7 @@ private:
 		tf::Matrix3x3 s_ekf_gnss(q_ekf_gnss);
 		double getyaw, getroll, getpitch;
 		s_ndt_gnss.getRPY(getroll, getpitch, getyaw);
-		str << "," << getyaw;//41
+		str << "," << getyaw;
 		s_ndt_ekf.getRPY(getroll, getpitch, getyaw);
 		str << "," << getyaw;
 		s_ekf_gnss.getRPY(getroll, getpitch, getyaw);
@@ -1113,11 +1112,10 @@ private:
 		str << "," << can_receive_502_.velocity_actual;//micom_drive_value_;
 		str << "," << can_receive_501_.steering_angle;
 		str << "," << can_receive_502_.angle_actual;
-		str << "," << can_receive_503_.pedal_displacement;//50
 		str << "," << routine_;
 		str << "," << pid_params.get_stroke_prev();
 		str << "," << pid_params.get_stop_stroke_prev();
-		str << "," << send_step_;//54
+		str << "," << send_step_;
 
 		std_msgs::String aw_msg;
 		aw_msg.data = str.str();
@@ -1628,43 +1626,9 @@ private:
 		return target_steer;
 	}
 
-	double math_stroke_kagen_accle(double current_velocity)
-	{
-		const double minvel = 10;
-		const double maxvel = 20;
-		const double minsrk = 0;
-		const double maxsrk = 200;
-		double stroke_kagen;
-		if(current_velocity > maxvel) stroke_kagen = maxsrk;
-		else if(current_velocity < minvel) stroke_kagen = minsrk;
-		else
-		{
-			double maxv = maxvel - minvel;
-			double maxs = maxsrk - minsrk;
-			double vel = current_velocity - minvel;
-			stroke_kagen = vel*maxs/maxv + minsrk;
-		}
-		return stroke_kagen;
-	}
 
-	double math_stroke_kagen_brake(double current_velocity)
-	{
-		const double minvel = 10;
-		const double maxvel = 20;
-		const double minsrk = 0;
-		const double maxsrk = 200;
-		double stroke_kagen;
-		if(current_velocity > maxvel) stroke_kagen = maxsrk;
-		else if(current_velocity < minvel) stroke_kagen = minsrk;
-		else
-		{
-			double maxv = maxvel - minvel;
-			double maxs = maxsrk - minsrk;
-			double vel = current_velocity - minvel;
-			stroke_kagen = vel*maxs/maxv + minsrk;
-		}
-		return stroke_kagen;
-	}
+
+
 
 	double _accel_stroke_pid_control(double current_velocity, double cmd_velocity)
 	{
@@ -1755,8 +1719,6 @@ private:
 			if(ret < setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
 		}*/
 
-		double stroke_kagen = math_stroke_kagen_accle(cmd_velocity);
-		if(ret < stroke_kagen) ret = stroke_kagen;
 		send_step_ = accle_stroke_step;
 		pid_params.set_stroke_prev(ret);
 		return ret;
@@ -1776,23 +1738,12 @@ private:
 		}
 		bool use_step_flag = true;
 
-		const double velocity_magn = 1.5;
-		double stopper_distance_th = (setting_.stopper_distance1 > cmd_velocity*velocity_magn) ? setting_.stopper_distance1 : cmd_velocity*velocity_magn;
-		if(pid_params.get_stroke_prev() > 0 && (stopper_distance_ < 0 || stopper_distance_ > stopper_distance_th))
+		if(pid_params.get_stroke_prev() > 0)
 		{
-			pid_params.clear_diff_velocity();
-			pid_params.clear_diff_acceleration();
-			pid_params.clear_diff_distance();
-			pid_params.set_accel_e_prev_velocity(0);
-			pid_params.set_accel_e_prev_acceleration(0);
 			//if(current_velocity > cmd_velocity)
 			{
-				double stroke_kagen = math_stroke_kagen_brake(cmd_velocity);
-				std::cout << "kagen : " << stroke_kagen << std::endl;
-				double stroke = pid_params.get_stroke_prev()-brake_stroke_step;
-				if(stroke < stroke_kagen) stroke = stroke_kagen;
-				pid_params.set_stroke_prev(stroke);
-				return stroke;
+				pid_params.set_stroke_prev(pid_params.get_stroke_prev()-brake_stroke_step);
+				return pid_params.get_stroke_prev() - brake_stroke_step;
 			}
 			//else return pid_params.get_stroke_prev();
 		}
@@ -2250,7 +2201,6 @@ private:
 			//加速判定
 			std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
 			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity : accel_avoidance_distance_min_;
-			std::cout << "velocity hikaku : " << cmd_velocity << "," << current_velocity << std::endl;
 			if (checkMobileyeObstacleStop(nowtime) == false
 					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit

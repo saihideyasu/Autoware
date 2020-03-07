@@ -303,6 +303,7 @@ void WaypointLoaderNode::parseWaypointForVer3(const std::string& line, const std
     info.linears.x = wp->pose.pose.position.x;
     info.linears.y = wp->pose.pose.position.y;
     info.linears.z = wp->pose.pose.position.z;
+    info.velocity = wp->waypoint_param.temporary_fixed_velocity;
     info.waypoint_id = id_counter_;
     info.stop_flag = false;
     temporary_list_.list.push_back(info);

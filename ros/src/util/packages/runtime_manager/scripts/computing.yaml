@@ -6340,7 +6340,7 @@ params :
       v     : 2
     - name : yaw_correction1
       desc : yaw_correction1
-      label: yaw_correction1
+      label: yaw_correction1(left +   right -)
       min  : -10.0
       max  : 10.0
       v    : 0.0
@@ -6349,7 +6349,7 @@ params :
         delim    : ':='
     - name : yaw_correction2
       desc : yaw_correction2
-      label: yaw_correction2
+      label: yaw_correction2(left +   right -)
       min  : -10.0
       max  : 10.0
       v    : 0.0

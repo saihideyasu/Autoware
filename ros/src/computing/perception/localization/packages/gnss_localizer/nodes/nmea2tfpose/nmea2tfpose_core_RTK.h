@@ -50,11 +50,12 @@ private:
 
   // variables
   int32_t plane_number_;
-  geo_pos_conv geo_;
+  geo_pos_conv geo_, geo_sub_;
   geo_pos_conv last_geo_;
   double roll_, pitch_, yaw_;
   double orientation_time_, position_time_, surface_speed_;
   double lat_std_, lon_std_, alt_std_;
+  double lat_std_sub_, lon_std_sub_, alt_std_sub_;
   double x_accel_, y_accel_, z_accel_, x_gyro_, y_gyro_, z_gyro_;
   unsigned char gnss_stat_;
   ros::Time current_time_, orientation_stamp_;
@@ -65,8 +66,8 @@ private:
   ros::NodeHandle private_nh_;
 
   // publisher
-  ros::Publisher pub1_;
-  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_imu_, pub_stat_, pub_time_;
+  ros::Publisher pub1_, pub2_;
+  ros::Publisher pub_surface_speed_, pub_std_dev_, pub_std_dev2_, pub_imu_, pub_stat_, pub_time_;
 
   // subscriber
   ros::Subscriber sub1_;

@@ -38,6 +38,7 @@ Nmea2TFPoseNode::Nmea2TFPoseNode()
 {
   initForROS();
   geo_.set_plane(plane_number_);
+  geo_sub_.set_plane(plane_number_);
 }
 
 // Destructor
@@ -91,8 +92,10 @@ void Nmea2TFPoseNode::initForROS()
 
   // setup publisher
   pub1_ = nh_.advertise<geometry_msgs::PoseStamped>("gnss_pose", 10);
+  pub2_ = nh_.advertise<geometry_msgs::PoseStamped>("gnss_pose_sub", 10);
   pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("gnss_surface_speed", 10);
   pub_std_dev_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("gnss_standard_deviation", 10);
+  pub_std_dev2_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("gnss_standard_deviation_sub", 10);
   pub_imu_ = nh_.advertise<sensor_msgs::Imu>("gnss_imu", 10);
   pub_stat_ = nh_.advertise<std_msgs::UInt8>("gnss_stat", 10);
   pub_time_ = nh_.advertise<std_msgs::Float64>("gnss_time", 10);
@@ -175,7 +178,7 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
         double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
         double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
         geo_.set_llh_nmea_degrees(lat, lon, h);
-        ROS_INFO("BESTGNSSPOS is subscribed.");
+        ROS_INFO("BESTPOS is subscribed.");
 
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = MAP_FRAME_;
@@ -185,8 +188,39 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
         pose.pose.position.z = geo_.z();
         pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
         pub1_.publish(pose);
+      }
+    }
+    else if(nmea.at(0) == "#BESTGNSSPOSA")
+    {
+      if(nmea.size() == 30)
+      {
+        //std::cout << "aaa : " << nmea.at(16) << std::endl;
+        double lat = degrees_minutes_seconds(stod(nmea.at(11))); std::cout << "lat2 : " << std::setprecision(16) << lat << std::endl;
+        double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon2 : " << std::setprecision(16) << lon << std::endl;
+        double h = stod(nmea.at(13)); std::cout << "h2 : " << std::setprecision(16) << h << std::endl;
+        geo_sub_.set_llh_nmea_degrees(lat, lon, h);
+        ROS_INFO("BESTGNSSPOS is subscribed.");
 
+        geometry_msgs::PoseStamped pose;
+        pose.header.frame_id = "gps2";
+        pose.header.stamp = current_time_;
+        pose.pose.position.x = geo_sub_.y();
+        pose.pose.position.y = geo_sub_.x();
+        pose.pose.position.z = geo_sub_.z();
+        pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
+        pub2_.publish(pose);
 
+        lat_std_sub_ = stod(nmea.at(16));
+        lon_std_sub_ = stod(nmea.at(17));
+        alt_std_sub_ = stod(nmea.at(18));
+
+        autoware_msgs::GnssStandardDeviation gsd;
+        gsd.header.frame_id = "gps2";
+        gsd.header.stamp = current_time_;
+        gsd.lat_std = lat_std_sub_;
+        gsd.lon_std = lon_std_sub_;
+        gsd.alt_std = alt_std_sub_;
+        pub_std_dev2_.publish(gsd);
       }
     }
     else if(nmea.at(0) == "#INSPVAXA")

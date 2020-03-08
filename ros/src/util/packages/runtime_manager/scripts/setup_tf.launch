@@ -40,33 +40,12 @@
 
   <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.301 -0.905 -1.5875 -0.035 -1.500 velodyne camera 10"/ -->
 
-  <!-- param name="/gx" value="1.1"/ -->
-  <!-- param name="/gy" value="0.0"/ -->
-  <!-- param name="/gz" value="2.7"/ -->
-  <!-- param name="/ax" value="0.0"/ -->
-  <!-- param name="/ay" value="0.0"/ -->
-  <!-- param name="/az" value="0.0"/ -->
+//base_link_to_gnss antena
+  <param name="/gx" value="1.0266189878"/>
+  <param name="/gy" value="-0.1333642815"/>
+  <param name="/gz" value="2.6394687154"/>
+  <param name="/gyaw" value="0.0087947692"/>
+  <param name="/gpitch" value="-0.0149885017"/>
+  <param name="/groll" value="0.0055272574"/>
 
-  <!-- span cpt7 -->
-  <!-- param name="/gy" value="1.5633310795"/ -->
-  <!-- param name="/gx" value="-0.1874881414"/ -->
-  <!-- param name="/gz" value="2.9422340836"/ -->
-  <!-- param name="/ay" value="0.0046677941"/ -->
-  <!-- param name="/ax" value="-0.0124095540"/ -->
-  <!-- param name="/az" value="-0.0088106334"/ -->
-
-  <!-- pwrpak7 -->
-  <param name="/gx" value="1.2274298036"/>
-  <param name="/gy" value="-0.1670757574"/>
-  <param name="/gz" value="2.5328792686"/>
-  <param name="/ax" value="0.0273402224"/>
-  <param name="/ay" value="-0.0228358888"/>
-  <param name="/az" value="-0.0"/>
-
-  <!-- param name="/gx" value="1.695"/ -->
-  <!-- param name="/gy" value="0.0"/ -->
-  <!-- param name="/gz" value="2.64"/ -->
-  <!-- param name="/ax" value="0.0"/ -->
-  <!-- param name="/ay" value="0.0"/ -->
-  <!-- param name="/az" value="0.0"/ -->
 </launch>

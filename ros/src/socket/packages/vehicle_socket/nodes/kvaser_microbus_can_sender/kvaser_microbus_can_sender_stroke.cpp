@@ -298,13 +298,13 @@ private:
 	ros::Subscriber sub_blinker_right_, sub_blinker_left_, sub_blinker_stop_;
 	ros::Subscriber sub_automatic_door_, sub_drive_clutch_, sub_steer_clutch_;
 	ros::Subscriber sub_econtrol_, sub_obtracle_waypoint_, sub_stopper_distance_;
-	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_;
+	ros::Subscriber sub_lidar_detector_objects_, sub_imu_, sub_gnss_standard_deviation_, sub_gnss_standard_deviation_sub_;
 	ros::Subscriber sub_ndt_stat_string, sub_gnss_stat_, sub_ndt_pose_, sub_gnss_pose_, sub_ndt_stat_, sub_ndt_reliability_, sub_ekf_pose_;
 	ros::Subscriber sub_difference_to_waypoint_distance_, sub_difference_to_waypoint_distance_ndt_, sub_difference_to_waypoint_distance_gnss_, sub_difference_to_waypoint_distance_ekf_;
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
 	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_, sub_mobileye_obstacle_data_, sub_temporary_fixed_velocity_;
-
+	ros::Subscriber sub_antenna_pose_, sub_antenna_pose_sub_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -343,10 +343,10 @@ private:
 	bool angle_limit_over_;
 	double steer_correction_;
 	std::string ndt_stat_string_;
-	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_, ekf_pose_;
+	geometry_msgs::PoseStamped ndt_pose_, gnss_pose_, ekf_pose_, antenna_pose_, antenna_pose_sub_;
 	unsigned char gnss_stat_;
 	autoware_msgs::DifferenceToWaypointDistance difference_toWaypoint_distance_, difference_toWaypoint_distance_ndt_, difference_toWaypoint_distance_gnss_, difference_toWaypoint_distance_ekf_;
-	autoware_msgs::GnssStandardDeviation gnss_deviation_;
+	autoware_msgs::GnssStandardDeviation gnss_deviation_, gnss_deviation_sub_;
 	autoware_msgs::NDTStat ndt_stat_;
 	double ndt_reliability_;
 	int localizer_select_num_;
@@ -372,6 +372,7 @@ private:
 	mobileye_560_660_msgs::ObstacleData mobileye_obstacle_data_;
 	double temporary_fixed_velocity_;
 	double send_step_;
+	unsigned int log_subscribe_count_;
 
 	void callbackTemporaryFixedVelocity(const std_msgs::Float64::ConstPtr &msg)
 	{
@@ -782,6 +783,18 @@ private:
 		//NdtGnssCheck();
 	}
 
+	void callbackAntennaPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	{
+		antenna_pose_ = *msg;
+		//NdtGnssCheck();
+	}
+
+	void callbackAntennaPoseSub(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	{
+		antenna_pose_sub_ = *msg;
+		//NdtGnssCheck();
+	}
+
 	void callbackEkfCovariance(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg)
 	{
 		ekf_covariance_ = *msg;
@@ -835,6 +848,11 @@ private:
 				can_send();
 			}
 		}
+		gnss_deviation_ = *msg;
+	}
+
+	void callbackGnssStandardDeviationSub(const autoware_msgs::GnssStandardDeviation::ConstPtr &msg)
+	{
 		gnss_deviation_ = *msg;
 	}
 
@@ -1018,21 +1036,32 @@ private:
 		double tire_angle;
 		if(twist_.ctrl_cmd.steering_angle > 0) tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_left;
 		else tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_right;
-		std::stringstream str;
+		std::stringstream str,name;
 //		str << std::setprecision(10) << waypoint_id_ << "," << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << "," << pose_msg->pose.orientation.z << ",";
 //		str << twist_msg->twist.angular.z << "," << twist_msg->twist.linear.x << ",";
 //		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
 //		str << x << "," << v0 << "," << v << "," << v_sa;
-		str << std::setprecision(10) 
-			<< waypoint_id_ 
-			<< "," << twist_.ctrl_cmd.linear_velocity * 3.6
-			<< "," << cruse_velocity_
-			<< "," << current_velocity_.twist.linear.x * 3.6
-			<< "," << twist_msg->twist.linear.x 
-			<< "," << acc2 
-			<< "," << jurk2 
-			<< "," << difference_toWaypoint_distance_.baselink_angular
-			<< "," << difference_toWaypoint_distance_.baselink_distance;//9
+		str << std::setprecision(10) ;
+		str << waypoint_id_; 
+		name << "waypoint_id"; 	
+		str <<  "," << twist_.ctrl_cmd.linear_velocity * 3.6;
+		name <<  "," << "twist_.ctrl_cmd.linear_velocity";
+		str <<  "," << cruse_velocity_;
+		name <<  "," << "cruse_velocity";
+		str <<  "," << current_velocity_.twist.linear.x * 3.6;
+		name <<  "," << "current_velocity_.twist.linear.x";
+		str <<  "," << twist_msg->twist.linear.x;
+		name <<  "," << "twist_msg->twist.linear.x";
+		str <<  "," << acc2 ;
+		name <<  "," << "acc2" ;
+		str <<  "," << jurk2 ;
+		name <<  "," << "jurk2" ;
+		str <<  "," << difference_toWaypoint_distance_.baselink_angular;
+		name <<  "," << "difference_toWaypoint_distance_.baselink_angular";
+		str <<  "," << difference_toWaypoint_distance_.baselink_distance;//9
+		name <<  "," << "difference_toWaypoint_distance_.baselink_distance";
+		
+	
 		//str << difference_toWaypoint_distance_.front_baselink_distance <<",";
 		//str << _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance) ;
 	
@@ -1040,24 +1069,77 @@ private:
 		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
 
 		std::string gnss_stat_string = (gnss_stat_ == 3) ? "GNSS_OK" : "GNSS_ERROR";
-		str << "," << stopper_distance_//10
-			<< "," << estimated_stopping_distance 
-			<< "," << ndt_stat_.score 
-			<< "," << ndt_reliability_ 
-			<< "," << ndt_stat_.exe_time
-			<< "," << ndt_stat_string_  //15
-			<< "," << gnss_stat_string
-			<< "," << gnss_deviation_.lat_std
-			<< "," << gnss_deviation_.lon_std
-			<< "," << gnss_deviation_.alt_std;//19
+		str << "," << stopper_distance_;//10
+		name << "," << "stopper_distance";
+		str << "," << estimated_stopping_distance;
+		name << "," << "estimated_stopping_distance";
+		str << "," << ndt_stat_.score ;
+		name << "," << "ndt_stat_.score" ;
+		str << "," << ndt_reliability_ ;
+		name << "," << "ndt_reliability" ;
+		str << "," << ndt_stat_.exe_time;
+		name << "," << "ndt_stat_.exe_time";
+		str << "," << ndt_stat_string_ ; //15
+		name << "," << "ndt_stat_string";
+		str << "," << gnss_stat_string;
+		name << "," << "gnss_stat_string";
+		str << "," << gnss_deviation_.lat_std;
+		name << "," << "gnss_deviation_.lat_std";
+		str << "," << gnss_deviation_.lon_std;
+		name << "," << "gnss_deviation_.lon_std";
+		str << "," << gnss_deviation_.alt_std;//19
+		name << "," << "gnss_deviation_.alt_std";
+		str << "," << gnss_deviation_sub_.lat_std;
+		name << "," << "gnss_deviation_sub_.lat_std";
+		str << "," << gnss_deviation_sub_.lon_std;
+		name << "," << "gnss_deviation_sub_.lon_std";
+		str << "," << gnss_deviation_sub_.alt_std;//22
+		name << "," << "gnss_deviation_sub_.alt_std";
+		str << "," << antenna_pose_.pose.position.x;
+		name << "," << "antenna_pose_.pose.position.x";
+		str << "," << antenna_pose_sub_.pose.position.x;
+		name << "," << "antenna_pose_sub_.pose.position.x";
+		str << "," << antenna_pose_.pose.position.y;
+		name << "," << "antenna_pose_.pose.position.y";
+		str << "," << antenna_pose_sub_.pose.position.y;
+		name << "," << "antenna_pose_sub_.pose.position.y";
+		str << "," << antenna_pose_.pose.position.z;
+		name << "," << "antenna_pose_.pose.position.z";
+		str << "," << antenna_pose_sub_.pose.position.z;//28
+		name << "," << "antenna_pose_sub_.pose.position.z";
+		tf::Quaternion antenna_qua;
+		tf::quaternionMsgToTF(antenna_pose_.pose.orientation, antenna_qua);
+		tf::Matrix3x3 antenna_mat(antenna_qua);
+		double antenna_roll, antenna_pitch, antenna_yaw;
+		antenna_mat.getRPY(antenna_roll, antenna_pitch, antenna_yaw);
+		tf::Quaternion antenna_qua_sub;
+		tf::quaternionMsgToTF(antenna_pose_sub_.pose.orientation, antenna_qua_sub);
+		tf::Matrix3x3 antenna_mat_sub(antenna_qua_sub);
+		double antenna_roll_sub, antenna_pitch_sub, antenna_yaw_sub;
+		antenna_mat_sub.getRPY(antenna_roll_sub, antenna_pitch_sub, antenna_yaw_sub);
+		str << "," << antenna_roll;//29
+		name << "," << "antenna_roll";
+		str <<  "," << antenna_pitch;
+		name <<  "," << "antenna_pitch";
+		str <<  "," << antenna_yaw;
+		name <<  "," << "antenna_yaw";
+		str << "," << antenna_roll_sub;
+		name << "," << "antenna_roll_sub";
+		str <<  "," << antenna_pitch_sub;
+		name <<  "," << "antenna_pitch_sub";
+		str <<  "," << antenna_yaw_sub;//34
+		name <<  "," << "antenna_yaw_sub";
 		tf::Quaternion gnss_qua;
 		tf::quaternionMsgToTF(gnss_pose_.pose.orientation, gnss_qua);
 		tf::Matrix3x3 gnss_mat(gnss_qua);
 		double gnss_roll, gnss_pitch, gnss_yaw;
 		gnss_mat.getRPY(gnss_roll, gnss_pitch, gnss_yaw);
-		str << "," << gnss_roll //20
-		    << "," << gnss_pitch 
-			<< "," << gnss_yaw;
+		str << "," << gnss_roll ;//35
+		name << "," << "gnss_roll";
+		str <<  "," << gnss_pitch ;
+		name <<  "," << "gnss_pitch";
+		str <<  "," << gnss_yaw;//37
+		name <<  "," << "gnss_yaw";
 		double ndtx = ndt_pose_.pose.position.x;
 		double ndty = ndt_pose_.pose.position.y;
 		
@@ -1067,29 +1149,50 @@ private:
 		double ekfx = ekf_pose_.pose.position.x;
 		double ekfy = ekf_pose_.pose.position.y;
 		double distance = sqrt((ndtx - gnssx) * (ndtx -gnssx) + (ndty - gnssy) * (ndty -gnssy));
-		str <<"," <<ndtx//23
-		    <<"," <<ndty
-			<<"," << gnssx
-			<<"," << gnssy//26
-			<<"," << ekfx
-			<<"," << ekfy
-			<<"," << ekf_covariance_.pose.covariance[0]
-			<<"," << ekf_covariance_.pose.covariance[6*1+1]
-			<<"," << distance;//31
-		double roll, pitch, yaw;
+		str <<"," <<ndtx;//38
+		name <<"," <<"ndtx";
+		str <<"," <<ndty;
+		name <<"," <<"ndty";
+		str <<"," << gnssx;
+		name <<"," << "gnssx";
+		str <<"," << gnssy;//41
+		name <<"," << "gnssy";
+		str <<"," << ekfx;
+		name <<"," << "ekfx";
+		str <<"," << ekfy;
+		name <<"," << "ekfy";
+		str <<"," << sqrt(ekf_covariance_.pose.covariance[0]);
+		name <<"," << "sqrt(ekf_covariance_.pose.covariance[0])";
+		str <<"," << sqrt(ekf_covariance_.pose.covariance[6*1+1]);
+		name <<"," << "sqrt(ekf_covariance_.pose.covariance[6*1+1])";
+		str <<"," << distance;//46
+		name <<"," << "distance";
+		double waypoint_roll, waypoint_pitch, waypoint_yaw;
 		tf::Matrix3x3 wla(waypoint_localizer_angle_);
-		wla.getRPY(roll, pitch, yaw);
-		str << "," <<  waypoint_angle_//32 
-			<<"," << ndt_gnss_angle_ 
-			<< "," << yaw;//34
+		wla.getRPY(waypoint_roll, waypoint_pitch, waypoint_yaw);
+		str << "," <<  waypoint_angle_;//50
+		name << "," <<  "waypoint_angle"; 
+		str <<"," << ndt_gnss_angle_ ;
+		name <<"," << "ndt_gnss_angle";
+		str << "," <<waypoint_roll;//52
+		name << "," <<"waypoint_roll";
+		str << "," <<waypoint_pitch;
+		name << "," <<"waypoint_pitch";
+		str << "," <<waypoint_yaw;
+		name << "," <<"waypoint_yaw";
 
-
-		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance//35
-		    << "," << difference_toWaypoint_distance_gnss_.baselink_distance
-			<< "," << difference_toWaypoint_distance_ekf_.baselink_distance;
+		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance;//53
+		name << "," << "difference_toWaypoint_distance_ndt_.baselink_distance";
+		str << "," << difference_toWaypoint_distance_gnss_.baselink_distance;
+		name << "," << "difference_toWaypoint_distance_gnss_.baselink_distance";
+		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance;
+		name << "," << "difference_toWaypoint_distance_ekf_.baselink_distance";
 		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;
+		name << "," << "difference_toWaypoint_distance_ndt_.baselink_distance-difference_toWaypoint_distance_gnss_.baselink_distance";
 		str << "," << difference_toWaypoint_distance_ndt_.baselink_distance - difference_toWaypoint_distance_ekf_.baselink_distance;
-		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;//40
+		name << "," << "difference_toWaypoint_distance_ndt_.baselink_distance-difference_toWaypoint_distance_ekf_.baselink_distance";
+		str << "," << difference_toWaypoint_distance_ekf_.baselink_distance - difference_toWaypoint_distance_gnss_.baselink_distance;//58
+		name << "," << "difference_toWaypoint_distance_ekf_.baselink_distance-difference_toWaypoint_distance_gnss_.baselink_distance";
 
 		tf::Quaternion ndt_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ndt_.baselink_angular);
 		tf::Quaternion ekf_q = tf::createQuaternionFromYaw(difference_toWaypoint_distance_ekf_.baselink_angular);
@@ -1100,28 +1203,61 @@ private:
 		tf::Matrix3x3 s_ndt_ekf(q_ndt_ekf);
 		tf::Matrix3x3 s_ndt_gnss(q_ndt_gnss);
 		tf::Matrix3x3 s_ekf_gnss(q_ekf_gnss);
-		double getyaw, getroll, getpitch;
-		s_ndt_gnss.getRPY(getroll, getpitch, getyaw);
-		str << "," << getyaw;//41
-		s_ndt_ekf.getRPY(getroll, getpitch, getyaw);
-		str << "," << getyaw;
-		s_ekf_gnss.getRPY(getroll, getpitch, getyaw);
-		str << "," << getyaw;
+		double ndt_gnss_yaw, ndt_gnss_roll, ndt_gnss_pitch;
+		s_ndt_gnss.getRPY(ndt_gnss_roll, ndt_gnss_pitch, ndt_gnss_yaw);
+		str << "," << ndt_gnss_roll;//59
+		name << "," << "ndt_gnss_roll";
+		str << "," << ndt_gnss_pitch;
+		name << "," << "ndt_gnss_pitch";
+		str << "," << ndt_gnss_yaw;
+		name << "," << "ndt_gnss_yaw";
+		double ndt_ekf_yaw, ndt_ekf_roll, ndt_ekf_pitch;
+		s_ndt_ekf.getRPY(ndt_ekf_roll, ndt_ekf_pitch, ndt_ekf_yaw);
+		str << "," << ndt_ekf_roll;
+		name << "," << "ndt_ekf_roll";
+		str << "," << ndt_ekf_pitch;
+		name << "," << "ndt_ekf_pitch";
+		str << "," << ndt_ekf_yaw;
+		name << "," << "ndt_ekf_yaw";
+		double ekf_gnss_yaw, ekf_gnss_roll, ekf_gnss_pitch;
+		s_ekf_gnss.getRPY(ekf_gnss_roll, ekf_gnss_pitch, ekf_gnss_yaw);
+		str << "," << ekf_gnss_roll;
+		name << "," << "ekf_gnss_roll";
+		str << "," << ekf_gnss_pitch;
+		name << "," << "ekf_gnss_pitch";
+		str << "," << ekf_gnss_yaw;
+		name << "," << "ekf_gnss_yaw";
 		str << "," << (int)can_receive_502_.clutch;
+		name << "," << "can_receive_502_.clutch";
 		str << "," << (int)can_receive_503_.clutch;
+		name << "," << "can_receive_503_.clutch";
 		str << "," << can_receive_501_.velocity;
-		str << "," << can_receive_502_.velocity_actual;//micom_drive_value_;
+		name << "," << "can_receive_501_.velocity";
+		str << "," << can_receive_502_.velocity_actual;
+		name << "," << "can_receive_502_.velocity_actual";
 		str << "," << can_receive_501_.steering_angle;
+		name << "," << "can_receive_501_.steering_angle";
 		str << "," << can_receive_502_.angle_actual;
-		str << "," << can_receive_503_.pedal_displacement;//50
-		str << "," << routine_;
+		name << "," << "can_receive_502_.angle_actual";
+		str << "," << can_receive_503_.pedal_displacement;//68
+		name << "," << "can_receive_503_.pedal_displacement";
+		str << "," << routine_.data;
+		name << "," << "routine_.data";
 		str << "," << pid_params.get_stroke_prev();
+		name << "," << "pid_params.get_stroke_prev";
 		str << "," << pid_params.get_stop_stroke_prev();
-		str << "," << send_step_;//54
+		name << "," << "pid_params.get_stop_stroke_prev";
+		str << "," << send_step_;//72
+		name << "," << "send_step";
 
 		std_msgs::String aw_msg;
-		aw_msg.data = str.str();
+		unsigned int sub_count = pub_acceleration_write_.getNumSubscribers();
+		if(sub_count >= 1 && log_subscribe_count_ == 0)
+			aw_msg.data = name.str();
+		else
+			aw_msg.data = str.str();
 		pub_acceleration_write_.publish(aw_msg);
+		log_subscribe_count_ = sub_count;
 
 		current_velocity_ = *twist_msg;
 		current_pose_ = *pose_msg;
@@ -2487,6 +2623,7 @@ public:
 		, use_safety_localizer_(true)
 		, cruse_velocity_(0)
 		, temporary_fixed_velocity_(0)
+		, log_subscribe_count_(0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2567,12 +2704,15 @@ public:
 		sub_lidar_detector_objects_ = nh_.subscribe("/detection/lidar_detector/objects", 10, &kvaser_can_sender::callbackLidarDetectorObjects, this);
 		sub_imu_ = nh_.subscribe("/imu_raw_tidy", 10, &kvaser_can_sender::callbackImu, this);
 		sub_gnss_standard_deviation_ = nh_.subscribe("/gnss_standard_deviation", 10, &kvaser_can_sender::callbackGnssStandardDeviation, this);
+		sub_gnss_standard_deviation_sub_ = nh_.subscribe("/gnss_standard_deviation_sub", 10, &kvaser_can_sender::callbackGnssStandardDeviationSub, this);
 		sub_ndt_stat_string = nh_.subscribe("/ndt_monitor/ndt_status", 10, &kvaser_can_sender::callbackNdtStatString, this);
 		sub_ndt_stat_ = nh_.subscribe("/ndt_stat", 10, &kvaser_can_sender::callbackNdtStat, this);
 		sub_ndt_reliability_ = nh_.subscribe("/ndt_reliability", 10, &kvaser_can_sender::callbackNdtReliability, this);
 		sub_gnss_stat_ = nh_.subscribe("/gnss_stat", 10, &kvaser_can_sender::callbackGnssStat, this);
 		sub_ndt_pose_ = nh_.subscribe("/ndt_pose", 10, &kvaser_can_sender::callbackNdtPose, this);
 		sub_gnss_pose_ = nh_.subscribe("/RTK_gnss_pose", 10, &kvaser_can_sender::callbackGnssPose, this);
+		sub_antenna_pose_ = nh_.subscribe("/gnss_pose", 10, &kvaser_can_sender::callbackAntennaPose, this);
+		sub_antenna_pose_sub_ = nh_.subscribe("/gnss_pose_sub", 10, &kvaser_can_sender::callbackAntennaPoseSub, this);
 		sub_ekf_pose_ = nh_.subscribe("/ekf_pose", 10, &kvaser_can_sender::callbackEkfPose, this);
 		sub_ekf_covariance_ = nh_.subscribe("/ekf_pose_with_covariance", 10, &kvaser_can_sender::callbackEkfCovariance, this);
 		sub_difference_to_waypoint_distance_ = nh_.subscribe("/difference_to_waypoint_distance", 10, &kvaser_can_sender::callbackDifferenceToWaypointDistance, this);

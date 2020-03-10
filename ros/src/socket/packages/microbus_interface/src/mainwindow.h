@@ -58,6 +58,7 @@ private:
     ros::Publisher pub_blinker_right_, pub_blinker_left_, pub_blinker_stop_; //ウィンカー
     ros::Publisher pub_error_lock_;//エラーがでている場合、canアプリにロック情報を送る
     ros::Publisher pub_use_safety_localizer_;//localizer関連のセーフティのチェック
+    ros::Publisher pub_log_write_, pub_log_stop;//ログ出力通知
 
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
@@ -147,6 +148,8 @@ private slots:
     void publish_blinker_left();
     void publish_blinker_stop();
     void publish_use_safety_localizer();
+    void publish_log_write();
+    void publish_log_stop();
     void click_error_text_reset();
 };
 

@@ -17,6 +17,7 @@
     <build_depend>autoware_msgs</build_depend>
     <build_depend>tablet_socket_msgs</build_depend>
     <build_depend>microbus_interface</build_depend>
+    <build_depend>nmea_msgs</build_depend>
 
     <run_depend>std_msgs</run_depend>
     <run_depend>roscpp</run_depend>
@@ -28,5 +29,6 @@
     <run_depend>autoware_msgs</run_depend>
     <run_depend>tablet_socket_msgs</run_depend>
     <run_depend>microbus_interface</run_depend>
+    <run_depend>nmea_msgs</run_depend>
 
 </package>

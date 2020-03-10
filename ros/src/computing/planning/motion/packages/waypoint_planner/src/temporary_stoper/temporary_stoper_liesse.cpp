@@ -33,7 +33,6 @@ private:
 	{
 	  autoware_msgs::Lane l = lane;
 
-	  fixed_vel /= 3.6;
 	  if (fixed_cnt == 0)
 		return l;
 
@@ -112,7 +111,7 @@ private:
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
 			{
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;
-				fixed_velocity_ = way.waypoints[i].waypoint_param.temporary_fixed_velocity;
+				fixed_velocity_ = way.waypoints[i].waypoint_param.temporary_fixed_velocity / 3.6;
 
 				visualization_msgs::Marker marker;
 				marker.header.frame_id = "/map";
@@ -140,6 +139,7 @@ private:
 				else dis.data = -1;
 				//dis.data = i;
 				pub_temporary_distance_.publish(dis);
+				pub_temporary_fixed_velocity_.publish(fixed_velocity_);
 
 				return i;
 			}
@@ -307,7 +307,7 @@ private:
 	void callbackConfig(const autoware_config_msgs::ConfigTemporaryStopper& msg)
 	{
 		config_ = msg;
-		fixed_velocity_ = config_.fixed_velocity;
+		fixed_velocity_ = config_.fixed_velocity / 3.6;
 		//std::cout << config_.fixed_velocity << std::endl;
 
 		std_msgs::Float64 fixed_vel;
@@ -330,6 +330,7 @@ private:
 		/*if(msg.temporary_fixed_velocity >= 0.0)
 		{
 			fixed_velocity_ = msg.temporary_fixed_velocity;
+			fixed_velocity_ /= 3.6;
 			std_msgs::Float64 fixed_vel;
 			fixed_vel.data = fixed_velocity_;
 			pub_temporary_fixed_velocity_.publish(fixed_velocity_);

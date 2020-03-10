@@ -6926,7 +6926,7 @@ params :
       desc  : search_distance
       label : search_distance
       min   : 30
-      max   : 100
+      max   : 200
       v     : 50
       cmd_param :
         dash        : ''

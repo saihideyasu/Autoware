@@ -20,6 +20,20 @@ void publish(const char buf[], const int bufSize)
     nmea_pub.publish(sentence);
 }
 
+std::string replaceOtherStr(const std::string &replacedStr, const char* from, const char* to) {
+    std::string str = replacedStr;
+    for(;;)
+    {
+        int pos = str.find(from);
+        std::cout << pos << std::endl;
+        if(pos < 0) break;
+
+        str = str.replace(pos, 1, to);
+    }
+
+    return str;
+}
+
 int main(int argc, char** argv)
 {
     ros::init(argc,argv,"nmea_tcp");
@@ -48,7 +62,11 @@ int main(int argc, char** argv)
         int len=read(sock, buf, sizeof(buf));
         if(len <= 0) continue;
         buf[len]='\0';
-        publish(buf,len);
+        std::string str = buf;
+        std::cout << str << std::endl;
+        std::string rep = replaceOtherStr(str, "\"", "'");
+        rep = replaceOtherStr(rep, "\r\n", "\0");
+        publish(rep.c_str(), rep.size());
         //std::cout << "size : " << len << std::endl;
         printf("%s\n\n",buf);
         //rate.sleep();

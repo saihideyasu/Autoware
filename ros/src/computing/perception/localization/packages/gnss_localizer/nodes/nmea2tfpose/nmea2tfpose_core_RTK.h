@@ -51,6 +51,7 @@ private:
   // variables
   int32_t plane_number_;
   geo_pos_conv geo_, geo_sub_;
+  std::vector<geo_pos_conv> geo_vec_;
   geo_pos_conv last_geo_;
   double roll_, pitch_, yaw_;
   double orientation_time_, position_time_, surface_speed_;

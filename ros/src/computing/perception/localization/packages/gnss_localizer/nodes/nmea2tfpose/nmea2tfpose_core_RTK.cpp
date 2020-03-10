@@ -178,6 +178,8 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
         double lon = degrees_minutes_seconds(stod(nmea.at(12))); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
         double h = stod(nmea.at(13)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
         geo_.set_llh_nmea_degrees(lat, lon, h);
+        geo_vec_.insert(geo_vec_.begin(), geo_);
+        if(geo_vec_.size() > 5) geo_vec_.resize(5);
         ROS_INFO("BESTPOS is subscribed.");
 
         geometry_msgs::PoseStamped pose;

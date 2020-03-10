@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <stdlib.h>
+#include <fstream>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -377,6 +377,8 @@ private:
 	unsigned int log_subscribe_count_;
 	double gnss_time_;
 	std::string log_path_;
+	std::ofstream log_write_;
+	int log_write_count_;
 
 	const int nmea_list_count_ = 5;
 	std::vector<std::string> nmae_name_list_ = {"#BESTPOSA","#BESTGNSSPOSA","#TIMEA","#INSSTDEVA","#RAWIMUA"};
@@ -386,12 +388,11 @@ private:
 	{
 		if(msg->data == true)
 		{
-			//system("konsole -e /home/autoware/test.sh /home/autoware/aaa.csv");
-			system("/home/autoware/test.sh /home/autoware/aaa.csv");
+			if(log_write_.is_open() == false) {log_write_.open(log_path_); log_write_count_ = 0;}
 		}
 		else
 		{
-			system("/home/autoware/log_stop.sh");
+			if(log_write_.is_open() == true) log_write_.close();
 		}
 	}
 
@@ -1344,6 +1345,13 @@ private:
 		{
 			str << "|" << nmea_text_list_[i].str();
 			name << "|" << nmae_name_list_[i];
+		}
+		if(log_write_.is_open() == true)
+		{
+			if(log_write_count_ == 0) log_write_ << name.str() << "\n";
+			log_write_ << str.str() << "\n";
+			log_write_.flush();
+			log_write_count_++;
 		}
 
 		nmea_text_list_.clear();
@@ -2730,7 +2738,6 @@ public:
 		, log_subscribe_count_(0)
 		, gnss_time_(0)
 		, log_path_("/home/autoware/can_log.csv")
-
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;

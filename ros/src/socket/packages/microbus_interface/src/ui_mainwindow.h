@@ -214,6 +214,8 @@ public:
     QPushButton *bt2_blinker_right;
     QPushButton *bt2_blinker_left;
     QPushButton *bt2_blinker_stop;
+    QPushButton *bt2_log_write;
+    QPushButton *bt2_log_stop;
     QPushButton *bt_emergency_clear;
     QGroupBox *gb_shift;
     QPushButton *bt_shift_P;
@@ -237,13 +239,13 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(1066, 738);
+        MainWindow->resize(1066, 812);
         MainWindow->setAutoFillBackground(false);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         tabWidget = new QTabWidget(centralWidget);
         tabWidget->setObjectName(QStringLiteral("tabWidget"));
-        tabWidget->setGeometry(QRect(10, 30, 691, 661));
+        tabWidget->setGeometry(QRect(10, 30, 691, 731));
         tab = new QWidget();
         tab->setObjectName(QStringLiteral("tab"));
         groupBox_drive = new QGroupBox(tab);
@@ -1458,7 +1460,7 @@ public:
         gb2_autoware_info = new QGroupBox(tab_2);
         gb2_autoware_info->setObjectName(QStringLiteral("gb2_autoware_info"));
         gb2_autoware_info->setEnabled(true);
-        gb2_autoware_info->setGeometry(QRect(0, 460, 691, 151));
+        gb2_autoware_info->setGeometry(QRect(0, 460, 691, 161));
         QPalette palette11;
         palette11.setBrush(QPalette::Active, QPalette::Base, brush);
         palette11.setBrush(QPalette::Active, QPalette::Window, brush1);
@@ -1631,6 +1633,20 @@ public:
         bt2_blinker_stop = new QPushButton(gb2_blinker);
         bt2_blinker_stop->setObjectName(QStringLiteral("bt2_blinker_stop"));
         bt2_blinker_stop->setGeometry(QRect(20, 100, 111, 25));
+        bt2_log_write = new QPushButton(tab_2);
+        bt2_log_write->setObjectName(QStringLiteral("bt2_log_write"));
+        bt2_log_write->setGeometry(QRect(30, 630, 211, 60));
+        bt2_log_write->setFont(font4);
+        bt2_log_write->setCheckable(false);
+        bt2_log_write->setAutoRepeat(false);
+        bt2_log_write->setAutoExclusive(false);
+        bt2_log_stop = new QPushButton(tab_2);
+        bt2_log_stop->setObjectName(QStringLiteral("bt2_log_stop"));
+        bt2_log_stop->setGeometry(QRect(260, 630, 211, 60));
+        bt2_log_stop->setFont(font4);
+        bt2_log_stop->setCheckable(false);
+        bt2_log_stop->setAutoRepeat(false);
+        bt2_log_stop->setAutoExclusive(false);
         tabWidget->addTab(tab_2, QString());
         bt_emergency_clear = new QPushButton(centralWidget);
         bt_emergency_clear->setObjectName(QStringLiteral("bt_emergency_clear"));
@@ -1941,6 +1957,8 @@ public:
         bt2_blinker_right->setText(QApplication::translate("MainWindow", "RIGHT", nullptr));
         bt2_blinker_left->setText(QApplication::translate("MainWindow", "LEFT", nullptr));
         bt2_blinker_stop->setText(QApplication::translate("MainWindow", "STOP", nullptr));
+        bt2_log_write->setText(QApplication::translate("MainWindow", "LOG WRITE", nullptr));
+        bt2_log_stop->setText(QApplication::translate("MainWindow", "LOG STOP", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("MainWindow", "Tab 2", nullptr));
         bt_emergency_clear->setText(QApplication::translate("MainWindow", "\345\256\211\345\205\250\346\251\237\350\203\275\350\247\243\351\231\244", nullptr));
         gb_shift->setTitle(QApplication::translate("MainWindow", "Shift", nullptr));

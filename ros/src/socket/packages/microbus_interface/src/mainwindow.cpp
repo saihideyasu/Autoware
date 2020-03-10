@@ -74,6 +74,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt2_drive_off,SIGNAL(clicked()), this, SLOT(publish_Dmode_manual()));
     connect(ui->bt2_steer_off,SIGNAL(clicked()), this, SLOT(publish_Smode_manual()));
     connect(ui->cb_use_localizer_safety, SIGNAL(clicked()), this, SLOT(publish_use_safety_localizer()));
+    connect(ui->bt2_log_write, SIGNAL(clicked()), this, SLOT(publish_log_write()));
+    connect(ui->bt2_log_stop, SIGNAL(clicked()), this, SLOT(publish_log_stop()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -90,6 +92,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     pub_blinker_stop_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_stop", 1);
     pub_error_lock_ = nh_.advertise<std_msgs::Bool>("/microbus/interface_lock", 1);
     pub_use_safety_localizer_ = nh_.advertise<std_msgs::Bool>("/microbus/use_safety_localizer", 1, true);
+    pub_log_write_ = nh_.advertise<std_msgs::Bool>("/microbus/log_write", 1);
 
     sub_can501_ = nh_.subscribe("/microbus/can_receive501", 10, &MainWindow::callbackCan501, this);
     sub_can502_ = nh_.subscribe("/microbus/can_receive502", 10, &MainWindow::callbackCan502, this);
@@ -1143,6 +1146,20 @@ void MainWindow::publish_use_safety_localizer()
     std_msgs::Bool msg;
     msg.data = ui->cb_use_localizer_safety->isChecked();
     pub_use_safety_localizer_.publish(msg);
+}
+
+void MainWindow::publish_log_write()
+{
+    std_msgs::Bool msg;
+    msg.data = true;
+    pub_log_write_.publish(msg);
+}
+
+void MainWindow::publish_log_stop()
+{
+    std_msgs::Bool msg;
+    msg.data = false;
+    pub_log_write_.publish(msg);
 }
 
 void MainWindow::click_error_text_reset()

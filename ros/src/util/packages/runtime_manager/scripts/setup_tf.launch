@@ -1,9 +1,9 @@
 <launch>
 
-  <arg name="x" default="1.08"/>
-  <arg name="y" default="0.011"/>
-  <arg name="z" default="1.81"/>
-  <arg name="yaw" default="-0.025"/>
+  <arg name="x" default="3.35"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="2.70"/>
+  <arg name="yaw" default="0.0"/>
   <arg name="pitch" default="0.0"/>
   <arg name="roll" default="0.0"/>
   <arg name="frame_id" default="base_link"/>

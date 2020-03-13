@@ -386,8 +386,8 @@ private:
 	{
 		if(msg->data == true)
 		{
-			//system("konsole -e /home/autoware/test.sh /home/autoware/aaa.csv");
-			system("/home/autoware/test.sh /home/autoware/aaa.csv");
+			system("konsole -e /home/autoware/test.sh /home/autoware/aaa.csv");
+			//system("/home/autoware/test.sh /home/autoware/aaa.csv");
 		}
 		else
 		{

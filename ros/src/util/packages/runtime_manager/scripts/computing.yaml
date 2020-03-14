@@ -6894,9 +6894,15 @@ params :
       kind  : radio_box
       choices:
       - constant
+      - constant_direct
+      - can
+      - can_direct
       - traking
       descs :
       - constant
+      - constant_direct
+      - can
+      - can_direct
       - traking
       v     : 0
     - name  : search_distance
@@ -6923,6 +6929,15 @@ params :
       min   : 30
       max   : 100
       v     : 100
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : constant_velocity
+      desc  : constant_velocity
+      label : constant_velocity
+      min   : 0
+      max   : 50
+      v     : 10
       cmd_param :
         dash        : ''
         delim       : ':='

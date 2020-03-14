@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -11,11 +12,18 @@
 #include <autoware_msgs/LaneArray.h>
 #include <current_velocity_conversion/waypoint_param_init.h>
 
+struct VelodyneLocalizer
+{
+    double x_, y_, z_, yaw_, roll_, pitch_;
+};
+
 class CurrentVelocityConversion
 {
 private:
     ros::NodeHandle nh_, private_nh_;
-    ros::Publisher pub_cruse_velocity_, pub_waypoints_;
+    ros::Publisher pub_cruse_velocity_, pub_waypoints_, pub_current_pose_, pub_current_velocity_, pub_localizer_pose_;
+    ros::Publisher pub_closest_waypoint_;
+
     ros::Subscriber sub_config_, sub_microbus_can502_, sub_microbus_can503_, sub_mobileye_obstacle_;
 
     autoware_config_msgs::ConfigCurrentVelocityConversion config_;
@@ -29,6 +37,9 @@ private:
 
     tf::TransformListener listener_;
     tf::TransformBroadcaster br_;
+
+    VelodyneLocalizer velodyne_localizer_;
+    bool init_flag_;
 
     void callbackConfig(const autoware_config_msgs::ConfigCurrentVelocityConversion &msg)
     {
@@ -56,7 +67,19 @@ private:
 
         switch(config_.velocity_mode)
         {
-            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT:
+            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT_DIRECT:
+            {
+                if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
+                {
+                    publishCruseVelocity(config_.constant_velocity);
+                }
+                else
+                {
+                    publishCruseVelocity(0);
+                }
+                break;
+            }
+            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CAN_DIRECT:
             {
                 if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
                 {
@@ -71,7 +94,7 @@ private:
             }
             case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_MOBILEYE_TRAKING:
             {
-                if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
+                /*if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
                 {
                     publishCruseVelocity(0);
                 }
@@ -153,7 +176,7 @@ private:
                             }
                         }
                     }
-                }
+                }*/
                 break;
             }
         }
@@ -168,11 +191,47 @@ public:
     CurrentVelocityConversion(ros::NodeHandle nh, ros::NodeHandle p_nh)
         : cruse_velocity_(0)
         , reference_mobileye_obstacle_(false)
+        , init_flag_(false)
     {
         nh_ = nh;  private_nh_ = p_nh;
 
-        pub_cruse_velocity_ = nh_.advertise<std_msgs::Float64>("/cruse_velocity", 10);
-        pub_waypoints_ = nh_.advertise<autoware_msgs::Lane>("/safety_waypoints", 10);
+        if (nh_.getParam("tf_x", velodyne_localizer_.x_) == false)
+        {
+          std::cout << "tf_x is not set." << std::endl;
+          return;
+        }
+        if (nh_.getParam("tf_y", velodyne_localizer_.y_) == false)
+        {
+          std::cout << "tf_y is not set." << std::endl;
+          return;
+        }
+        if (nh_.getParam("tf_z", velodyne_localizer_.z_) == false)
+        {
+          std::cout << "tf_z is not set." << std::endl;
+          return;
+        }
+        if (nh_.getParam("tf_roll", velodyne_localizer_.roll_) == false)
+        {
+          std::cout << "tf_roll is not set." << std::endl;
+          return;
+        }
+        if (nh_.getParam("tf_pitch", velodyne_localizer_.pitch_) == false)
+        {
+          std::cout << "tf_pitch is not set." << std::endl;
+          return;
+        }
+        if (nh_.getParam("tf_yaw", velodyne_localizer_.yaw_) == false)
+        {
+          std::cout << "tf_yaw is not set." << std::endl;
+          return;
+        }
+
+        pub_cruse_velocity_ = nh_.advertise<std_msgs::Float64>("/cruse_velocity", 1);
+        pub_waypoints_ = nh_.advertise<autoware_msgs::Lane>("/safety_waypoints", 1);
+        pub_current_pose_ = nh_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1);
+        pub_current_velocity_ = nh_.advertise<geometry_msgs::TwistStamped>("/current_velocity", 1);
+        pub_localizer_pose_ = nh_.advertise<geometry_msgs::PoseStamped>("/localizer_pose", 1);
+        pub_closest_waypoint_ = nh_.advertise<std_msgs::Int32>("/closest_waypoint", 1);
 
         sub_config_ = nh_.subscribe("/config/current_velocity_conversion", 1, &CurrentVelocityConversion::callbackConfig, this);
         sub_microbus_can502_ = nh_.subscribe("/microbus/can_receive502", 1, &CurrentVelocityConversion::callbackMicrobusCan502, this);
@@ -181,6 +240,19 @@ public:
 
         config_.enable = false;
         config_.velocity_mode = autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT;
+
+        init_flag_ = true;
+    }
+
+    bool isInit() {return init_flag_;}
+    bool enable() {return config_.enable;}
+    bool publishOK()
+    {
+        if(config_.velocity_mode == autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT
+           || config_.velocity_mode == autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CAN
+           || config_.velocity_mode == autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_MOBILEYE_TRAKING)
+           return true;
+        else return false;
     }
 
     void createBaseLink()
@@ -209,6 +281,51 @@ public:
 
         pub_waypoints_.publish(lane);
     }
+
+    void createCurrentPose()
+    {
+        ros::Time nowtime = ros::Time::now();
+
+        geometry_msgs::PoseStamped current_pose_msg;
+        current_pose_msg.header.frame_id = "map";
+        current_pose_msg.header.stamp = nowtime;
+        current_pose_msg.pose.position.x = 0;
+        current_pose_msg.pose.position.x = 0;
+        current_pose_msg.pose.position.x = 0;
+        current_pose_msg.pose.orientation.x = 0;
+        current_pose_msg.pose.orientation.y = 0;
+        current_pose_msg.pose.orientation.z = 0;
+        current_pose_msg.pose.orientation.w = 1;
+        pub_current_pose_.publish(current_pose_msg);
+
+        geometry_msgs::TwistStamped current_velocity_msg;
+        current_velocity_msg.header.frame_id = "base_link";
+        current_velocity_msg.header.stamp = nowtime;
+        current_velocity_msg.twist.linear.x = config_.constant_velocity;
+        current_velocity_msg.twist.linear.y = 0;
+        current_velocity_msg.twist.linear.z = 0;
+        current_velocity_msg.twist.angular.x = 0;
+        current_velocity_msg.twist.angular.y = 0;
+        current_velocity_msg.twist.angular.z = 0;
+        pub_current_velocity_.publish(current_velocity_msg);
+
+        geometry_msgs::PoseStamped localizer_pose_msg;
+        localizer_pose_msg.header.frame_id = "map";
+        localizer_pose_msg.header.stamp = nowtime;
+        localizer_pose_msg.pose.position.x = velodyne_localizer_.x_;
+        localizer_pose_msg.pose.position.y = velodyne_localizer_.y_;
+        localizer_pose_msg.pose.position.z = velodyne_localizer_.z_;
+        tf::Quaternion qua = tf::createQuaternionFromRPY(velodyne_localizer_.roll_, velodyne_localizer_.pitch_, velodyne_localizer_.yaw_);
+        localizer_pose_msg.pose.orientation.x = qua.getX();
+        localizer_pose_msg.pose.orientation.y = qua.getY();
+        localizer_pose_msg.pose.orientation.z = qua.getZ();
+        localizer_pose_msg.pose.orientation.w = qua.getW();
+        pub_localizer_pose_.publish(localizer_pose_msg);
+
+        std_msgs::Int32 closest_waypoint_msg;
+        closest_waypoint_msg.data = 0;
+        pub_closest_waypoint_.publish(closest_waypoint_msg);
+    }
 };
 
 int main(int argc, char** argv)
@@ -218,14 +335,21 @@ int main(int argc, char** argv)
 	ros::NodeHandle private_nh("~");
 
     CurrentVelocityConversion cvc(nh, private_nh);
-    ros::Rate rate(100);
-    while (ros::ok())
+    if(cvc.isInit())
     {
-        ros::spinOnce();
-        cvc.createBaseLink();
-        cvc.createWaypoints();
-        rate.sleep();
+        ros::Rate rate(100);
+        while (ros::ok())
+        {
+            ros::spinOnce();
+            if(cvc.enable() && cvc.publishOK())
+            {
+                cvc.createBaseLink();
+                cvc.createWaypoints();
+                cvc.createCurrentPose();
+            }
+            rate.sleep();
+        }
     }
-    
+
     return 0;
 }

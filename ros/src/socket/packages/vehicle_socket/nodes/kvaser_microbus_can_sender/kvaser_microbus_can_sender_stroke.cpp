@@ -33,6 +33,7 @@
 #include <autoware_config_msgs/ConfigLocalizerSwitchFusion.h>
 #include <autoware_config_msgs/ConfigCurrentVelocityConversion.h>
 //#include <autoware_config_msgs/ConfigMicrobusInterface.h>
+#include <autoware_system_msgs/Date.h>
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/PositionChecker.h>
 #include <autoware_msgs/WaypointParam.h>
@@ -284,7 +285,7 @@ private:
 	LIMIT_ANGLE_FROM_VELOCITY_CLASS lafvc_;
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
-	ros::Publisher pub_microbus_can_sender_status_, pub_acceleration_write_, pub_estimate_stopper_distance_;
+	ros::Publisher pub_microbus_can_sender_status_, pub_log_write_, pub_estimate_stopper_distance_;
 	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_, pub_vehicle_status_, pub_velocity_param_;
 
 	ros::NodeHandle nh_, private_nh_;
@@ -375,7 +376,7 @@ private:
 	double temporary_fixed_velocity_;
 	double send_step_;
 	unsigned int log_subscribe_count_;
-	double gnss_time_;
+	autoware_system_msgs::Date gnss_time_;
 	std::string log_path_;
 
 	const int nmea_list_count_ = 5;
@@ -386,7 +387,11 @@ private:
 	{
 		if(msg->data == true)
 		{
-			system("konsole -e /home/autoware/test.sh /home/autoware/aaa.csv");
+			std::stringstream str;
+			str << "konsole -e /home/autoware/Autoware_1.11.0_sai_edit/ros/src/util/packages/runtime_manager/scripts/can_log.sh /home/autoware/Autoware_1.11.0_sai_edit/ros/";
+			str << gnss_time_.year << "_" << gnss_time_.month << "_" << gnss_time_.hour << "_" << gnss_time_.min << "_" << gnss_time_.sec << ".csv";
+			std::cout << "log write : " << str.str() << std::endl;
+			system(str.str().c_str());
 			//system("/home/autoware/test.sh /home/autoware/aaa.csv");
 		}
 		else
@@ -457,9 +462,9 @@ private:
 		return str.str();
 	}
 
-	void callbackGnssTime(const std_msgs::Float64::ConstPtr &msg)
+	void callbackGnssTime(const autoware_system_msgs::Date::ConstPtr &msg)
 	{
-		gnss_time_ = msg->data;
+		gnss_time_ = *msg;
 	}
 
 	void callbackTemporaryFixedVelocity(const std_msgs::Float64::ConstPtr &msg)
@@ -1131,8 +1136,9 @@ private:
 //		str << x << "," << v0 << "," << v << "," << v_sa;
 		str << std::setprecision(10) ;
 		str << waypoint_id_;
-		name << "waypoint_id"; 	
-		str << "|" << timeString(gnss_time_);
+		name << "waypoint_id";
+		str << "|" <<  gnss_time_.year << "/" << gnss_time_.month << "/" << gnss_time_.hour << "/" << gnss_time_.min << "/" << gnss_time_.sec;
+		//str << "|" << time_str;//timeString(time_str);
 		name << "|" << "gnss_time";
 		str <<  "|" << twist_.ctrl_cmd.linear_velocity * 3.6;
 		name <<  "|" << "twist_.ctrl_cmd.linear_velocity_3.6";
@@ -1340,6 +1346,55 @@ private:
 		str << "|" << send_step_;//72
 		name << "|" << "send_step";
 
+		str << "|" << mobileye_obstacle_data_.obstacle_id;
+		name << "|" << "mbe_obstacle_data";
+		str << "|" << mobileye_obstacle_data_.obstacle_pos_x;
+		name << "|" << "mbe_obstacle_posx";
+		str << "|" << mobileye_obstacle_data_.obstacle_pos_y;
+		name << "|" << "mbe_obstacle_posy";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.blinker_info;
+		name << "|" << "mbe_blinker_info";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.cut_in_and_out;
+		name << "|" << "mbe_cut_in_and_out";
+		str << "|" << mobileye_obstacle_data_.obstacle_rel_vel_x;
+		name << "|" << "mbe_obstacle_rel_vel_x";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.obstacle_type;
+		name << "|" << "mbe_obstacle_type";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.obstacle_status;
+		name << "|" << "mbe_obstacle_status";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.obstacle_brake_lights;
+		name << "|" << "mbe_obstacle_brake_lights";
+		str << "|" << (int)mobileye_obstacle_data_.obstacle_valid;
+		name << "|" << "mbe_obstacle_valid";
+		str << "|" << mobileye_obstacle_data_.obstacle_length;
+		name << "|" << "mbe_obstacle_length";
+		str << "|" << mobileye_obstacle_data_.obstacle_width;
+		name << "|" << "mbe_obstacle_width";
+		str << "|" << mobileye_obstacle_data_.obstacle_age;
+		name << "|" << "mbe_obstacle_age";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.obstacle_lane;
+		name << "|" << "mbe_obstacle_lane";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.cipv_flag;
+		name << "|" << "mbe_obstacle_cipv_flag";
+		str << "|" << mobileye_obstacle_data_.radar_pos_x;
+		name << "|" << "mbe_radar_pos_x";
+		str << "|" << mobileye_obstacle_data_.radar_vel_x;
+		name << "|" << "mbe_radar_vel_x";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.radar_match_confidence;
+		name << "|" << "mbe_radar_match_confidence";
+		str << "|" << mobileye_obstacle_data_.matched_radar_id;
+		name << "|" << "mbe_matched_radar_id";
+		str << "|" << mobileye_obstacle_data_.obstacle_angle_rate;
+		name << "|" << "mbe_obstacle_angle_rate";
+		str << "|" << mobileye_obstacle_data_.obstacle_scale_change;
+		name << "|" << "mbe_obstacle_scale_change";
+		str << "|" << mobileye_obstacle_data_.object_accel_x;
+		name << "|" << "mbe_object_accel_x";
+		str << "|" << (unsigned int)mobileye_obstacle_data_.obstacle_replaced;
+		name << "|" << "mbe_obstacle_replaced";
+		str << "|" << mobileye_obstacle_data_.obstacle_angle;
+		name << "|" << "mbe_obstacle_angle";
+
 		for(int i=0; i<nmae_name_list_.size(); i++)
 		{
 			str << "|" << nmea_text_list_[i].str();
@@ -1350,12 +1405,12 @@ private:
 		for(int i=0; i<nmae_name_list_.size(); i++) nmea_text_list_.push_back(std::stringstream());
 
 		std_msgs::String aw_msg;
-		unsigned int sub_count = pub_acceleration_write_.getNumSubscribers();
+		unsigned int sub_count = pub_log_write_.getNumSubscribers();
 		if(sub_count >= 1 && log_subscribe_count_ == 0)
 			aw_msg.data = name.str();
 		else
 			aw_msg.data = str.str();
-		pub_acceleration_write_.publish(aw_msg);
+		pub_log_write_.publish(aw_msg);
 		log_subscribe_count_ = sub_count;
 
 		current_velocity_ = *twist_msg;
@@ -2728,7 +2783,6 @@ public:
 		, cruse_velocity_(0)
 		, temporary_fixed_velocity_(0)
 		, log_subscribe_count_(0)
-		, gnss_time_(0)
 		, log_path_("/home/autoware/can_log.csv")
 
 	{
@@ -2765,7 +2819,7 @@ public:
 		lafvc_.add(limit10); lafvc_.add(limit15); lafvc_.add(limit20); lafvc_.add(limit30); lafvc_.add(limit40);
 
 		pub_microbus_can_sender_status_ = nh_.advertise<autoware_can_msgs::MicroBusCanSenderStatus>("/microbus/can_sender_status", 1, true);
-		pub_acceleration_write_ = nh_.advertise<std_msgs::String>("/microbus/acceleration_write", 1);
+		pub_log_write_ = nh_.advertise<std_msgs::String>("/microbus/log_write", 1);
 		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
 		pub_localizer_match_stat_ = nh_.advertise<autoware_msgs::LocalizerMatchStat>("/microbus/localizer_match_stat", 1);
 		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);

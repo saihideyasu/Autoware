@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   autoware_msgs
   autoware_can_msgs
   autoware_config_msgs
+  autoware_system_msgs
   tablet_socket_msgs
   microbus_interface
   nmea_msgs
@@ -30,6 +31,7 @@ catkin_package(CATKIN_DEPENDS
   std_msgs
   geometry_msgs
   autoware_can_msgs
+  autoware_system_msgs
   autoware_msgs
   tablet_socket_msgs
   microbus_interface

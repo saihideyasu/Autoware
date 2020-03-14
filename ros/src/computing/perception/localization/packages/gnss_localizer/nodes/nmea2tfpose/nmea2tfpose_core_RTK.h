@@ -27,6 +27,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nmea_msgs/Sentence.h>
 #include <tf/transform_broadcaster.h>
+#include <autoware_system_msgs/Date.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/GnssSurfaceSpeed.h>
 #include <sensor_msgs/Imu.h>

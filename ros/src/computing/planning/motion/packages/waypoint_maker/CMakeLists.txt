@@ -44,6 +44,7 @@ catkin_package(
 SET(CMAKE_CXX_FLAGS "-O2 -g -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
 
 include_directories(
+        include
         ${catkin_INCLUDE_DIRS}
         ${vector_map_INCLUDE_DIRS}
         ${autoware_msgs_INCLUDE_DIRS}
@@ -144,3 +145,6 @@ install(TARGETS
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
         PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY include/waypoint_loader/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

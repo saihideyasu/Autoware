@@ -30,6 +30,7 @@ find_package(catkin REQUIRED COMPONENTS
         visualization_msgs
         waypoint_follower
         autoware_msgs
+        autoware_system_msgs
         vector_map
         camera_info_manager
         image_transport
@@ -74,6 +75,7 @@ catkin_package(
         INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS}
         CATKIN_DEPENDS
         autoware_msgs
+        autoware_system_msgs
         cmake_modules
         cv_bridge
         geometry_msgs

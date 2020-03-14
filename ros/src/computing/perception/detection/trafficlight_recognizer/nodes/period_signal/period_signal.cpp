@@ -1,5 +1,6 @@
 #include <ros/ros.h>
-#include <std_msgs/Float64.h>
+//#include <std_msgs/Float64.h>
+#include <autoware_system_msgs/Date.h>
 #include <std_msgs/String.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_msgs/TrafficLight.h>
@@ -20,7 +21,8 @@ private:
 
     autoware_config_msgs::ConfigPeriodSignal config_;
 
-    double first_time_, gnss_time_;
+    double first_time_;
+    autoware_system_msgs::Date gnss_time_;
     TimeStep time_step_;
     int prev_traffic_;
 
@@ -96,9 +98,9 @@ private:
         first_time_ = time_step_.time_step_green_ = time_step_.time_step_yellow_ = time_step_.time_step_red_ = 0;
     }
 
-    void callbackGnssTimesOfDay(const std_msgs::Float64 &msg)
+    void callbackGnssTimesOfDay(const autoware_system_msgs::Date &msg)
     {
-        gnss_time_ = msg.data;
+        gnss_time_ = msg;
     }
 public:
     PeriodSignal(ros::NodeHandle nh, ros::NodeHandle p_nh)
@@ -136,7 +138,8 @@ public:
         }
 
         double time_sa;
-        if(config_.use_time_flag == 0) time_sa = gnss_time_ - first_time_;
+        double real_time = gnss_time_.hour*60.0*60.0 + gnss_time_.min*60.0 + gnss_time_.sec;
+        if(config_.use_time_flag == 0) time_sa = real_time - first_time_;
         else
         {
             //ros::Time rostime = ros::Time::now();

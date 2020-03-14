@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(autoware_connector)
 
-
 find_package(autoware_msgs REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
         autoware_build_flags
         roscpp
@@ -17,9 +17,13 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 catkin_package(
+        INCLUDE_DIRS include
 )
 
+SET(CMAKE_CXX_FLAGS "-O2 -g -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
+
 include_directories(
+        include
         ${catkin_INCLUDE_DIRS}
         ${autoware_msgs_INCLUDE_DIRS}
 )
@@ -89,3 +93,6 @@ install(TARGETS current_velocity_conversion
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
         PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY include/current_velocity_conversion/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

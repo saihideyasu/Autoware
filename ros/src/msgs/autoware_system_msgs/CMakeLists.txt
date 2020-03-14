@@ -16,6 +16,7 @@ add_message_files(
   SystemStatus.msg
   NodeStatus.msg
   HardwareStatus.msg
+  Date.msg
 )
 
 generate_messages(DEPENDENCIES

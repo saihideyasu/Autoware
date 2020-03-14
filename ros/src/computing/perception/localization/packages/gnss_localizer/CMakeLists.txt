@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
         gnss
         tf
         autoware_msgs
+        autoware_system_msgs
         pcl_ros
         )
 

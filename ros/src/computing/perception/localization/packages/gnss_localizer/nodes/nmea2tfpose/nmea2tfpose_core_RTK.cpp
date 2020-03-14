@@ -98,7 +98,7 @@ void Nmea2TFPoseNode::initForROS()
   pub_std_dev2_ = nh_.advertise<autoware_msgs::GnssStandardDeviation>("gnss_standard_deviation_sub", 10);
   pub_imu_ = nh_.advertise<sensor_msgs::Imu>("gnss_imu", 10);
   pub_stat_ = nh_.advertise<std_msgs::UInt8>("gnss_stat", 10);
-  pub_time_ = nh_.advertise<std_msgs::Float64>("gnss_time", 10);
+  pub_time_ = nh_.advertise<autoware_system_msgs::Date>("gnss_time", 10);
 }
 
 void Nmea2TFPoseNode::run()
@@ -306,12 +306,16 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
     {
       if(nmea.size() == 20)
       {
-        unsigned int hour = stoi(nmea.at(16));
-        unsigned int min = stoi(nmea.at(17));
-        unsigned int msec = stoi(nmea.at(18));
-        std_msgs::Float64 date;
-        date.data = hour*60.0*60.0 + min*60.0 + msec/1000.0;
+        autoware_system_msgs::Date date;
+        date.year = stoi(nmea.at(14));
+        date.month = stoi(nmea.at(15));
+        date.hour = stoi(nmea.at(16));
+        date.min = stoi(nmea.at(17));
+        date.sec = stoi(nmea.at(18)) / (float)1000.0;
         pub_time_.publish(date);
+        //std_msgs::Float64 date;
+        //date.data = hour*60.0*60.0 + min*60.0 + msec/1000.0;
+        //pub_time_.publish(date);
       }
     }
   }catch (const std::exception &e)

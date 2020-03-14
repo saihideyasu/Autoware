@@ -14,6 +14,7 @@
     <build_depend>geometry_msgs</build_depend>
     <build_depend>autoware_can_msgs</build_depend>
 	<build_depend>autoware_config_msgs</build_depend>
+    <build_depend>autoware_system_msgs</build_depend>
     <build_depend>autoware_msgs</build_depend>
     <build_depend>tablet_socket_msgs</build_depend>
     <build_depend>microbus_interface</build_depend>
@@ -26,6 +27,7 @@
     <run_depend>geometry_msgs</run_depend>
     <run_depend>autoware_can_msgs</run_depend>
 	<run_depend>autoware_config_msgs</run_depend>
+    <run_depend>autoware_system_msgs</run_depend>
     <run_depend>autoware_msgs</run_depend>
     <run_depend>tablet_socket_msgs</run_depend>
     <run_depend>microbus_interface</run_depend>

@@ -47,6 +47,8 @@ private:
         std::string enable_str = (config_.enable == true) ? "True" : "False";
         std::cout << "enable," << enable_str << std::endl;
         std::cout << "velocity_mode" << config_.velocity_mode << std::endl;
+
+        if(config_.velocity_mode != msg.velocity_mode) cruse_velocity_ = 0;//safety
     }
 
     void callbackMobileyeObstacle(const autoware_msgs::MobileyeObstacle &msg)
@@ -71,7 +73,7 @@ private:
             {
                 if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
                 {
-                    publishCruseVelocity(config_.constant_velocity);
+                    publishCruseVelocity(config_.constant_velocity / 3.6);
                 }
                 else
                 {
@@ -276,6 +278,15 @@ public:
             autoware_msgs::Waypoint wp;
             waypoint_maker::waypoint_param_init(&wp, id);
             wp.pose.pose.position.x = step;
+            switch(config_.velocity_mode)
+            {
+            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT:
+                wp.twist.twist.linear.x = config_.constant_velocity / 3.6;
+                break;    
+            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CAN:
+                wp.twist.twist.linear.x = cruse_velocity_;
+                break;
+            }
             lane.waypoints.emplace_back(wp);
         }
 
@@ -301,7 +312,7 @@ public:
         geometry_msgs::TwistStamped current_velocity_msg;
         current_velocity_msg.header.frame_id = "base_link";
         current_velocity_msg.header.stamp = nowtime;
-        current_velocity_msg.twist.linear.x = config_.constant_velocity;
+        current_velocity_msg.twist.linear.x = config_.constant_velocity / 3.6;
         current_velocity_msg.twist.linear.y = 0;
         current_velocity_msg.twist.linear.z = 0;
         current_velocity_msg.twist.angular.x = 0;

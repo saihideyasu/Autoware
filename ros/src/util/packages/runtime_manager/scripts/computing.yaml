@@ -6897,13 +6897,15 @@ params :
       - constant_direct
       - can
       - can_direct
-      - traking
+      - mobileye_constant
+      - mobileye_can
       descs :
       - constant
       - constant_direct
       - can
       - can_direct
-      - traking
+      - mobileye_constant
+      - mobileye_can
       v     : 0
     - name  : search_distance
       desc  : search_distance

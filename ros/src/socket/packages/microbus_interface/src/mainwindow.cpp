@@ -1001,7 +1001,7 @@ void MainWindow::callbackMobileyeCan(const can_msgs::Frame &frame)
                 distR_p[1] = getMessage_bit<unsigned char>(&buf[7], 4, 7);
                 distR_p[0] = getMessage_bit<unsigned char>(&buf[7], 0, 3) << 4;
                 distR_p[0] |= getMessage_bit<unsigned char>(&buf[6], 4, 7);
-                if(distR_p[1] & 0x8)//12bitのマイナスか
+                if(distR_p[1] & 0x8)//12bitのマイナス化
                 {
                     distR--;
                     distR = ~distR;

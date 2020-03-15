@@ -191,7 +191,7 @@ public:
 					std::sort(velocity_med.begin(), velocity_med.end());
 					can.velocity_median = velocity_med[(int)std::round(velocity_med.size()/(double)2.0)];
 
-					can.velocity_mps = (double)can.velocity_actual / (100.0);
+					can.velocity_mps = (double)can.velocity_actual / 100.0 / 3.6;
 
 					unsigned char *str_tmp = (unsigned char*)&can.angle_actual;
 					str_tmp[0] = data[5];  str_tmp[1] = data[4];

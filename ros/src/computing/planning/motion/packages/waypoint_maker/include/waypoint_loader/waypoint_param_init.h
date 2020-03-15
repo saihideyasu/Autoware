@@ -76,7 +76,7 @@ namespace waypoint_maker
         wp->waypoint_param.detection_use_point_cloud = ((map.find("use_point_cloud") != map.end()) ? std::stoi(map["use_point_cloud"]) : -1);
         wp->waypoint_param.detection_use_point_pillar = ((map.find("use_point_pillar") != map.end()) ? std::stoi(map["use_point_pillar"]) : -1);
         wp->waypoint_param.detection_use_mobileye = ((map.find("use_mobileye") != map.end()) ? std::stoi(map["use_mobileye"]) : -1);
-        wp->waypoint_param.temporary_fixed_velocity = ((map.find("temporary_fixed_velocity") != map.end()) ? std::stod(map["temporary_fixed_velocity"]) : -1);
+        wp->waypoint_param.temporary_fixed_velocity = ((map.find("temporary_fixed_velocity") != map.end()) ? std::stod(map["temporary_fixed_velocity"]) : 0);
     }
 
     void waypoint_param_init(autoware_msgs::Waypoint *wp, const unsigned int id_counter)

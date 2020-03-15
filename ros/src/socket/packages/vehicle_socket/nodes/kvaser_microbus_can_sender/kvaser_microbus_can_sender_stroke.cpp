@@ -474,7 +474,7 @@ private:
 
 	bool checkMobileyeObstacleStop(ros::Time nowtime)
 	{
-		ros::Duration t = nowtime - mobileye_obstacle_data_.header.stamp;
+		/*ros::Duration t = nowtime - mobileye_obstacle_data_.header.stamp;
 		ros::Duration th = ros::Duration(1);
 		std::cout << "mobs : " << t << "," << th << "," << (int)mobileye_obstacle_data_.obstacle_status << std::endl;
 		if(t < th)
@@ -491,7 +491,8 @@ private:
 					return false;
 			}
 		}
-		else return false;
+		else return false;*/
+		return false;
 	}
 
 	void callbackMobileyeObstacleData(const mobileye_560_660_msgs::ObstacleData::ConstPtr &msg)
@@ -2529,7 +2530,14 @@ private:
 			if(input_drive_mode_ == true && can_receive_501_.drive_auto)
 				cmd_velocity = input_drive_ / 100.0;
 			if(config_current_velocity_conversion_.enable == true && can_receive_502_.clutch == false && can_receive_503_.clutch == true)
-				cmd_velocity = cruse_velocity_;
+			{
+				switch(config_current_velocity_conversion_.velocity_mode)
+				{
+					case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT_DIRECT:
+					case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CAN_DIRECT:
+						cmd_velocity = cruse_velocity_;
+				}
+			}
 
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 			double cv_s = current_velocity /3.6;
@@ -2546,6 +2554,7 @@ private:
 			std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
 			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity : accel_avoidance_distance_min_;
 			std::cout << "velocity hikaku : " << cmd_velocity << "," << current_velocity << std::endl;
+			std::cout << "flag : " << (int)checkMobileyeObstacleStop(nowtime) << "," << stopper_distance_ << "," << in_accel_mode_ << std::endl;
 			if (checkMobileyeObstacleStop(nowtime) == false
 					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit

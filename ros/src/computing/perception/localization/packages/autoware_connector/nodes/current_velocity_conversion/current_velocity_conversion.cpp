@@ -312,7 +312,7 @@ public:
         geometry_msgs::TwistStamped current_velocity_msg;
         current_velocity_msg.header.frame_id = "base_link";
         current_velocity_msg.header.stamp = nowtime;
-        current_velocity_msg.twist.linear.x = config_.constant_velocity / 3.6;
+        current_velocity_msg.twist.linear.x = microbus_can502_.velocity_mps;
         current_velocity_msg.twist.linear.y = 0;
         current_velocity_msg.twist.linear.z = 0;
         current_velocity_msg.twist.angular.x = 0;

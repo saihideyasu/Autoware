@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-//#include <std_msgs/Float64.h>
+#include <std_msgs/Float64.h>
 #include <autoware_system_msgs/Date.h>
 #include <std_msgs/String.h>
 #include <autoware_msgs/Lane.h>
@@ -17,7 +17,7 @@ class PeriodSignal
 private:
     ros::NodeHandle nh_, private_nh_;
     ros::Subscriber sub_config_, sub_local_waypoints_, sub_gnss_time_;
-    ros::Publisher pub_signal_stat_, pub_signal_stat_string_;
+    ros::Publisher pub_signal_stat_, pub_signal_stat_string_, pub_signal_change_time_;
 
     autoware_config_msgs::ConfigPeriodSignal config_;
 
@@ -117,6 +117,7 @@ public:
 
         pub_signal_stat_ = nh_.advertise<autoware_msgs::TrafficLight>("/light_color", 10, true);
         pub_signal_stat_string_ = nh_.advertise<std_msgs::String>("/sound_player", 10);
+        pub_signal_change_time_ = nh_.advertise<std_msgs::Float64>("/signal_change_time", 10);
     }
 
     void run()
@@ -160,6 +161,10 @@ public:
                 pub_signal_stat_.publish(traffic_light_msg);
 		        pub_signal_stat_string_.publish(state_string_msg);
             }
+
+            std_msgs::Float64 change_time_msg;
+            change_time_msg.data = time_step_.time_step_green_ - time_range;
+            pub_signal_change_time_.publish(change_time_msg);
         }
         //yellow
         else
@@ -175,6 +180,10 @@ public:
                     pub_signal_stat_.publish(traffic_light_msg);
 		            pub_signal_stat_string_.publish(state_string_msg);
                 }
+
+                std_msgs::Float64 change_time_msg;
+                change_time_msg.data = time_step_.time_step_yellow_ - time_range;
+                pub_signal_change_time_.publish(change_time_msg);
             }
             //red
             else
@@ -187,6 +196,10 @@ public:
                     pub_signal_stat_.publish(traffic_light_msg);
 		            pub_signal_stat_string_.publish(state_string_msg);
                 }
+
+                std_msgs::Float64 change_time_msg;
+                change_time_msg.data = time_step_.time_step_red_ - time_range;
+                pub_signal_change_time_.publish(change_time_msg);
             }
         }
     }

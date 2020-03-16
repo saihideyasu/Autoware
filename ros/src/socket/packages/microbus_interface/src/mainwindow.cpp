@@ -76,6 +76,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->cb_use_localizer_safety, SIGNAL(clicked()), this, SLOT(publish_use_safety_localizer()));
     connect(ui->bt2_log_write, SIGNAL(clicked()), this, SLOT(publish_log_write()));
     connect(ui->bt2_log_stop, SIGNAL(clicked()), this, SLOT(publish_log_stop()));
+    connect(ui->bt3_signal_time, SIGNAL(clicke()), this, SLOT(click_signal_time()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -116,7 +117,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_ndt_stat_string_ = nh.subscribe("/ndt_monitor/ndt_status", 10 , &MainWindow::callbackNdtStatString, this);
     sub_stroke_routine_ = nh.subscribe("/microbus/stroke_routine", 10 , &MainWindow::callbackStrokeRoutine, this);
     sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &MainWindow::callbackMobileyeCan, this);
-
+    sub_gnss_time_ = nh.subscribe("/gnss_time", 10 , &MainWindow::callbackGnssTime, this);
+ 
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.baselink_distance = 10000;
@@ -1016,6 +1018,11 @@ void MainWindow::callbackMobileyeCan(const can_msgs::Frame &frame)
     }
 }
 
+void MainWindow::callbackGnssTime(const autoware_system_msgs::Date &msg)
+{
+    gnss_time_ = msg;
+}
+
 void MainWindow::publish_emergency_clear()
 {
     std_msgs::Empty msg;
@@ -1171,4 +1178,9 @@ void MainWindow::click_error_text_reset()
     error_text_lock_ = false;
     ui->tx_error_text->setText("");
     ui->tx2_error_text->setText("");
+}
+
+void MainWindow::click_signal_time()
+{
+    
 }

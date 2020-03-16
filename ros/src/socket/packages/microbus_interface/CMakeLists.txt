@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
   autoware_msgs
   autoware_can_msgs
   autoware_config_msgs
+  autoware_system_msgs
 )
 
 set(CMAKE_CXX_FLAGS "-O2 -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
@@ -36,6 +37,7 @@ catkin_package(CATKIN_DEPENDS
   mobileye_560_660_msgs
   autoware_can_msgs
   autoware_msgs
+  autoware_system_msgs
 )
 
 include_directories(

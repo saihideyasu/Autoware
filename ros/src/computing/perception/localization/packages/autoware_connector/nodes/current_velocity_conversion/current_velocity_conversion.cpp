@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/String.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <autoware_config_msgs/ConfigCurrentVelocityConversion.h>
@@ -23,7 +24,7 @@ class CurrentVelocityConversion
 private:
     ros::NodeHandle nh_, private_nh_;
     ros::Publisher pub_cruse_velocity_mps_, pub_waypoints_, pub_current_pose_, pub_current_velocity_, pub_localizer_pose_;
-    ros::Publisher pub_closest_waypoint_;
+    ros::Publisher pub_closest_waypoint_, pub_error_string_;
 
     ros::Subscriber sub_config_, sub_microbus_can502_, sub_microbus_can503_, sub_mobileye_obstacle_;
     ros::Subscriber sub_mobileye_left_lka_lane_, sub_mobileye_right_lka_lane_;
@@ -44,13 +45,13 @@ private:
     VelodyneLocalizer velodyne_localizer_;
     bool init_flag_;
 
+    const unsigned char lane_quality_th_ = 2;
+
     double lka_math(double z)
     {
-        const unsigned char lane_quality = 2;
-
         double left_x_not_c0=0, right_x_not_c0=0;
         double left_x=0, right_x=0;
-        if(left_lane_.quality >= lane_quality)
+        if(left_lane_.quality >= lane_quality_th_)
         {
             double c3 = left_lane_.curvature_derivative_parameter_c3;
             double c2 = left_lane_.curvature_parameter_c2;
@@ -59,7 +60,7 @@ private:
             double c0 = left_lane_.position_parameter_c0;
             left_x = left_x_not_c0 + c0;
         }
-        if(right_lane_.quality >= lane_quality)
+        if(right_lane_.quality >= lane_quality_th_)
         {
             double c3 = right_lane_.curvature_derivative_parameter_c3;
             double c2 = right_lane_.curvature_parameter_c2;
@@ -129,6 +130,27 @@ private:
                 }
                 break;
             }
+            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CAN:
+            case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_MOBILEYE_CAN:
+            {
+                if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
+                {
+                }
+                else
+                {
+                    cruse_velocity_mps_  = msg.velocity_mps;
+                }
+
+                if(msg.clutch == true && (left_lane_.quality < lane_quality_th_ || right_lane_.quality < lane_quality_th_))
+                {
+                    std::stringstream str;
+                    str << "error : lane left quality," << left_lane_.quality << "   right lane quality," << right_lane_.quality;
+                    std_msgs::String msg_str;
+                    msg_str.data = str.str();
+                    pub_error_string_.publish(msg_str);
+                }
+                break;
+            }
             case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CAN_DIRECT:
             {
                 if(config_.enable == true && microbus_can503_.clutch == true && msg.clutch == false)
@@ -140,9 +162,19 @@ private:
                     cruse_velocity_mps_  = msg.velocity_mps;
                     publishCruseVelocity(0);
                 }
+
+                if(msg.clutch == true && (left_lane_.quality < lane_quality_th_ || right_lane_.quality < lane_quality_th_))
+                {
+                    std::stringstream str;
+                    str << "error : lane left quality," << left_lane_.quality << "   right lane quality," << right_lane_.quality;
+                    std_msgs::String msg_str;
+                    msg_str.data = str.str();
+                    pub_error_string_.publish(msg_str);
+                }
                 break;
             }
         }
+
 
         microbus_can502_ = msg;
     }
@@ -191,11 +223,12 @@ public:
         }
 
         pub_cruse_velocity_mps_ = nh_.advertise<std_msgs::Float64>("/cruse_velocity", 1);
-        pub_waypoints_ = nh_.advertise<autoware_msgs::Lane>("/safety_waypoints", 1);
+        pub_waypoints_ = nh_.advertise<autoware_msgs::Lane>("/base_waypoints", 1);
         pub_current_pose_ = nh_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1);
         pub_current_velocity_ = nh_.advertise<geometry_msgs::TwistStamped>("/current_velocity", 1);
         pub_localizer_pose_ = nh_.advertise<geometry_msgs::PoseStamped>("/localizer_pose", 1);
         pub_closest_waypoint_ = nh_.advertise<std_msgs::Int32>("/closest_waypoint", 1);
+        pub_error_string_ = nh_.advertise<std_msgs::String>("/cruse_error", 1);
 
         sub_config_ = nh_.subscribe("/config/current_velocity_conversion", 1, &CurrentVelocityConversion::callbackConfig, this);
         sub_microbus_can502_ = nh_.subscribe("/microbus/can_receive502", 1, &CurrentVelocityConversion::callbackMicrobusCan502, this);

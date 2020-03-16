@@ -307,7 +307,7 @@ private:
 	ros::Subscriber sub_localizer_select_num_, sub_config_localizer_switch_, sub_interface_lock_;//sub_interface_config_;
 	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
 	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_, sub_mobileye_obstacle_data_, sub_temporary_fixed_velocity_;
-	ros::Subscriber sub_antenna_pose_, sub_antenna_pose_sub_, sub_gnss_time_, sub_nmea_sentence_, sub_log_write_;
+	ros::Subscriber sub_antenna_pose_, sub_antenna_pose_sub_, sub_gnss_time_, sub_nmea_sentence_, sub_log_write_, sub_cruse_error_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -382,6 +382,23 @@ private:
 	const int nmea_list_count_ = 5;
 	std::vector<std::string> nmae_name_list_ = {"#BESTPOSA","#BESTGNSSPOSA","#TIMEA","#INSSTDEVA","#RAWIMUA"};
 	std::vector<std::stringstream> nmea_text_list_;
+
+	void callbackCruseError(const std_msgs::String::ConstPtr &msg)
+	{
+			//if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
+			//	drive_clutch_ = false;
+			if(can_receive_501_.steer_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
+				steer_clutch_ = false;
+			//flag_drive_mode_ = false;
+			//flag_steer_mode_ = false;
+			shift_auto_ = false;
+			std::cout << msg->data << std::endl;
+			std::stringstream safety_error_message;
+			safety_error_message << msg->data;
+			publishStatus(safety_error_message.str());
+			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
+			can_send();
+	}
 
 	void callbackLogWrite(const std_msgs::Bool::ConstPtr &msg)
 	{
@@ -2900,6 +2917,7 @@ public:
 		sub_gnss_time_ = nh.subscribe("/gnss_time", 10 , &kvaser_can_sender::callbackGnssTime, this);
 		sub_nmea_sentence_ = nh.subscribe("/novatel_oem7_2/nmea_sentence", 10 , &kvaser_can_sender::callbackNmeaSentence, this);
 		sub_log_write_ = nh.subscribe("/microbus/log_write", 10 , &kvaser_can_sender::callbackLogWrite, this);
+		sub_cruse_error_ = nh.subscribe("/cruse_error", 10 , &kvaser_can_sender::callbackCruseError, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 
 		sub_current_pose_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, "/current_pose", 10);

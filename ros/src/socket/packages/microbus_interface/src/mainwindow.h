@@ -29,6 +29,7 @@
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/NDTStat.h>
+#include <autoware_system_msgs/Date.h>
 
 namespace Ui {
 class MainWindow;
@@ -73,6 +74,7 @@ private:
     ros::Subscriber sub_gnss_pose_, sub_gnss_deviation_, sub_ndt_stat_, sub_gnss_stat_, sub_ndt_stat_string_;
     ros::Subscriber sub_stroke_routine_;
     ros::Subscriber sub_mobileye_frame_;//mobileyeからのcanの生データ
+    ros::Subscriber sub_gnss_time_;//gnssの時間
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
@@ -96,6 +98,7 @@ private:
     void callbackNdtStatString(const std_msgs::String &msg);
     void callbackStrokeRoutine(const std_msgs::String &msg);
     void callbackMobileyeCan(const can_msgs::Frame &msg);
+    void callbackGnssTime(const autoware_system_msgs::Date &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
@@ -112,6 +115,7 @@ private:
     autoware_msgs::WaypointParam waypoint_param_;
     geometry_msgs::PoseStamped gnss_pose_;
     autoware_msgs::GnssStandardDeviation gnss_deviation_;
+    autoware_system_msgs::Date gnss_time_;
     autoware_msgs::NDTStat ndt_stat_;
     unsigned char gnss_stat_;
     std::string ndt_stat_string_, stroke_routine_;
@@ -151,6 +155,7 @@ private slots:
     void publish_log_write();
     void publish_log_stop();
     void click_error_text_reset();
+    void click_signal_time();
 };
 
 #endif // MAINWINDOW_H

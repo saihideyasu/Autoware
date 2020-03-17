@@ -132,6 +132,9 @@ private:
     QPalette palette_score_ok_, palette_score_error_;
     QPalette palette_current_localizer_, palette_lb_normal_, palette_lb_localize_;
 
+    std::string gnss_time_str();
+
+    double signal_red_green_time_, signal_green_yellow_time_, signal_yellow_red_time_, signal_red_green_time2_;
 private slots:
     void publish_emergency_clear();
     void publish_Dmode_manual();
@@ -156,6 +159,7 @@ private slots:
     void publish_log_stop();
     void click_error_text_reset();
     void click_signal_time();
+    void click_signal_time_clear();
 };
 
 #endif // MAINWINDOW_H

@@ -4,7 +4,11 @@
 MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    localizer_select_(-1)
+    localizer_select_(-1),
+    signal_red_green_time_(0),
+    signal_green_yellow_time_(0),
+    signal_yellow_red_time_(0),
+    signal_red_green_time2_(0)
 {
     ui->setupUi(this);
 
@@ -76,7 +80,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->cb_use_localizer_safety, SIGNAL(clicked()), this, SLOT(publish_use_safety_localizer()));
     connect(ui->bt2_log_write, SIGNAL(clicked()), this, SLOT(publish_log_write()));
     connect(ui->bt2_log_stop, SIGNAL(clicked()), this, SLOT(publish_log_stop()));
-    connect(ui->bt3_signal_time, SIGNAL(clicke()), this, SLOT(click_signal_time()));
+    connect(ui->bt3_signal_time, SIGNAL(clicked()), this, SLOT(click_signal_time()));
+    connect(ui->bt3_signal_time_clear, SIGNAL(clicked()), this, SLOT(click_signal_time_clear()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -1180,7 +1185,59 @@ void MainWindow::click_error_text_reset()
     ui->tx2_error_text->setText("");
 }
 
+std::string MainWindow::gnss_time_str()
+{
+    std::stringstream str;
+    str << gnss_time_.year << ":" << +gnss_time_.month << ":" << +gnss_time_.day << ":" << +gnss_time_.hour << ":" << +gnss_time_.min << ":" << gnss_time_.sec;
+    return str.str();
+}
+
 void MainWindow::click_signal_time()
 {
-    
+    std::string time_str = gnss_time_str();
+    double time = gnss_time_.hour*60.0*60.0 + gnss_time_.min*60.0 + gnss_time_.sec;
+
+    QString red_green_text = ui->tx3_signal_red_green_time->toPlainText();
+    QString green_yellow_text = ui->tx3_signal_green_yellow_time->toPlainText();
+    QString yellow_red_text = ui->tx3_signal_yellow_red_time->toPlainText();
+    QString red_green_text2 = ui->tx3_signal_red_green_time_2->toPlainText();
+    if(red_green_text == "")
+        {ui->tx3_signal_red_green_time->setText(time_str.c_str()); signal_red_green_time_ = time;}
+    else if(green_yellow_text == "")
+        {ui->tx3_signal_green_yellow_time->setText(time_str.c_str()); signal_green_yellow_time_ = time;}
+    else if(yellow_red_text == "")
+        {ui->tx3_signal_yellow_red_time->setText(time_str.c_str()); signal_yellow_red_time_ = time;}
+    else if(red_green_text2 == "")
+        {ui->tx3_signal_red_green_time_2->setText(time_str.c_str()); signal_red_green_time2_ = time;}
+
+    if(signal_red_green_time_ != 0 && signal_green_yellow_time_)
+    {
+        std::stringstream str;
+        str << signal_green_yellow_time_ - signal_red_green_time_;
+        ui->tx3_signal_red_green_difference->setText(str.str().c_str());
+    }
+    if(signal_green_yellow_time_ != 0 && signal_yellow_red_time_)
+    {
+        std::stringstream str;
+        str << signal_yellow_red_time_ - signal_green_yellow_time_;
+        ui->tx3_signal_green_yellow_difference->setText(str.str().c_str());
+    }
+    if(signal_yellow_red_time_ != 0 && signal_red_green_time2_)
+    {
+        std::stringstream str;
+        str << signal_red_green_time2_ - signal_yellow_red_time_;
+        ui->tx3_signal_yellow_red_difference->setText(str.str().c_str());
+    }
+}
+
+void MainWindow::click_signal_time_clear()
+{
+    ui->tx3_signal_red_green_time->setText("");
+    ui->tx3_signal_green_yellow_time->setText("");
+    ui->tx3_signal_yellow_red_time->setText("");
+    ui->tx3_signal_red_green_time_2->setText("");
+    ui->tx3_signal_green_yellow_difference->setText("");
+    ui->tx3_signal_yellow_red_difference->setText("");
+    ui->tx3_signal_red_green_difference->setText("");
+    signal_red_green_time_ = signal_green_yellow_time_ = signal_yellow_red_time_ = signal_red_green_time2_ = 0;
 }

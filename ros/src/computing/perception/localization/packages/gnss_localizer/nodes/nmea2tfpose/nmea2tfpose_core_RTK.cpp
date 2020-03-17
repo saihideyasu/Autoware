@@ -307,8 +307,9 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
       if(nmea.size() == 20)
       {
         autoware_system_msgs::Date date;
-        date.year = stoi(nmea.at(14));
-        date.month = stoi(nmea.at(15));
+        date.year = stoi(nmea.at(13));
+        date.month = stoi(nmea.at(14));
+        date.day = stoi(nmea.at(15));
         date.hour = stoi(nmea.at(16));
         date.min = stoi(nmea.at(17));
         date.sec = stoi(nmea.at(18)) / (float)1000.0;

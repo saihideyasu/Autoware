@@ -349,6 +349,7 @@ void AstarAvoid::publishWaypoints()
     autoware_msgs::Lane safety_waypoints;
     safety_waypoints.header = current_waypoints.header;
     safety_waypoints.increment = current_waypoints.increment;
+    safety_waypoints.signal_select = current_waypoints.signal_select;
 
     // push waypoints from closest index
     for (int i = 0; i < safety_waypoints_size_; ++i)

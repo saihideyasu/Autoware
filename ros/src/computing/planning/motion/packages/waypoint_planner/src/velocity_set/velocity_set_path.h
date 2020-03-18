@@ -32,6 +32,8 @@ class VelocitySetPath
   double velocity_offset_; // m/s
   double decelerate_vel_min_; // m/s
 
+  unsigned char signal_select_;
+
   bool checkWaypoint(int num, const char *name) const;
 
  public:

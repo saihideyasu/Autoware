@@ -415,10 +415,13 @@ void create_waypoint(const autoware_msgs::LaneArray& msg)
   {
 	    autoware_msgs::Lane lane = create_new_lane(msg.lanes[i], header);
 
+    lane.signal_select = autoware_msgs::Lane::SIGNAL_SELECT_UNKNOWN;
 		traffic_waypoint.lanes.push_back(lane);
+    lane.signal_select = autoware_msgs::Lane::SIGNAL_SELECT_GREEN;
 		green_waypoint.lanes.push_back(lane);
 		lane = apply_stopline_acceleration(lane, config_acceleration, config_stopline_search_radius,
 		                                    config_number_of_zeros_ahead, config_number_of_zeros_behind);
+    lane.signal_select = autoware_msgs::Lane::SIGNAL_SELECT_RED;
 		red_waypoint.lanes.push_back(lane);
 		continue;
   }

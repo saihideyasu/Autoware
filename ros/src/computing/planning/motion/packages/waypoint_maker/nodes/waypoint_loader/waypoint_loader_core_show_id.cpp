@@ -101,6 +101,7 @@ void WaypointLoaderNode::createLaneWaypoint(const std::string& file_path, autowa
   lane->header.frame_id = "/map";
   lane->header.stamp = ros::Time(0);
   lane->waypoints = wps;
+  lane->signal_select = autoware_msgs::Lane::SIGNAL_SELECT_UNKNOWN;
 }
 
 void WaypointLoaderNode::loadWaypointsForVer1(const char* filename, std::vector<autoware_msgs::Waypoint>* wps)

@@ -6,7 +6,6 @@
 #include <autoware_msgs/TrafficLight.h>
 #include <autoware_config_msgs/ConfigPeriodSignal.h>
 #include "TrafficLight.h"
-#include <unistd.h>
 
 struct TimeStep
 {
@@ -66,7 +65,7 @@ private:
     }
 
     void callbackLocalWaypoints(const autoware_msgs::Lane &lane)
-    {std::cout << "signal_select : " << +lane.signal_select << std::endl;
+    {
         double dt_sum = 0;
         geometry_msgs::Point pose_prev;
         for(int num=1; num<lane.waypoints.size(); num++)
@@ -254,6 +253,5 @@ int main(int argc, char** argv)
         period_signal.run();
         rate.sleep();
     }
-    ros::spinOnce();
     return 0;
 }

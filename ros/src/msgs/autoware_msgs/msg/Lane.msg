@@ -1,3 +1,7 @@
+uint8 SIGNAL_SELECT_RED = 0
+uint8 SIGNAL_SELECT_GREEN = 1
+uint8 SIGNAL_SELECT_UNKNOWN = 2
+
 Header header
 int32 increment
 int32 lane_id
@@ -8,3 +12,4 @@ float32 cost
 float32 closest_object_distance
 float32 closest_object_velocity
 bool is_blocked
+uint8 signal_select

@@ -18,7 +18,8 @@
 
 VelocitySetPath::VelocitySetPath()
   : set_path_(false),
-    current_vel_(0)
+    current_vel_(0),
+    signal_select_(autoware_msgs::Lane::SIGNAL_SELECT_UNKNOWN)
 {
   ros::NodeHandle private_nh_("~");
   private_nh_.param<double>("velocity_offset", velocity_offset_, 1.2);
@@ -64,6 +65,7 @@ void VelocitySetPath::setTemporalWaypoints(int temporal_waypoints_size, int clos
     temporal_waypoints_.waypoints.push_back(new_waypoints_.waypoints[closest_waypoint + i]);
   }
 
+  temporal_waypoints_.signal_select = signal_select_;
   return;
 }
 
@@ -245,6 +247,7 @@ void VelocitySetPath::waypointsCallback(const autoware_msgs::LaneConstPtr& msg)
   // temporary, edit waypoints velocity later
   new_waypoints_ = *msg;
 
+  signal_select_ = msg->signal_select;
   set_path_ = true;
 }
 

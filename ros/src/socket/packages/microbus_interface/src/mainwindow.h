@@ -30,6 +30,9 @@
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/NDTStat.h>
 #include <autoware_system_msgs/Date.h>
+#include <autoware_msgs/StopperDistance.h>
+#include <QFileDialog>
+#include <QStandardPaths>
 
 namespace Ui {
 class MainWindow;
@@ -59,7 +62,7 @@ private:
     ros::Publisher pub_blinker_right_, pub_blinker_left_, pub_blinker_stop_; //ウィンカー
     ros::Publisher pub_error_lock_;//エラーがでている場合、canアプリにロック情報を送る
     ros::Publisher pub_use_safety_localizer_;//localizer関連のセーフティのチェック
-    ros::Publisher pub_log_write_, pub_log_stop;//ログ出力通知
+    ros::Publisher pub_log_write_, pub_log_stop, pub_log_folder_;//ログ出力通知
 
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
@@ -88,7 +91,7 @@ private:
     void callbackLocalizerSelect(const std_msgs::Int32 &msg);//localizerの遷移状態 
     void callbackLocalizerMatchStat(const autoware_msgs::LocalizerMatchStat &msg);
     void callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVelocityParam &msg);
-    void callbackStopperDistance(const std_msgs::Float64 &msg);
+    void callbackStopperDistance(const autoware_msgs::StopperDistance &msg);
     void callbackWaypointParam(const autoware_msgs::WaypointParam &msg);
     void callbackImu(const sensor_msgs::Imu &msg);
     void callbackGnssPose(const geometry_msgs::PoseStamped &msg);
@@ -111,7 +114,7 @@ private:
     autoware_msgs::LocalizerMatchStat localizer_match_stat_;
     autoware_can_msgs::MicroBusCanVelocityParam can_velocity_param_;
     bool error_text_lock_;
-    double stopper_distance_;
+    autoware_msgs::StopperDistance stopper_distance_;
     autoware_msgs::WaypointParam waypoint_param_;
     geometry_msgs::PoseStamped gnss_pose_;
     autoware_msgs::GnssStandardDeviation gnss_deviation_;
@@ -121,6 +124,7 @@ private:
     std::string ndt_stat_string_, stroke_routine_;
     sensor_msgs::Imu imu_;
     mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
+    std::string log_folder_;
 
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror
@@ -160,6 +164,7 @@ private slots:
     void click_error_text_reset();
     void click_signal_time();
     void click_signal_time_clear();
+    void click_log_folder();
 };
 
 #endif // MAINWINDOW_H

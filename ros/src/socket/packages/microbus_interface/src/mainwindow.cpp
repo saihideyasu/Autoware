@@ -82,6 +82,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     connect(ui->bt2_log_stop, SIGNAL(clicked()), this, SLOT(publish_log_stop()));
     connect(ui->bt3_signal_time, SIGNAL(clicked()), this, SLOT(click_signal_time()));
     connect(ui->bt3_signal_time_clear, SIGNAL(clicked()), this, SLOT(click_signal_time_clear()));
+    connect(ui->bt2_log_folder, SIGNAL(clicked()), this, SLOT(click_log_folder()));
 
     nh_ = nh;  private_nh_ = p_nh;
 
@@ -98,7 +99,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     pub_blinker_stop_ = nh_.advertise<std_msgs::Bool>("/microbus/blinker_stop", 1);
     pub_error_lock_ = nh_.advertise<std_msgs::Bool>("/microbus/interface_lock", 1);
     pub_use_safety_localizer_ = nh_.advertise<std_msgs::Bool>("/microbus/use_safety_localizer", 1, true);
-    pub_log_write_ = nh_.advertise<std_msgs::Bool>("/microbus/log_write", 1);
+    pub_log_write_ = nh_.advertise<std_msgs::Bool>("/microbus/log_on", 1);
+    pub_log_folder_ = nh_.advertise<std_msgs::String>("/microbus/log_folder", 1, true);
 
     sub_can501_ = nh_.subscribe("/microbus/can_receive501", 10, &MainWindow::callbackCan501, this);
     sub_can502_ = nh_.subscribe("/microbus/can_receive502", 10, &MainWindow::callbackCan502, this);
@@ -134,7 +136,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     distance_angular_check_ekf_.baselink_angular = 180;
     distance_angular_check_gnss_.baselink_distance = 10000;
     distance_angular_check_gnss_.baselink_angular = 180;
-    stopper_distance_ = -1;
+    stopper_distance_.distance = -1;
 
     publish_use_safety_localizer();
 }
@@ -707,7 +709,7 @@ void MainWindow::window_updata()
         ui->tx2_jurk->setText(str_jurk.str().c_str());
 
         std::stringstream str_stop_dis;
-        str_stop_dis  << std::fixed << std::setprecision(keta) << stopper_distance_;
+        str_stop_dis  << std::fixed << std::setprecision(keta) << stopper_distance_.distance;
         ui->tx_stopper_distance->setText(str_stop_dis.str().c_str());
         ui->tx2_stopD->setText(str_stop_dis.str().c_str());
 
@@ -840,6 +842,10 @@ void MainWindow::window_updata()
         }
         else ui->tx2_right_lane->setText("NONE");
     }
+
+    {
+        ui->tx2_log_folder->setText(log_folder_.c_str());
+    }
 }
 
 void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg)
@@ -911,9 +917,9 @@ void MainWindow::callbackCanVelocityParam(const autoware_can_msgs::MicroBusCanVe
     can_velocity_param_ = msg;
 }
 
-void MainWindow::callbackStopperDistance(const std_msgs::Float64 &msg)
+void MainWindow::callbackStopperDistance(const autoware_msgs::StopperDistance &msg)
 {
-    stopper_distance_ = msg.data;
+    stopper_distance_ = msg;
 }
 
 void MainWindow::callbackWaypointParam(const autoware_msgs::WaypointParam &msg)
@@ -1227,6 +1233,19 @@ void MainWindow::click_signal_time()
         std::stringstream str;
         str << signal_red_green_time2_ - signal_yellow_red_time_;
         ui->tx3_signal_yellow_red_difference->setText(str.str().c_str());
+    }
+}
+
+void MainWindow::click_log_folder()
+{
+    QString path = QFileDialog::getExistingDirectory(this, tr("フォルダ選択画面"),
+                                      QStandardPaths::writableLocation(QStandardPaths::DesktopLocation));
+    if(path != "")
+    {
+        log_folder_ = path.toStdString();
+        std_msgs::String str;
+        str.data = log_folder_;
+        pub_log_folder_.publish(str);
     }
 }
 

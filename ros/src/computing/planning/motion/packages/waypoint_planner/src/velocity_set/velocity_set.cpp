@@ -279,6 +279,7 @@ int detectStopObstacle(const pcl::PointCloud<pcl::PointXYZ>& points,
   int ob_type = (int)EObstacleType::NONE;
   int end_waypoint = closest_waypoint + STOP_SEARCH_DISTANCE;
   bool check_point = false, check_pillar = false, check_mobileye = false;
+  *mobileye_velocity = DBL_MIN;
 
   tf::StampedTransform mobileye_transform;
   listener->lookupTransform("map", "me_viz", ros::Time(0), mobileye_transform);
@@ -649,6 +650,10 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
   // skip searching deceleration range
   if (vs_info.getDecelerationRange() < 0.01)
   {
+    std_msgs::Float64 vel;
+		vel.data = *mobileye_velocity;
+		mobileye_velocity_pub.publish(vel);
+
 	  *obstacle_waypoint = stop_obstacle_waypoint;
 	  if (stop_obstacle_waypoint < 0)
 		return EControl::KEEP;
@@ -659,9 +664,9 @@ EControl pointsDetection(const pcl::PointCloud<pcl::PointXYZ>& points,
 		return EControl::STOPLINE;
     else if(ob_type & (int)EObstacleType::ON_MOBILEYE)
     {
-        std_msgs::Float64 vel;
+        /*std_msgs::Float64 vel;
 			  vel.data = *mobileye_velocity;
-			  mobileye_velocity_pub.publish(vel);
+			  mobileye_velocity_pub.publish(vel);*/
 
         //double dt = vs_path.calcInterval(closest_waypoint, *obstacle_waypoint);
         //std::cout << dt << std::endl;
@@ -999,7 +1004,8 @@ int main(int argc, char** argv)
   ros::Publisher mobileye_velocity_pub = nh.advertise<std_msgs::Float64>("mobileye_velocity", 1);
   ros::Publisher detection_mobileye_pub = nh.advertise<mobileye_560_660_msgs::ObstacleData>("detection_mobileye", 1);
   ros::Publisher use_mobileye_obstacle_pub = nh.advertise<mobileye_560_660_msgs::ObstacleData>("use_mobileye_obstacle", 1);
-
+  //ros::Publisher temporary_fixed_velocity_pub = nh.advertise<std_msgs::Float64>("/temporary_fixed_velocity", 1);
+  
   ros::Publisher final_waypoints_pub;
   if(enablePlannerDynamicSwitch){
 	  final_waypoints_pub = nh.advertise<autoware_msgs::Lane>("astar/final_waypoints", 1, true);

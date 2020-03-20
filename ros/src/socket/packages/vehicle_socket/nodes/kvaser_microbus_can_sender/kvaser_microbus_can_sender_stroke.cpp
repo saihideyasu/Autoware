@@ -43,6 +43,7 @@
 #include <autoware_msgs/NDTStat.h>
 #include <autoware_msgs/LocalizerMatchStat.h>
 #include <autoware_msgs/VehicleStatus.h>
+#include <autoware_msgs/StopperDistance.h>
 #include <tf/tf.h>
 #include "kvaser_can.h"
 #include <time.h>
@@ -308,6 +309,7 @@ private:
 	ros::Subscriber sub_ekf_covariance_, sub_use_safety_localizer_, sub_config_current_velocity_conversion_;
 	ros::Subscriber sub_cruse_velocity_, sub_mobileye_frame_, sub_mobileye_obstacle_data_, sub_temporary_fixed_velocity_;
 	ros::Subscriber sub_antenna_pose_, sub_antenna_pose_sub_, sub_gnss_time_, sub_nmea_sentence_, sub_log_write_, sub_cruse_error_;
+	ros::Subscriber sub_log_folder_;
 
 	message_filters::Subscriber<geometry_msgs::TwistStamped> *sub_current_velocity_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped> *sub_current_pose_;
@@ -338,7 +340,7 @@ private:
 	bool blinker_right_, blinker_left_, blinker_stop_, blinker_param_sender_;
 	EControl econtrol;
 	int obstracle_waypoint_;
-	double stopper_distance_;
+	autoware_msgs::StopperDistance stopper_distance_;
 	autoware_msgs::WaypointParam waypoint_param_;
 	PID_params pid_params;
 	int use_velocity_data_, use_acceleration_data_;
@@ -377,7 +379,7 @@ private:
 	double send_step_;
 	unsigned int log_subscribe_count_;
 	autoware_system_msgs::Date gnss_time_;
-	std::string log_path_;
+	std::string log_folder_;
 
 	const int nmea_list_count_ = 5;
 	std::vector<std::string> nmae_name_list_ = {"#BESTPOSA","#BESTGNSSPOSA","#TIMEA","#INSSTDEVA","#RAWIMUA"};
@@ -400,20 +402,26 @@ private:
 			can_send();
 	}
 
+	void callbackLogFolder(const std_msgs::String::ConstPtr &msg)
+	{
+		log_folder_ = msg->data;
+	}
+
 	void callbackLogWrite(const std_msgs::Bool::ConstPtr &msg)
 	{
 		if(msg->data == true)
 		{
 			std::stringstream str;
-			str << "konsole -e /home/autoware/Autoware_1.11.0_sai_edit/ros/src/util/packages/runtime_manager/scripts/can_log.sh /home/autoware/Autoware_1.11.0_sai_edit/ros/";
-			str << gnss_time_.year << "_" << gnss_time_.month << "_" << gnss_time_.hour << "_" << gnss_time_.min << "_" << gnss_time_.sec << ".csv";
+			//str << "konsole -e /home/autoware/Autoware_1.11.0_sai_edit/ros/src/util/packages/runtime_manager/scripts/can_log.sh /home/autoware/Autoware_1.11.0_sai_edit/ros/";
+			str << "konsole -e /home/autoware/Autoware_1.11.0_sai_edit/ros/src/util/packages/runtime_manager/scripts/can_log.sh " << log_folder_ << "/";
+			str << gnss_time_.year << "_" << +gnss_time_.month << "_" << +gnss_time_.hour << "_" << +gnss_time_.min << "_" << gnss_time_.sec << ".csv";
 			std::cout << "log write : " << str.str() << std::endl;
 			system(str.str().c_str());
 			//system("/home/autoware/test.sh /home/autoware/aaa.csv");
 		}
 		else
 		{
-			system("/home/autoware/log_stop.sh");
+			system("/home/autoware/Autoware_1.11.0_sai_edit/ros/src/util/packages/runtime_manager/scripts/log_stop.sh");
 		}
 	}
 
@@ -998,10 +1006,10 @@ private:
 		}
 	}
 
-	void callbackStopperDistance(const std_msgs::Float64::ConstPtr &msg)
+	void callbackStopperDistance(const autoware_msgs::StopperDistance::ConstPtr &msg)
 	{
-		stopper_distance_ = msg->data;
-		std::cout << "stopper distance : " << stopper_distance_ << std::endl;
+		stopper_distance_ = *msg;
+		std::cout << "stopper distance : " << stopper_distance_.distance << "  process : " << +stopper_distance_.send_process << "velocity : "  << stopper_distance_.fixed_velocity << std::endl;
 	}
 
 	void callbackEmergencyStop(const std_msgs::UInt8::ConstPtr &msg)
@@ -1107,7 +1115,7 @@ private:
 	                       const geometry_msgs::PoseStampedConstPtr &pose_msg)
 	{
 		std::cout << "current velocity : " << twist_msg->twist.linear.x << std::endl;
-		std::cout << "current pose : "     << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << std::endl;
+		std::cout << "current pose : "      << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << std::endl;
 
 		ros::Duration rostime = twist_msg->header.stamp - current_velocity_.header.stamp;
 		double td = rostime.sec + rostime.nsec * 1E-9;
@@ -1155,7 +1163,7 @@ private:
 		str << std::setprecision(10) ;
 		str << waypoint_id_;
 		name << "waypoint_id";
-		str << "|" <<  gnss_time_.year << "/" << gnss_time_.month << "/" << gnss_time_.hour << "/" << gnss_time_.min << "/" << gnss_time_.sec;
+		str << "|" <<  gnss_time_.year << "/" << +gnss_time_.month << "/" << +gnss_time_.hour << "/" << +gnss_time_.min << "/" << gnss_time_.sec;
 		//str << "|" << time_str;//timeString(time_str);
 		name << "|" << "gnss_time";
 		str <<  "|" << twist_.ctrl_cmd.linear_velocity * 3.6;
@@ -1191,8 +1199,14 @@ private:
 		double estimated_stopping_distance = (0 * 0 - mps*mps)/(2.0*acceleration2_twist_);
 
 		std::string gnss_stat_string = (gnss_stat_ == 3) ? "GNSS_OK" : "GNSS_ERROR";
-		str << "|" << stopper_distance_;//10
+		str << "|" << stopper_distance_.distance;//10
 		name << "|" << "stopper_distance";
+		str << "|" << +stopper_distance_.send_process;//10
+		name << "|" << "stopper_send_process";
+		str << "|" << stopper_distance_.fixed_velocity;//10
+		name << "|" << "stopper_fixed_velocity";
+		str << "|" << temporary_fixed_velocity_;//10
+		name << "|" << "temporary_fixed_velocity_";
 		str << "|" << estimated_stopping_distance;
 		name << "|" << "estimated_stopping_distance";
 		str << "|" << ndt_stat_.score ;
@@ -2075,6 +2089,7 @@ private:
 		double brake_stroke_step = setting_.brake_stroke_step_max;//2;
 		double vel_sa = current_velocity - cmd_velocity;
 		double brake_stroke_adjust_th = (current_velocity + cmd_velocity)/2 * (setting_.brake_stroke_adjust_th / 100.0);
+
 		if(vel_sa < brake_stroke_adjust_th)
 		//if(vel_sa < setting_.brake_stroke_adjust_th)
 		{
@@ -2086,7 +2101,7 @@ private:
 
 		const double velocity_magn = 1.7;
 		double stopper_distance_th = (setting_.stopper_distance1 > cmd_velocity*velocity_magn) ? setting_.stopper_distance1 : cmd_velocity*velocity_magn;
-		if(pid_params.get_stroke_prev() > 0 && (stopper_distance_ < 0 || stopper_distance_ > stopper_distance_th))
+		if(pid_params.get_stroke_prev() > 0 && (stopper_distance_.distance < 0 || stopper_distance_.distance > stopper_distance_th))
 		{
 			pid_params.clear_diff_velocity();
 			pid_params.clear_diff_acceleration();
@@ -2190,11 +2205,12 @@ private:
 */
 
 		//const double stop_stroke = 340.0;
-		if(use_stopper_distance_ == true && temporary_fixed_velocity_ <= 0)
+		//if(use_stopper_distance_ == true && temporary_fixed_velocity_ <= 0)
+		if(use_stopper_distance_ == true && stopper_distance_.fixed_velocity <= 0)
 		{
 			std::cout << "stopper list : "<< setting_.stopper_distance1 << "," << setting_.stopper_distance2 << "," << setting_.stopper_distance3 << std::endl;
 			std::cout << "kkk stop_stroke_max : " << stop_stroke_max_ << std::endl;
-			if(stopper_distance_ >= setting_.stopper_distance2 && stopper_distance_ <= setting_.stopper_distance1)
+			if(stopper_distance_.distance >= setting_.stopper_distance2 && stopper_distance_.distance <= setting_.stopper_distance1)
 			{std::cout << loop_counter_ << " : stopD1" << std::endl;
 				/*std::cout << "tbs," << target_brake_stroke;
 				double d = stop_stroke - target_brake_stroke;
@@ -2202,7 +2218,7 @@ private:
 				target_brake_stroke  += d * (1 - stopper_distance_/ 20.0 );
 				std::cout << ",tbs," << target_brake_stroke << ",d," << d << ",dis," << stopper_distance_ << std::endl;*/
 			}
-			else if(stopper_distance_ >= setting_.stopper_distance3 && stopper_distance_ <= setting_.stopper_distance2)
+			else if(stopper_distance_.distance >= setting_.stopper_distance3 && stopper_distance_.distance <= setting_.stopper_distance2)
 			{std::cout << loop_counter_ << "stopD2" << std::endl;
 				/*if(current_velocity > 5.0)
 				{
@@ -2215,7 +2231,8 @@ private:
 				else {
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
 				}*/
-				if(temporary_fixed_velocity_ > 0)
+				//if(temporary_fixed_velocity_ > 0)
+				if(stopper_distance_.fixed_velocity > 0)
 				{
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
 					if(current_velocity <= 0.5)
@@ -2225,13 +2242,14 @@ private:
 					}
 				}
 			}
-			else if(stopper_distance_ >= 0 && stopper_distance_ <= setting_.stopper_distance3)
+			else if(stopper_distance_.distance >= 0 && stopper_distance_.distance <= setting_.stopper_distance3)
 			{std::cout << loop_counter_ << "stopD3" << std::endl;
-				if(temporary_fixed_velocity_ == 0)
+				//if(temporary_fixed_velocity_ == 0)
+				if(stopper_distance_.fixed_velocity == 0)
 				{
 					//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 					brake_stroke_step = 0.5;
-					target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_)/2.0;
+					target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_.distance)/2.0;
 					if(target_brake_stroke < pid_params.get_stop_stroke_prev())
 						target_brake_stroke = pid_params.get_stop_stroke_prev();
 				}
@@ -2558,8 +2576,8 @@ private:
 
 			//std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << std::endl;
 			double cv_s = current_velocity /3.6;
-			if(acceleration <= 0 && stopper_distance_ >= 0)
-				std::cout << "teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_ <<  std::endl;
+			if(acceleration <= 0 && stopper_distance_.distance >= 0)
+				std::cout << "teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_.distance <<  std::endl;
 
 			std::cout << "auto_mode" << std::endl;
 			double new_stroke = 0;
@@ -2571,11 +2589,11 @@ private:
 			std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
 			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity : accel_avoidance_distance_min_;
 			std::cout << "velocity hikaku : " << cmd_velocity << "," << current_velocity << std::endl;
-			std::cout << "flag : " << (int)checkMobileyeObstacleStop(nowtime) << "," << stopper_distance_ << "," << in_accel_mode_ << std::endl;
+			std::cout << "flag : " << (int)checkMobileyeObstacleStop(nowtime) << "," << stopper_distance_.distance << "," << in_accel_mode_ << std::endl;
 			if (checkMobileyeObstacleStop(nowtime) == false
 					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit
-			        && (stopper_distance_<0 || stopper_distance_>accel_mode_avoidance_distance)
+			        && (stopper_distance_.distance<0 || stopper_distance_.distance>accel_mode_avoidance_distance)
 					&& in_accel_mode_ == true)
 			{
 				std::cout << " stroke drive" << std::endl;
@@ -2583,14 +2601,14 @@ private:
 			}
 			//減速判定
 			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
-			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_>=0 && stopper_distance_ <=current_velocity)
+			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_.distance>=0 && stopper_distance_.distance <=current_velocity)
 					 && in_brake_mode_ == true)
 			{
 				std::cout << "stroke brake" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
 			}
 			//停止線判定
-			else if (stopper_distance_ >= 0 && stopper_distance_ < accel_avoidance_distance_min_ && in_brake_mode_ == true)
+			else if (stopper_distance_.distance >= 0 && stopper_distance_.distance < accel_avoidance_distance_min_ && in_brake_mode_ == true)
 			{
 				std::cout << "stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
@@ -2789,7 +2807,6 @@ public:
 	    , config_result(CONFIG_OK)
 	    , use_velocity_data_(USE_VELOCITY_TWIST)
 	    , use_acceleration_data_(USE_ACCELERATION_IMU)
-	    , stopper_distance_(-1)
 	    , acceleration1_twist_(0)
 	    , acceleration2_twist_(0)
 	    , jurk1_twist_(0)
@@ -2809,7 +2826,7 @@ public:
 		, cruse_velocity_(0)
 		, temporary_fixed_velocity_(0)
 		, log_subscribe_count_(0)
-		, log_path_("/home/autoware/can_log.csv")
+		, log_folder_("")
 
 	{
 		/*setting_.use_position_checker = true;
@@ -2831,6 +2848,8 @@ public:
 		setting_.accel_stroke_offset = -10;*/
 
 		position_checker_.stop_flag = false;
+		stopper_distance_.distance = -1;
+		stopper_distance_.send_process = autoware_msgs::StopperDistance::UNKNOWN;
 
 		int kvaser_channel;
 		private_nh_.param<int>("kvaser_channel", kvaser_channel, 0);
@@ -2916,7 +2935,8 @@ public:
 		sub_temporary_fixed_velocity_ = nh.subscribe("/temporary_fixed_velocity", 10 , &kvaser_can_sender::callbackTemporaryFixedVelocity, this);
 		sub_gnss_time_ = nh.subscribe("/gnss_time", 10 , &kvaser_can_sender::callbackGnssTime, this);
 		sub_nmea_sentence_ = nh.subscribe("/novatel_oem7_2/nmea_sentence", 10 , &kvaser_can_sender::callbackNmeaSentence, this);
-		sub_log_write_ = nh.subscribe("/microbus/log_write", 10 , &kvaser_can_sender::callbackLogWrite, this);
+		sub_log_write_ = nh.subscribe("/microbus/log_on", 10 , &kvaser_can_sender::callbackLogWrite, this);
+		sub_log_folder_ = nh.subscribe("/microbus/log_folder", 10 , &kvaser_can_sender::callbackLogFolder, this);
 		sub_cruse_error_ = nh.subscribe("/cruse_error", 10 , &kvaser_can_sender::callbackCruseError, this);
 		//sub_interface_config_ = nh_.subscribe("/config/microbus_interface", 10, &kvaser_can_sender::callbackConfigInterface, this);
 

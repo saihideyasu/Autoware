@@ -2,6 +2,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <autoware_msgs/Lane.h>
+#include <autoware_msgs/StopperDistance.h>
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_config_msgs/ConfigTemporaryStopper.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -25,7 +26,8 @@ private:
 	double front_bumper_to_baselink_;
 	uint32_t stop_waypoint_id_;
 	ros::Time timer_;
-	double stop_time_, distance_;
+	double stop_time_;
+	autoware_msgs::StopperDistance distance_;
 	double fixed_velocity_;
 
 	autoware_msgs::Lane apply_acceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
@@ -179,7 +181,7 @@ private:
 				stop_waypoint_id_ = 0;
 				//if(can_.velocity_actual <= config_.stop_speed_threshold)   //幅を持たせなくてよいか？
 				if(current_velocity_.twist.linear.x <= config_.stop_speed_threshold
-				        && distance_ <= 0.5 && distance_ >=0)
+				        && distance_.distance <= 0.5 && distance_.distance >=0)
 				{
 					stop_waypoint_id_ = lane.waypoints[stop_index].waypoint_param.id;
 					//timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
@@ -294,9 +296,9 @@ private:
 		can503_ = msg;
 	}
 
-	void callbackDistance(const std_msgs::Float64& msg)
+	void callbackDistance(const autoware_msgs::StopperDistance& msg)
 	{
-		distance_ = msg.data;
+		distance_ = msg;
 	}
 
 	void callbackCurrentVelocity(const geometry_msgs::TwistStamped& msg)
@@ -340,7 +342,6 @@ public:
 	TemporaryStopper(ros::NodeHandle nh, ros::NodeHandle p_nh)
 	    : stop_waypoint_id_(100)//0
 	    , stop_time_(5.0)
-	    , distance_(1000.0)//0.0
 		, fixed_velocity_(0)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
@@ -360,6 +361,7 @@ public:
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
 		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
 		pub_temporary_fixed_velocity_ = nh_.advertise<std_msgs::Float64>("/temporary_fixed_velocity", 1, true);
+
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStopper::callbackWaypoint, this);
 		sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &TemporaryStopper::callbackWaypointParam, this);
 		sub_can502_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan502, this);
@@ -368,6 +370,8 @@ public:
 		sub_distance_ = nh_.subscribe("/stopper_distance", 1, &TemporaryStopper::callbackDistance, this);
 		sub_config_ = nh_.subscribe("/config/temporary_stopper", 1, &TemporaryStopper::callbackConfig, this);
 		
+		distance_.distance = 1000;
+
 		std_msgs::Float64 fixed_vel;
 		fixed_vel.data = fixed_velocity_;
 		pub_temporary_fixed_velocity_.publish(fixed_velocity_);

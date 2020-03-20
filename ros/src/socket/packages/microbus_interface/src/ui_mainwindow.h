@@ -216,6 +216,8 @@ public:
     QPushButton *bt2_blinker_stop;
     QPushButton *bt2_log_write;
     QPushButton *bt2_log_stop;
+    QPushButton *bt2_log_folder;
+    QTextEdit *tx2_log_folder;
     QWidget *tab_3;
     QGroupBox *gb3_signal_time;
     QPushButton *bt3_signal_time;
@@ -1651,18 +1653,35 @@ public:
         bt2_blinker_stop->setGeometry(QRect(20, 100, 111, 25));
         bt2_log_write = new QPushButton(tab_2);
         bt2_log_write->setObjectName(QStringLiteral("bt2_log_write"));
-        bt2_log_write->setGeometry(QRect(30, 630, 211, 60));
+        bt2_log_write->setGeometry(QRect(0, 620, 151, 60));
         bt2_log_write->setFont(font4);
         bt2_log_write->setCheckable(false);
         bt2_log_write->setAutoRepeat(false);
         bt2_log_write->setAutoExclusive(false);
         bt2_log_stop = new QPushButton(tab_2);
         bt2_log_stop->setObjectName(QStringLiteral("bt2_log_stop"));
-        bt2_log_stop->setGeometry(QRect(260, 630, 211, 60));
+        bt2_log_stop->setGeometry(QRect(160, 620, 141, 60));
         bt2_log_stop->setFont(font4);
         bt2_log_stop->setCheckable(false);
         bt2_log_stop->setAutoRepeat(false);
         bt2_log_stop->setAutoExclusive(false);
+        bt2_log_folder = new QPushButton(tab_2);
+        bt2_log_folder->setObjectName(QStringLiteral("bt2_log_folder"));
+        bt2_log_folder->setGeometry(QRect(310, 630, 91, 41));
+        bt2_log_folder->setFont(font4);
+        bt2_log_folder->setCheckable(false);
+        bt2_log_folder->setAutoRepeat(false);
+        bt2_log_folder->setAutoExclusive(false);
+        tx2_log_folder = new QTextEdit(tab_2);
+        tx2_log_folder->setObjectName(QStringLiteral("tx2_log_folder"));
+        tx2_log_folder->setGeometry(QRect(410, 630, 261, 51));
+        tx2_log_folder->setFont(font5);
+        tx2_log_folder->setAutoFillBackground(true);
+        tx2_log_folder->setLineWidth(0);
+        tx2_log_folder->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        tx2_log_folder->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+        tx2_log_folder->setReadOnly(true);
+        tx2_log_folder->setTextInteractionFlags(Qt::TextSelectableByMouse);
         tab3->addTab(tab_2, QString());
         tab_3 = new QWidget();
         tab_3->setObjectName(QStringLiteral("tab_3"));
@@ -1987,7 +2006,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tab3->setCurrentIndex(2);
+        tab3->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -2106,6 +2125,7 @@ public:
         bt2_blinker_stop->setText(QApplication::translate("MainWindow", "STOP", nullptr));
         bt2_log_write->setText(QApplication::translate("MainWindow", "LOG WRITE", nullptr));
         bt2_log_stop->setText(QApplication::translate("MainWindow", "LOG STOP", nullptr));
+        bt2_log_folder->setText(QApplication::translate("MainWindow", "folder", nullptr));
         tab3->setTabText(tab3->indexOf(tab_2), QApplication::translate("MainWindow", "Tab 2", nullptr));
         gb3_signal_time->setTitle(QApplication::translate("MainWindow", "SIGNAL_TIME", nullptr));
         bt3_signal_time->setText(QApplication::translate("MainWindow", "signal\n"

@@ -30,8 +30,6 @@ private:
     // traffic_light_takeover
     double red_change_time_;
     double stop_acc_;
-    unsigned char lane_signal_select_;
-    bool lookahead_flag_;
 
     void callbackConfig(const autoware_config_msgs::ConfigPeriodSignal &msg)
     {
@@ -97,7 +95,6 @@ private:
         }
 
         if(red_distance == 0) return DBL_MAX;
-        //std::cout << "redD : " << red_distance << std::endl;
         double acc = red_vel * red_vel / (2 * red_distance);
         return acc;
     }
@@ -167,8 +164,6 @@ public:
         , prev_traffic_(TRAFFIC_LIGHT_UNKNOWN)
         , red_change_time_(-1)
         , stop_acc_(DBL_MIN)
-        , lane_signal_select_(autoware_msgs::Lane::SIGNAL_SELECT_UNKNOWN)
-        , lookahead_flag_(false)
     {
         time_step_.time_step_green_ = time_step_.time_step_yellow_ = time_step_.time_step_red_ = 0;
 
@@ -182,17 +177,6 @@ public:
         pub_signal_stat_string_ = nh_.advertise<std_msgs::String>("/sound_player", 10);
     }
 
-    void publishSignal(int traffic_light, std::string str)
-    {
-        autoware_msgs::TrafficLight traffic_light_msg;
-        std_msgs::String state_string_msg;
-        traffic_light_msg.traffic_light = traffic_light;
-        state_string_msg.data = str;
-        pub_signal_stat_.publish(traffic_light_msg);
-        pub_signal_stat_string_.publish(state_string_msg);
-        prev_traffic_ = traffic_light;
-    }
-
     void run()
     {
         std::cout << "acc : " << stop_acc_ << std::endl;
@@ -203,9 +187,12 @@ public:
         {
             if(prev_traffic_ != TRAFFIC_LIGHT_UNKNOWN)
             {
-                publishSignal(TRAFFIC_LIGHT_UNKNOWN, std::string(TLR_UNKNOWN_SIGNAL_STR));
+                traffic_light_msg.traffic_light = TRAFFIC_LIGHT_UNKNOWN;
+			    state_string_msg.data = TLR_UNKNOWN_SIGNAL_STR;
+                pub_signal_stat_.publish(traffic_light_msg);
+		        pub_signal_stat_string_.publish(state_string_msg);
+                prev_traffic_ = TRAFFIC_LIGHT_UNKNOWN;
             }
-            lookahead_flag_ = false;
             return;
         }
 
@@ -224,30 +211,15 @@ public:
         //green
         if(time_range < time_step_.time_step_green_)
         {
-            if(lookahead_flag_ == false)
+            if(prev_traffic_ != TRAFFIC_LIGHT_GREEN)
             {
-                if(lane_signal_select_ == autoware_msgs::Lane::SIGNAL_SELECT_RED)
-                {
-                    if(prev_traffic_ != TRAFFIC_LIGHT_GREEN) publishSignal(TRAFFIC_LIGHT_GREEN, std::string(TLR_GREEN_SIGNAL_STR));
-                    lookahead_flag_ = false;
-                }
-                else if(stop_acc_ >= config_.takeover_acc)
-                {
-                    if(prev_traffic_ != TRAFFIC_LIGHT_RED) publishSignal(TRAFFIC_LIGHT_RED, std::string(TLR_RED_SIGNAL_STR));
-                    lookahead_flag_ = true;
-                }
-                else
-                {
-                    if(prev_traffic_ != TRAFFIC_LIGHT_GREEN) publishSignal(TRAFFIC_LIGHT_GREEN, std::string(TLR_GREEN_SIGNAL_STR));
-                    lookahead_flag_ = false;
-                }
+                traffic_light_msg.traffic_light = TRAFFIC_LIGHT_GREEN;
+                state_string_msg.data = TLR_GREEN_SIGNAL_STR;
+                prev_traffic_ = TRAFFIC_LIGHT_GREEN;
+                pub_signal_stat_.publish(traffic_light_msg);
+		        pub_signal_stat_string_.publish(state_string_msg);
             }
-            else
-            {
-                if(prev_traffic_ != TRAFFIC_LIGHT_RED) publishSignal(TRAFFIC_LIGHT_GREEN, std::string(TLR_GREEN_SIGNAL_STR));
-                lookahead_flag_ = true;
-            }
-            
+
             std_msgs::Float64 change_time_msg;
             change_time_msg.data = time_step_.time_step_green_ - time_range;
             pub_signal_change_time_.publish(change_time_msg);
@@ -264,7 +236,11 @@ public:
             {
                 if(prev_traffic_ != TRAFFIC_LIGHT_RED)
                 {
-                    publishSignal(TRAFFIC_LIGHT_RED, std::string(TLR_RED_SIGNAL_STR));
+				    traffic_light_msg.traffic_light = TRAFFIC_LIGHT_RED;
+				    state_string_msg.data = TLR_RED_SIGNAL_STR;
+                    prev_traffic_ = TRAFFIC_LIGHT_RED;
+                    pub_signal_stat_.publish(traffic_light_msg);
+		            pub_signal_stat_string_.publish(state_string_msg);
                 }
 
                 std_msgs::Float64 change_time_msg;
@@ -274,7 +250,6 @@ public:
                 std_msgs::Float64 red_time_msg;
                 red_time_msg.data = -1;
                 pub_signal_red_change_time_.publish(red_time_msg);
-                lookahead_flag_ = false;
             }
             //red
             else
@@ -282,7 +257,11 @@ public:
                 time_range -= time_step_.time_step_yellow_;
                 if(prev_traffic_ != TRAFFIC_LIGHT_RED)
                 {
-                    publishSignal(TRAFFIC_LIGHT_RED, std::string(TLR_RED_SIGNAL_STR));
+                    traffic_light_msg.traffic_light = TRAFFIC_LIGHT_RED;
+				    state_string_msg.data = TLR_RED_SIGNAL_STR;
+                    prev_traffic_ = TRAFFIC_LIGHT_RED;
+                    pub_signal_stat_.publish(traffic_light_msg);
+		            pub_signal_stat_string_.publish(state_string_msg);
                 }
 
                 std_msgs::Float64 change_time_msg;
@@ -292,7 +271,6 @@ public:
                 std_msgs::Float64 red_time_msg;
                 red_time_msg.data = -1;
                 pub_signal_red_change_time_.publish(red_time_msg);
-                lookahead_flag_ = false;
             }
         }
     }

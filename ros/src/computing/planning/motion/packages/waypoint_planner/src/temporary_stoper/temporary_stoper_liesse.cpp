@@ -17,6 +17,7 @@ private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_waypoint_, sub_waypoint_param_, sub_can502_, sub_can503_, sub_current_velocity_, sub_distance_, sub_config_;
 	ros::Publisher pub_waypoint_, pub_temporary_line_, pub_temporary_distance_, pub_temporari_flag_, pub_temporary_fixed_velocity_;
+	ros::Publisher pub_stop_waypoint_id_;
 
 	autoware_config_msgs::ConfigTemporaryStopper config_;
 	autoware_can_msgs::MicroBusCan502 can502_;
@@ -172,6 +173,10 @@ private:
 //			std::cout << "distance_1 : " << distance_ << std::endl;
 			if(stop_waypoint_id_ == lane.waypoints[stop_index].waypoint_param.id)
 			{
+				std_msgs::Int32 tmp;
+				tmp.data = stop_waypoint_id_;
+				pub_stop_waypoint_id_.publish(tmp);
+
 				flag.data = 2;
 				pub_temporari_flag_.publish(flag);
 				return lane;//停止判定終了
@@ -181,7 +186,8 @@ private:
 				stop_waypoint_id_ = 0;
 				//if(can_.velocity_actual <= config_.stop_speed_threshold)   //幅を持たせなくてよいか？
 				if(current_velocity_.twist.linear.x <= config_.stop_speed_threshold
-				        && distance_.distance <= 0.5 && distance_.distance >=0)
+				        && distance_.distance <= 0.5 && distance_.distance >=0
+						&& distance_.send_process == autoware_msgs::StopperDistance::TEMPORARY_STOPPER)
 				{
 					stop_waypoint_id_ = lane.waypoints[stop_index].waypoint_param.id;
 					//timer_ = ros::Time(now_time.sec + (int)stop_time_, now_time.nsec);
@@ -361,7 +367,7 @@ public:
 		pub_temporary_distance_ = nh_.advertise<std_msgs::Int32>("/temporary_distance", 1);
 		pub_temporari_flag_ = nh_.advertise<std_msgs::Int32>("/temporary_flag", 1);
 		pub_temporary_fixed_velocity_ = nh_.advertise<std_msgs::Float64>("/temporary_fixed_velocity", 1, true);
-
+		pub_stop_waypoint_id_ = nh_.advertise<std_msgs::Int32>("/stop_waypoint_id", 1);
 		sub_waypoint_ = nh_.subscribe("/safety_waypoints", 1, &TemporaryStopper::callbackWaypoint, this);
 		sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &TemporaryStopper::callbackWaypointParam, this);
 		sub_can502_ = nh_.subscribe("/microbus/can_receive502", 1, &TemporaryStopper::callbackCan502, this);

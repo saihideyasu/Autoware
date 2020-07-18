@@ -287,7 +287,7 @@ private:
 	bool dengerStopFlag = false;//自動運転が失敗しそうな場に止めるフラグ
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_log_write_, pub_estimate_stopper_distance_;
-	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_, pub_vehicle_status_, pub_velocity_param_;
+	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_, pub_vehicle_status_, pub_velocity_param_, pub_tmp_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -380,6 +380,7 @@ private:
 	unsigned int log_subscribe_count_;
 	autoware_system_msgs::Date gnss_time_;
 	std::string log_folder_;
+	double stop_distance_over_sum_, stop_distance_over_add_;
 
 	const int nmea_list_count_ = 5;
 	std::vector<std::string> nmae_name_list_ = {"#BESTPOSA","#BESTGNSSPOSA","#TIMEA","#INSSTDEVA","#RAWIMUA"};
@@ -397,7 +398,7 @@ private:
 			std::cout << msg->data << std::endl;
 			std::stringstream safety_error_message;
 			safety_error_message << msg->data;
-			publishStatus(safety_error_message.str());
+			//publishStatus(safety_error_message.str());
 			//system("aplay -D plughw:PCH /home/autoware/one33.wav");
 			can_send();
 	}
@@ -812,6 +813,9 @@ private:
 			lms.localizer_stat = true;
 		}
 		else*/
+		int aaa = (lms.localizer_stat) ? 1 : 0;
+		int bbb = (use_safety_localizer_) ? 1 : 0;
+		std::cout << aaa << "," << bbb << std::endl;
 		if(lms.localizer_stat == false && use_safety_localizer_ == true)
 		{
 			if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::DRIVE_AUTO)
@@ -1177,9 +1181,9 @@ private:
 		str << "|" << (int)can_receive_503_.clutch;
 		name << "|" << "can_receive_503_.clutch";
 		str << "|" << can_receive_501_.velocity;
-		name << "|" << "can_receive_501_.velocity";
+		name << "|" << "can_receive_501_.stroke";
 		str << "|" << can_receive_502_.velocity_actual;
-		name << "|" << "can_receive_502_.velocity_actual";
+		name << "|" << "can_receive_502_.stroke_actual";
 		str << "|" << can_receive_503_.pedal_displacement;
 		name << "|" << "can_receive_503_.pedal_displacement";
 		str <<  "|" << acc2 ;
@@ -1908,7 +1912,7 @@ private:
 //		steer_val += _steer_pid_control(difference_toWaypoint_distance_.base_linkdistance);
 //		steer_val += _steer_pid_control(wheel_base * tan(difference_toWaypoint_distance_.baselink_angular) + difference_toWaypoint_distance_.baselink_distance);
 		//if(waypoint_param_.steer_pid_on > 0)
-				steer_val += _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance);
+		//steer_val += _steer_pid_control(difference_toWaypoint_distance_.front_baselink_distance);
 		if(can_receive_501_.steer_auto != autoware_can_msgs::MicroBusCan501::STEER_AUTO) steer_val = 0;
 
 		unsigned char *steer_pointer = (unsigned char*)&steer_val;
@@ -1990,6 +1994,7 @@ private:
 
 	double _accel_stroke_pid_control(double current_velocity, double cmd_velocity)
 	{
+		stop_distance_over_sum_ = 0;
 		//cmd_velocityとcurrent_velocityの差が小さい場合、stepを小さくする
 		double accle_stroke_step = setting_.accel_stroke_step_max;//3;
 		double vel_sa = cmd_velocity - current_velocity;
@@ -2206,12 +2211,16 @@ private:
 
 		//const double stop_stroke = 340.0;
 		//if(use_stopper_distance_ == true && temporary_fixed_velocity_ <= 0)
-		if(use_stopper_distance_ == true && stopper_distance_.fixed_velocity <= 0)
+		if(use_stopper_distance_ == true && (stopper_distance_.fixed_velocity <= 0 || stopper_distance_.send_process == 3))
 		{
 			std::cout << "stopper list : "<< setting_.stopper_distance1 << "," << setting_.stopper_distance2 << "," << setting_.stopper_distance3 << std::endl;
 			std::cout << "kkk stop_stroke_max : " << stop_stroke_max_ << std::endl;
 			if(stopper_distance_.distance >= setting_.stopper_distance2 && stopper_distance_.distance <= setting_.stopper_distance1)
 			{std::cout << loop_counter_ << " : stopD1" << std::endl;
+				stop_distance_over_sum_ = 0;
+				std_msgs::String tmp;
+				tmp.data = "D1";
+				pub_tmp_.publish(tmp);
 				/*std::cout << "tbs," << target_brake_stroke;
 				double d = stop_stroke - target_brake_stroke;
 				if(d < 0) d = 0;
@@ -2220,6 +2229,10 @@ private:
 			}
 			else if(stopper_distance_.distance >= setting_.stopper_distance3 && stopper_distance_.distance <= setting_.stopper_distance2)
 			{std::cout << loop_counter_ << "stopD2" << std::endl;
+				stop_distance_over_sum_ = 0;
+				std_msgs::String tmp;
+				tmp.data = "D2";
+				pub_tmp_.publish(tmp);
 				/*if(current_velocity > 5.0)
 				{
 					std::cout << "tbs," << target_brake_stroke;
@@ -2247,13 +2260,26 @@ private:
 				//if(temporary_fixed_velocity_ == 0)
 				if(stopper_distance_.fixed_velocity == 0)
 				{
+					std_msgs::String tmp;
+					tmp.data = "D3_1";
+					pub_tmp_.publish(tmp);
 					//target_brake_stroke = 0.0 + 500.0 * pow((2.0-distance)/2.0,0.5);
 					brake_stroke_step = 0.5;
-					target_brake_stroke = 0.0 + stop_stroke_max_ * (2.0 - stopper_distance_.distance)/2.0;
+					target_brake_stroke = 0.0 + stop_stroke_max_ * (setting_.stopper_distance3 - stopper_distance_.distance)/2.0;
 					if(target_brake_stroke < pid_params.get_stop_stroke_prev())
 						target_brake_stroke = pid_params.get_stop_stroke_prev();
+					if(target_brake_stroke == stop_stroke_max_ && can_receive_502_.velocity_mps != 0) stop_distance_over_sum_ += stop_distance_over_add_;
+					target_brake_stroke += stop_distance_over_sum_;
+				}
+				else
+				{
+					std_msgs::String tmp;
+					tmp.data = "D3_2";
+					pub_tmp_.publish(tmp);
+					stop_distance_over_sum_ = 0;
 				}
 			}
+			else stop_distance_over_sum_ = 0;
 		}
 /*
 		if(stopper_distance_ >= 0.5 && stopper_distance_ <= 3 && current_velocity >= 0.1 && target_brake_stroke < 330)
@@ -2474,6 +2500,7 @@ private:
 		//if(ret > -setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 		send_step_ = brake_stroke_step;
 		pid_params.set_stop_stroke_prev(ret);
+		if(ret > 360) ret = 360;
 		return -ret;
 	}
 
@@ -2753,7 +2780,7 @@ private:
 		}
 		if(light_high_ == true) buf[7] |= 0x20;
 
-		if (shift_auto_ == true)
+		/*if (shift_auto_ == true)
 		{
 			buf[7] |= 0x08;
 			switch (shift_position_)
@@ -2777,7 +2804,7 @@ private:
 				buf[7] |= 0x05;
 				break;
 			}
-		}
+		}*/
 	}
 public:
 	kvaser_can_sender(ros::NodeHandle nh, ros::NodeHandle p_nh)
@@ -2815,7 +2842,7 @@ public:
 	    , steer_correction_(0)
 		, localizer_select_num_(1)
 		, accel_avoidance_distance_min_(30)
-		, stop_stroke_max_(340)
+		, stop_stroke_max_(325)
 		, in_accel_mode_(true)
 		, in_brake_mode_(true)
 		, use_stopper_distance_(true)
@@ -2827,7 +2854,8 @@ public:
 		, temporary_fixed_velocity_(0)
 		, log_subscribe_count_(0)
 		, log_folder_("")
-
+		, stop_distance_over_sum_(0)
+		, stop_distance_over_add_(10.0/100.0)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2870,6 +2898,7 @@ public:
 		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);
 		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
 		pub_velocity_param_ = nh_.advertise<autoware_can_msgs::MicroBusCanVelocityParam>("/microbus/velocity_param", 1);
+		pub_tmp_ = nh_.advertise<std_msgs::String>("/microbus/tmp", 1);
 
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
 		sub_microbus_steer_mode_ = nh_.subscribe("/microbus/steer_mode_send", 10, &kvaser_can_sender::callbackSModeSend, this);

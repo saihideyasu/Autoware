@@ -116,6 +116,8 @@ private:
     {
         ros::Time nowtime = ros::Time::now();
 
+        if(config_.enable == false) return;
+
         switch(config_.velocity_mode)
         {
             case autoware_config_msgs::ConfigCurrentVelocityConversion::VELOCITY_MODE_CONSTANT_DIRECT:

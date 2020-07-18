@@ -14,6 +14,220 @@ roscore &
 sleep 5
 echo "roscore OK."
 
+########## Publish topics of /config/* ###########
+##### voxel grid filter#####
+rostopic pub /config/voxel_grid_filter autoware_config_msgs/ConfigVoxelGridFilter "voxel_leaf_size: 3.0 
+measurement_range: 100.0" &
+sleep 1
+##### ndt matching #####
+rostopic pub /config/ndt autoware_config_msgs/ConfigNDT "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+init_pos_gnss: 1
+x: 0.0
+y: 0.0
+z: 0.0
+roll: 0.0
+pitch: 0.0
+yaw: 0.0
+use_predict_pose: 1
+error_threshold: 1.0
+resolution: 3.0
+step_size: 0.1
+trans_epsilon: 0.01
+max_iterations: 30" &
+sleep 1
+##### can2odom #####
+rostopic pub /config/can2odom autoware_config_msgs/ConfigCanOdometry "header:
+  seq: 1
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+kmph_th: 0.1" &
+sleep 1
+##### localizer switch #####
+rostopic pub /config/localizer_switch autoware_config_msgs/ConfigLocalizerSwitchFusion "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+fusion_select: 1
+localizer_check: 1
+yaw_correction1: 2.0
+yaw_correction2: 1.0" &
+sleep 1
+##### current velocity conversion #####
+rostopic pub /config/current_velocity_conversion autoware_config_msgs/ConfigCurrentVelocityConversion "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+enable: false
+velocity_mode: 4
+search_distance: 5.0
+search_step: 1.0
+search_step_count: 100
+constant_velocity: 8.0
+velocity_max: 50.0" &
+sleep 1
+##### lane rule #####
+rostopic pub /config/lane_rule autoware_config_msgs/ConfigLaneRule "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+acceleration: 0.4
+stopline_search_radius: 1.0
+number_of_zeros_ahead: 0
+number_of_zeros_behind: 0
+number_of_smoothing_count: 0" &
+sleep 1
+###### lane stop #####
+rostopic pub /config/lane_stop autoware_config_msgs/ConfigLaneStop "header:
+  seq: 1
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+manual_detection: false" &
+sleep 1
+##### lane select #####
+rostopic pub /config/lane_select autoware_config_msgs/ConfigLaneSelect "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+distance_threshold_neighbor_lanes: 5.0
+lane_change_interval: 10.0
+lane_change_target_ratio: 5.0
+lane_change_target_minimum: 10.0
+vector_length_hermite_curve: 10.0" &
+sleep 1
+##### waypoint loader #####
+rostopic pub /config/waypoint_replanner autoware_config_msgs/ConfigWaypointReplanner "{multi_lane_csv: '', replanning_mode: false, velocity_max: 20.0, velocity_min: 4.0,
+  accel_limit: 0.5, decel_limit: 0.3, radius_thresh: 20.0, radius_min: 6.0, resample_mode: true,
+  resample_interval: 1.0, velocity_offset: 4, end_point_offset: 1, braking_distance: 5,
+  replan_curve_mode: false, replan_endpoint_mode: true, overwrite_vmax_mode: false,
+  realtime_tuning_mode: false}" &
+  sleep 1
+##### temporary stopper #####
+rostopic pub /config/temporary_stopper autoware_config_msgs/ConfigTemporaryStopper "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+search_distance: 7.0
+acceleration: 0.45
+number_of_zeros_ahead: 1
+number_of_zeros_behind: 0
+stop_speed_threshold: 0.025
+fixed_velocity: 0.0" &
+sleep 1
+##### velocity set#####
+rostopic pub /config/velocity_set autoware_config_msgs/ConfigVelocitySet "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+stop_distance_obstacle: 7.0
+stop_distance_stopline: 5.0
+detection_range: 1.10000002384
+threshold_points: 8
+detection_height_top: 0.10000000149
+detection_height_bottom: -1.5
+deceleration_obstacle: 0.699999988079
+deceleration_stopline: 0.800000011921
+velocity_change_limit: 5.0
+deceleration_range: 0.0
+temporal_waypoints_size: 100.0
+use_point_cloud: False
+use_point_pillar: False
+use_mobileye: True" &
+sleep 1
+##### lookahead ratio magn #####
+rostopic pub /config/lookahead_ratio_magn autoware_config_msgs/ConfigLookAheadRatioMagn "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+max_magn: 1.0
+min_magn: 1.0
+max_distance: 0.0
+min_distance: 0.0" &
+sleep 1
+##### twist filter #####
+rostopic pub /config/twist_filter autoware_config_msgs/ConfigTwistFilter "header:
+  seq: 1
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+lateral_accel_limit: 0.8
+lowpass_gain_linear_x: 0.0
+lowpass_gain_angular_z: 0.0" &
+sleep 1
+##### microbus can #####
+rostopic pub /config/microbus_can autoware_config_msgs/ConfigMicroBusCan "header:
+  seq: 1
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+use_position_checker: true
+velocity_limit: 55.0
+velocity_stop_th: 0.0
+accel_max_i: 3000.0
+brake_max_i: 500.0
+k_accel_p_velocity: 0.12
+k_accel_i_velocity: 0.22
+k_accel_d_velocity: 0.1
+k_brake_p_velocity: 0.32
+k_brake_i_velocity: 0.63
+k_brake_d_velocity: 0.3
+k_accel_p_acceleration: 0.12
+k_accel_i_acceleration: 0.0
+k_accel_d_acceleration: 0.0
+k_brake_p_acceleration: 0.12
+k_brake_i_acceleration: 0.0
+k_brake_d_acceleration: 0.0
+k_accel_p_distance: 0.0
+k_accel_i_distance: 0.0
+k_accel_d_distance: 0.0
+k_brake_p_distance: 0.5
+k_brake_i_distance: 0.0
+k_brake_d_distance: 0.0
+steer_max_i: 100.0
+k_steer_p_distance: 130.0
+k_steer_i_distance: 0.0
+k_steer_d_distance: 0.0
+pedal_stroke_center: 0
+pedal_stroke_max: 840
+pedal_stroke_min: -500
+brake_stroke_stopping_med: -300
+accel_stroke_offset: 10
+brake_stroke_offset: -10
+gnss_lat_limit: 0.12
+gnss_lon_limit: 0.12
+gnss_alt_limit: 0.15
+acceptable_velocity_variation: 0.0
+ndt_gnss_min_distance_limit: 0.3
+ndt_gnss_max_distance_limit: 0.5
+ndt_gnss_angle_limit: 10.0
+steer_speed_limit1: 100.0
+steer_speed_limit2: 60.0
+check_distance_th: 0.9
+check_angular_th: 20.0
+stopper_distance1: 30.0
+stopper_distance2: 8.0
+stopper_distance3: 2.0
+use_lane_left: True
+use_lane_right: True
+lane_th_left: -5.0
+lane_th_right: 5.0
+accel_stroke_step_max: 1.5
+accel_stroke_step_min: 0.5
+brake_stroke_step_max: 2.0
+brake_stroke_step_min: 1.0
+accel_stroke_adjust_th: 15.0
+brake_stroke_adjust_th: 15.0" &
+
+sleep 1
+echo "Topics of config has been published."
+###################################################
+
 # Load runtime manager
 rosrun runtime_manager runtime_manager_dialog.py &
 sleep 5
@@ -35,7 +249,7 @@ sleep 3
 echo "vehicle info OK."
 
 # Load points map
-rosrun map_file points_map_loader noupdate '/home/autoware/load_data/okabe2/pcd/school2okabe/0.20_normal_project.pcd' &
+rosrun map_file points_map_loader noupdate '/home/autoware/load_data/okabe2/pcd/daigaku_rotari_20190907_norm.pcd' &
 sleep 5
 echo "points map OK."
 
@@ -50,7 +264,7 @@ sleep 5
 echo "tf map to world OK."
 
 # Set mobileye
-roslaunch runtime_manager mobileye.launch kvaser_channel:=2 can_circuit_i:=59879 can_bit_rate:=50000 &
+roslaunch runtime_manager mobileye.launch kvaser_channel:=0 can_circuit_i:=59879 can_bit_rate:=50000 &
 sleep 3
 echo "Mobileye OK."
 
@@ -123,17 +337,6 @@ echo "lane rule OK."
 rosrun lane_planner lane_stop &
 sleep 3
 echo "lane stop OK."
-
-# Use traffic light recognition result
-rostopic pub /config/lane_stop autoware_config_msgs/ConfigLaneStop "header:
-  seq: 0
-  stamp:
-    secs: 0
-    nsecs: 0
-  frame_id: ''
-manual_detection: false" &
-sleep 3
-echo "use traffic light recognition result for lane stop."
 
 # Lane select
 roslaunch lane_planner lane_select.launch search_closest_waypoint_minimum_dt:=5 &

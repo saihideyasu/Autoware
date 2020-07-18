@@ -428,8 +428,12 @@ void MainWindow::window_updata()
         ui->tx2_steer_angle_actual->setText("");
     }
 
+std::cout << can_status_.safety_error_message << ",";
+int aaa = (error_text_lock_) ? 1 : 0;
+std::cout << aaa << std::endl;
+std::cout << "aaa" << std::endl;
     if(can_status_.safety_error_message != "" && error_text_lock_ == false)
-    {
+    {std::cout << "bbb" << std::endl;
         std_msgs::Bool msg;
         msg.data = true;
         pub_error_lock_.publish(msg);

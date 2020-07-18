@@ -85,6 +85,15 @@ add_dependencies(bus_socket
 #  ${catkin_EXPORTED_TARGETS}
 #  )
 
+add_executable(saver
+	nodes/kvaser_microbus_can_sender/saver.cpp)
+target_link_libraries(saver
+  ${catkin_LIBRARIES}
+  canlib)
+add_dependencies(saver
+  ${catkin_EXPORTED_TARGETS}
+  )
+
 add_executable(kvaser_microbus_can_sender
 	nodes/kvaser_microbus_can_sender/kvaser_microbus_can_sender.cpp)
 target_link_libraries(kvaser_microbus_can_sender
@@ -160,6 +169,7 @@ install(TARGETS vehicle_sender vehicle_receiver bus_socket
                 kvaser_prius_can_receiver kvaser_prius_can_sender
                 rs232_microbus_can_receiver
                 canusbz_prius_can_receiver
+                saver
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

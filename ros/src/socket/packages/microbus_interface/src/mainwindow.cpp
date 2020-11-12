@@ -849,6 +849,9 @@ std::cout << "aaa" << std::endl;
 
     {
         ui->tx2_log_folder->setText(log_folder_.c_str());
+        std::stringstream str;
+        str << std::fixed << std::setprecision(keta) << vehicle_cmd_.ctrl_cmd.linear_velocity;
+        ui->lb2_cmd_vel->setText(str.str().c_str());
     }
 }
 
@@ -959,6 +962,11 @@ void MainWindow::callbackNdtStatString(const std_msgs::String &msg)
 void MainWindow::callbackStrokeRoutine(const std_msgs::String &msg)
 {
     stroke_routine_ = msg.data;
+}
+
+void MainWindow::callbackVehicleCmd(const autoware_msgs::VehicleCmd &msg)
+{
+    vehicle_cmd_ = msg;
 }
 
 const bool getMessage_bool(const unsigned char *buf, unsigned int bit)

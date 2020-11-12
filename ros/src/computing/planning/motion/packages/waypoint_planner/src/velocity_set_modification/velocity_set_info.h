@@ -21,16 +21,15 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-//#include <mobileye_560_660_msgs/ObstacleData.h>
-#include <autoware_msgs/MobileyeObstacle.h>
+#include <autoware_msgs/GnssSurfaceSpeed.h>
 #include <std_msgs/Int32.h>
 
-#include "autoware_config_msgs/ConfigVelocitySet.h"
+#include <autoware_config_msgs/ConfigVelocitySetModification.h>
+#include <autoware_msgs/MobileyeObstacle.h>
+#include <autoware_msgs/WaypointParam.h>
 
-#include <autoware_health_checker/node_status_publisher.h>
+#include <autoware_health_checker/health_checker/health_checker.h>
 #include <memory>
-
-#include "autoware_msgs/WaypointParam.h"
 
 class VelocitySetInfo
 {
@@ -49,38 +48,37 @@ class VelocitySetInfo
   double temporal_waypoints_size_;  // (meter)
   int	wpidx_detectionResultByOtherNodes_; // waypoints index@finalwaypoints
   bool use_point_cloud_, use_point_pillar_, use_mobileye_; //use detection
-  geometry_msgs::TwistStamped can_velocity_;
 
   // ROS param
   double remove_points_upto_;
 
   pcl::PointCloud<pcl::PointXYZ> points_;
-  //std::vector<mobileye_560_660_msgs::ObstacleData> mobileye_obstacle_;
   autoware_msgs::MobileyeObstacle mobileye_obstacle_;
+  geometry_msgs::TwistStamped can_velocity_;
   geometry_msgs::PoseStamped localizer_pose_;  // pose of sensor
   geometry_msgs::PoseStamped control_pose_;    // pose of base_link
   bool set_pose_;
 
-  std::shared_ptr<autoware_health_checker::NodeStatusPublisher> node_status_publisher_ptr_;
+  std::shared_ptr<autoware_health_checker::HealthChecker> health_checker_ptr_;
 
  public:
   VelocitySetInfo();
   ~VelocitySetInfo();
 
   // ROS Callback
-  void configCallback(const autoware_config_msgs::ConfigVelocitySetConstPtr &msg);
+  void configCallback(const autoware_config_msgs::ConfigVelocitySetModificationConstPtr &msg);
   void pointsCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
   void controlPoseCallback(const geometry_msgs::PoseStampedConstPtr &msg);
   void localizerPoseCallback(const geometry_msgs::PoseStampedConstPtr &msg);
   void detectionCallback(const std_msgs::Int32 &msg);
-  //void mobileyeObstacleCallback(const mobileye_560_660_msgs::ObstacleData &msg);
   void mobileyeObstacleCallback(const autoware_msgs::MobileyeObstacle &msg);
-  void waypointParamCallback(const autoware_msgs::WaypointParam &msg);
   void canVelocityCallback(const geometry_msgs::TwistStamped &msg);
   void currentVelocityCallback(const geometry_msgs::TwistStamped &msg);
+  void gnssSpeedCallback(const autoware_msgs::GnssSurfaceSpeed &msg);
+  void waypointParamCallback(const autoware_msgs::WaypointParam &msg);
 
   void clearPoints();
-  //void clearMobileyeObstacle();
+
 
   int getDetectionResultByOtherNodes() const
   {
@@ -142,30 +140,10 @@ class VelocitySetInfo
     return temporal_waypoints_size_;
   }
 
-  bool getUsePointCloud() const
-  {
-    return use_point_cloud_;
-  }
-
-  bool getUsePointPillar() const
-  {
-    return use_point_pillar_;
-  }
-
-  bool getUseMobileye() const
-  {
-    return use_mobileye_;
-  }
-
   pcl::PointCloud<pcl::PointXYZ> getPoints() const
   {
     return points_;
   }
-
-  /*std::vector<mobileye_560_660_msgs::ObstacleData> getMobileyeObstacle() const
-  {
-	  return mobileye_obstacle_;
-  }*/
 
   autoware_msgs::MobileyeObstacle getMobileyeObstacle() const
   {
@@ -182,14 +160,29 @@ class VelocitySetInfo
     return localizer_pose_;
   }
 
-  double getCanVelocity() const
-  {
-    return can_velocity_.twist.linear.x;
-  }
-  
   bool getSetPose() const
   {
     return set_pose_;
+  }
+
+  bool getUsePointCloud() const
+  {
+    return use_point_cloud_;
+  }
+
+  bool getUsePointPillar() const
+  {
+    return use_point_pillar_;
+  }
+
+  bool getUseMobileye() const
+  {
+    return use_mobileye_;
+  }
+
+  double getCanVelocity() const
+  {
+    return can_velocity_.twist.linear.x;
   }
 };
 

@@ -26,11 +26,10 @@ Nmea2TFPoseNode::Nmea2TFPoseNode()
   , roll_(0)
   , pitch_(0)
   , yaw_(0)
-  , orientation_time_(-std::numeric_limits<double>::infinity())
-  , position_time_(-std::numeric_limits<double>::infinity())
+  , orientation_time_(0)
+  , position_time_(0)
   , current_time_(0)
   , orientation_stamp_(0)
-  , orientation_ready_(false)
 {
   initForROS();
   geo_.set_plane(plane_number_);
@@ -51,7 +50,6 @@ void Nmea2TFPoseNode::initForROS()
 
   // setup publisher
   pub1_ = nh_.advertise<geometry_msgs::PoseStamped>("gnss_pose", 10);
-  pub_surface_speed_ = nh_.advertise<autoware_msgs::GnssSurfaceSpeed>("gnss_surface_speed", 10);
 }
 
 void Nmea2TFPoseNode::run()
@@ -99,7 +97,6 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
       pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
       yaw_ = -1 * stod(nmea.at(6)) * M_PI / 180. + M_PI / 2;
       orientation_stamp_ = current_stamp;
-      orientation_ready_ = true;
       ROS_INFO("QQ is subscribed.");
     }
     else if (nmea.at(0) == "$PASHR")
@@ -108,79 +105,27 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
       roll_ = stod(nmea.at(4)) * M_PI / 180.;
       pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
       yaw_ = -1 * stod(nmea.at(2)) * M_PI / 180. + M_PI / 2;
-      orientation_ready_ = true;
       ROS_INFO("PASHR is subscribed.");
     }
-    /*else if (nmea.at(0).compare(3, 3, "GGA") == 0)
+    else if(nmea.at(0).compare(3, 3, "GGA") == 0)
     {
       position_time_ = stod(nmea.at(1));
       double lat = stod(nmea.at(2));
       double lon = stod(nmea.at(4));
       double h = stod(nmea.at(9));
-
-      if (nmea.at(3) == "S")
-        lat = -lat;
-
-      if (nmea.at(5) == "W")
-        lon = -lon;
-
       geo_.set_llh_nmea_degrees(lat, lon, h);
-
       ROS_INFO("GGA is subscribed.");
-    }*/
-    else if (nmea.at(0) == "$GPRMC")
+    }
+    else if(nmea.at(0) == "$GPRMC")
     {
       position_time_ = stoi(nmea.at(1));
       double lat = stod(nmea.at(3));
       double lon = stod(nmea.at(5));
       double h = 0.0;
-
-      if (nmea.at(4) == "S")
-        lat = -lat;
-
-      if (nmea.at(6) == "W")
-        lon = -lon;
-
       geo_.set_llh_nmea_degrees(lat, lon, h);
-
       ROS_INFO("GPRMC is subscribed.");
     }
-    else if(nmea.at(0) == "$GNGGA")
-    {
-        std::cout << "GNGGA" << std::endl;
-        double lat = stod(nmea.at(2)); std::cout << "lat : " << std::setprecision(16) << lat << std::endl;
-        double lon = stod(nmea.at(4)); std::cout << "lon : " << std::setprecision(16) << lon << std::endl;
-        double h = stod(nmea.at(9)); std::cout << "h : " << std::setprecision(16) << h << std::endl;
-        geo_.set_llh_nmea_degrees(lat, lon, h);
-        ROS_INFO("GNGGA is subscribed.");
-        std::cout << "lat : " << std::setprecision(16) << geo_.y() << std::endl;
-        std::cout << "lat : " << std::setprecision(16) << geo_.x() << std::endl;
-        std::cout << "lat : " << std::setprecision(16) << geo_.z() << std::endl;
-        /*geometry_msgs::PoseStamped pose;
-        pose.header.frame_id = MAP_FRAME_;
-        pose.header.stamp = current_time_;
-        pose.pose.position.x = geo_.y();
-        pose.pose.position.y = geo_.x();
-        pose.pose.position.z = geo_.z();
-        pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
-        pub1_.publish(pose);*/
-
-        double sx = geo_.x() - last_geo_.x();
-        double sy = geo_.y() - last_geo_.y();
-        double sz = geo_.z() - last_geo_.z();
-        double distance = sqrt(sx*sx + sy*sy + sz*sz);
-        ros::Duration ros_time_diff = current_stamp - prev_stamp_;
-        double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
-        autoware_msgs::GnssSurfaceSpeed gss;
-        gss.header.frame_id = MAP_FRAME_;
-        gss.header.stamp = current_time_;
-        gss.surface_speed = distance / time_diff;
-        pub_surface_speed_.publish(gss);
-
-        prev_stamp_ = current_stamp;
-    }
-  }
-  catch (const std::exception &e)
+  }catch (const std::exception &e)
   {
     ROS_WARN_STREAM("Message is invalid : " << e.what());
   }
@@ -192,41 +137,23 @@ void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstP
   convert(split(msg->sentence), msg->header.stamp);
 
   double timeout = 10.0;
-  // if orientation_stamp_ is 0 then no "QQ" sentence was ever received,
-  // so orientation should be computed from offsets
-  if (orientation_stamp_.isZero()
-      || fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
+  if (fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
   {
     double dt = sqrt(pow(geo_.x() - last_geo_.x(), 2) + pow(geo_.y() - last_geo_.y(), 2));
     double threshold = 0.2;
     if (dt > threshold)
     {
-      /* If orientation data is not available it is generated based on translation
-         from the previous position. For the first message the previous position is
-         simply the origin, which gives a wildly incorrect orientation. Some nodes
-         (e.g. ndt_matching) rely on that first message to initialise their pose guess,
-         and cannot recover from such incorrect orientation.
-         Therefore the first message is not published, ensuring that orientation is
-         only calculated from sensible positions.
-      */
-      if (orientation_ready_)
-      {
-        ROS_INFO("QQ is not subscribed. Orientation is created by atan2");
-        createOrientation();
-        publishPoseStamped();
-        publishTF();
-      }
-      else
-      {
-        orientation_ready_ = true;
-      }
+      ROS_INFO("QQ is not subscribed. Orientation is created by atan2");
+      createOrientation();
+      publishPoseStamped();
+      publishTF();
       last_geo_ = geo_;
     }
     return;
   }
 
   double e = 1e-2;
-  if ((fabs(orientation_time_ - position_time_) < e) && orientation_ready_)
+  if (fabs(orientation_time_ - position_time_) < e)
   {
     publishPoseStamped();
     publishTF();
@@ -246,5 +173,4 @@ std::vector<std::string> split(const std::string &string)
   return str_vec_ptr;
 }
 
-}  // namespace gnss_localizer
-
+}  // gnss_localizer

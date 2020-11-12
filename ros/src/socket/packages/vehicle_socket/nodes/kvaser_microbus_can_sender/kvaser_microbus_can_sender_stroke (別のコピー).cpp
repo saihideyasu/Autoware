@@ -1673,7 +1673,7 @@ private:
 
 	void publishStatus(std::string safety_error_message)
 	{
-		autoware_can_msgs::MicroBusCanSenderStatus msg;
+		/*autoware_can_msgs::MicroBusCanSenderStatus msg;
 		msg.header.stamp = ros::Time::now();
 		msg.use_position_checker = setting_.use_position_checker;
 		msg.use_input_steer = input_steer_mode_;
@@ -1684,7 +1684,7 @@ private:
 		if(safety_error_message != "") msg.safety_error_message = safety_error_message;
 		else msg.safety_error_message = "";
 		std::cout << msg.safety_error_message << std::endl;
-		pub_microbus_can_sender_status_.publish(msg);
+		pub_microbus_can_sender_status_.publish(msg);*/
 	}
 
 	void callbackInputSteerFlag(const std_msgs::Bool::ConstPtr &msg)

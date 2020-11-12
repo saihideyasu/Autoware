@@ -216,17 +216,17 @@ static void extractedPos_cb(const autoware_msgs::Signals::ConstPtr &extractedPos
 	std_msgs::String state_string_msg;
 	static int32_t prev_state = TRAFFIC_LIGHT_UNKNOWN;
 	state_msg.traffic_light = TRAFFIC_LIGHT_UNKNOWN;
-
+//std::cout << detector.contexts.size() << std::endl;
 	for (unsigned int i = 0; i < detector.contexts.size(); i++)
 	{
 		Context current_context = detector.contexts.at(i);
 		switch (current_context.lightState)
 		{
 			case GREEN:
+			case YELLOW:
 				state_msg.traffic_light = TRAFFIC_LIGHT_GREEN;
 				state_string_msg.data = TLR_GREEN_SIGNAL_STR;
 				break;
-			case YELLOW:
 			case RED:
 				state_msg.traffic_light = TRAFFIC_LIGHT_RED;
 				state_string_msg.data = TLR_RED_SIGNAL_STR;
@@ -292,10 +292,10 @@ static void extractedPos_cb(const autoware_msgs::Signals::ConstPtr &extractedPos
 		switch (ctx.lightState)
 		{
 			case GREEN:
+			case YELLOW:
 				tlr_result_msg.recognition_result = TRAFFIC_LIGHT_GREEN;
 				tlr_result_msg.recognition_result_str = TLR_GREEN_SIGNAL_STR;
 				break;
-			case YELLOW:
 			case RED:
 				tlr_result_msg.recognition_result = TRAFFIC_LIGHT_RED;
 				tlr_result_msg.recognition_result_str = TLR_RED_SIGNAL_STR;

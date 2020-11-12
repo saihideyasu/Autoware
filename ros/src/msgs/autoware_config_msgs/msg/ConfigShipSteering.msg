@@ -1,0 +1,7 @@
+Header hader
+float64 max_electric_current_left
+float64 max_electric_current_right
+float64 max_angle_left
+float64 max_angle_right
+float64 permission_angle_left
+float64 permission_angle_right

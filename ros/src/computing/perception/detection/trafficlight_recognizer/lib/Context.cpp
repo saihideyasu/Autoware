@@ -61,6 +61,7 @@ void Context::SetContexts(std::vector<Context> &out_signal_contexts,
 	pole_id_vector.erase(new_end, pole_id_vector.end());
 
 	std::vector<Context> final_signal_contexts;
+	//std::cout << "c," << pole_id_vector.size() << std::endl;
 
 	//one traffic signal per lane, check each lane and find the bulb belonging to this lane (this signal Context)
 	for (unsigned int ctx_idx = 0; ctx_idx < pole_id_vector.size(); ctx_idx++)
@@ -83,6 +84,9 @@ void Context::SetContexts(std::vector<Context> &out_signal_contexts,
 			double map_y = lamp_iterator->y;
 			double map_z = lamp_iterator->z;
 			int radius = lamp_iterator->radius;
+			std::cout << "radius," << radius << std::endl;
+			std::cout << "width" << in_image_width << "," << img_x - radius - 1.5 * radius << "," << img_x + radius + 1.5 * radius << std::endl;
+			std::cout << "heght" << in_image_height << "," << img_y - radius - 1.5 * radius << "," << img_y + radius + 1.5 * radius << std::endl;
 			if (lamp_iterator->plId == pole_id_vector.at(ctx_idx) &&
 			    0 < img_x - radius - 1.5 * radius && img_x + radius + 1.5 * radius < in_image_width &&
 			    0 < img_y - radius - 1.5 * radius && img_y + radius + 1.5 * radius < in_image_height)

@@ -87,6 +87,7 @@ add_message_files(
             TemporaryStopperInfoList.msg
             MobileyeObstacle.msg
             StopperDistance.msg
+            ShipSendTwist.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

@@ -288,6 +288,7 @@ private:
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_log_write_, pub_estimate_stopper_distance_;
 	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_, pub_vehicle_status_, pub_velocity_param_, pub_tmp_;
+	ros::Publisher pub_way_distance_ave_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -666,28 +667,44 @@ private:
 		}
 	}
 
+	double way_distance_sum_ = 0;
+	int way_distance_count_ = 0;
 	void callbackDifferenceToWaypointDistance(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
+		way_distance_sum_ += msg->baselink_distance;
+		way_distance_count_++;
 		waypointDistanceCheck(msg, std::string("current"));
 		difference_toWaypoint_distance_ = *msg;
 	}
 
+	double way_distance_sum_ndt_ = 0;
+	int way_distance_count_ndt_ = 0;
 	void callbackDifferenceToWaypointDistanceNdt(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
+		way_distance_sum_ndt_ += msg->baselink_distance;
+		way_distance_count_ndt_++;
 		if(config_localizer_switch_.localizer_check == 0 || config_localizer_switch_.localizer_check == 2)
 			waypointDistanceCheck(msg, std::string("ndt"));
 		difference_toWaypoint_distance_ndt_ = *msg;
 	}
 
+	double way_distance_sum_gnss_ = 0;
+	int way_distance_count_gnss_ = 0;
 	void callbackDifferenceToWaypointDistanceGnss(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
+		way_distance_sum_gnss_ += msg->baselink_distance;
+		way_distance_count_gnss_++;
 		if(config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2)
 			waypointDistanceCheck(msg, std::string("gnss"));
 		difference_toWaypoint_distance_gnss_ = *msg;
 	}
 
+	double way_distance_sum_ekf_ = 0;
+	int way_distance_count_ekf_ = 0;
 	void callbackDifferenceToWaypointDistanceEkf(const autoware_msgs::DifferenceToWaypointDistance::ConstPtr &msg)
 	{
+		way_distance_sum_ekf_ += msg->baselink_distance;
+		way_distance_count_ekf_++;
 		//if(config_localizer_switch_.localizer_check == 1 || config_localizer_switch_.localizer_check == 2)
 		//	waypointDistanceCheck(msg, std::string("gnss"));
 		difference_toWaypoint_distance_ekf_ = *msg;
@@ -1606,6 +1623,25 @@ private:
 	void callbackWaypointParam(const autoware_msgs::WaypointParam::ConstPtr &msg)
 	{
 		pedal_ = msg->microbus_pedal;
+
+		if(msg->id != waypoint_param_.id)
+		{
+			double way_distance_ave = way_distance_sum_ / way_distance_count_;
+			double way_distance_ave_ndt = way_distance_sum_ndt_ / way_distance_count_ndt_;
+			double way_distance_ave_gnss = way_distance_sum_gnss_ / way_distance_count_gnss_;
+			double way_distance_ave_ekf = way_distance_sum_ekf_ / way_distance_count_ekf_;
+			way_distance_sum_ = 0;  way_distance_count_ = 0;
+			way_distance_sum_ndt_ = 0;  way_distance_count_ndt_ = 0;
+			way_distance_sum_gnss_ = 0;  way_distance_count_gnss_ = 0;
+			way_distance_sum_ekf_ = 0;  way_distance_count_ekf_ = 0;
+
+			std::stringstream str;
+			str << "," << waypoint_param_.id << ",current," << way_distance_ave << ",ndt," << way_distance_ave_ndt;
+			str << ",gnss," << way_distance_ave_gnss << ",ekf," << way_distance_ave_ekf << "," << std::endl;
+			std_msgs::String pub;
+			pub.data = str.str();
+			pub_way_distance_ave_.publish(pub);
+		}
 
 		if(msg->localizer_check > 0)
 		{
@@ -2898,6 +2934,7 @@ public:
 		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);
 		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
 		pub_velocity_param_ = nh_.advertise<autoware_can_msgs::MicroBusCanVelocityParam>("/microbus/velocity_param", 1);
+		pub_way_distance_ave_ = nh_.advertise<std_msgs::String>("/microbus/way_distance_ave", 1);
 		pub_tmp_ = nh_.advertise<std_msgs::String>("/microbus/tmp", 1);
 
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);
@@ -2984,6 +3021,7 @@ public:
 		pid_params.init(0.0);
 		mobileye_obstacle_data_.header.stamp = ros::Time(0);
 		for(int i=0; i<nmae_name_list_.size(); i++) nmea_text_list_.push_back(std::stringstream());
+		waypoint_param_.id = -1;
 	}
 
 	~kvaser_can_sender()

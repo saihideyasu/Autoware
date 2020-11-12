@@ -44,6 +44,7 @@ add_message_files(
   ConfigWaypointFollower.msg
   ConfigWaypointReplanner.msg
 
+  ConfigShipSteering.msg
   ConfigCameraROI.msg
   ConfigLocalizerSwitchFusion.msg
   ConfigManualDriveStroke.msg

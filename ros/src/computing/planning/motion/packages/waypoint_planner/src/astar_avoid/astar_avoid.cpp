@@ -39,6 +39,7 @@ AstarAvoid::AstarAvoid()
   private_nh_.param<int>("search_waypoints_delta", search_waypoints_delta_, 2);
 
   safety_waypoints_pub_ = nh_.advertise<autoware_msgs::Lane>("safety_waypoints", 1, true);
+  tmp_pub_ = nh_.advertise<std_msgs::String>("astar_tmp", 1);
   costmap_sub_ = nh_.subscribe("costmap", 1, &AstarAvoid::costmapCallback, this);
   current_pose_sub_ = nh_.subscribe("current_pose", 1, &AstarAvoid::currentPoseCallback, this);
   current_velocity_sub_ = nh_.subscribe("current_velocity", 1, &AstarAvoid::currentVelocityCallback, this);
@@ -326,6 +327,9 @@ void AstarAvoid::publishWaypoints()
 
   while (!terminate_thread_)
   {
+    std_msgs::String str;
+    str.data = "aaa";
+    tmp_pub_.publish(str);
     // select waypoints
     switch (state_)
     {

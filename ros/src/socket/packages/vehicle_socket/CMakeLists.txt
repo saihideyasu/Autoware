@@ -159,6 +159,15 @@ add_dependencies(canusbz_prius_can_receiver
   ${catkin_EXPORTED_TARGETS}
   )
 
+add_executable(ship_steering
+	nodes/ship_steering/ship_steering.cpp)
+target_link_libraries(ship_steering
+  ${catkin_LIBRARIES}
+  )
+add_dependencies(ship_steering
+  ${catkin_EXPORTED_TARGETS}
+  )
+
 catkin_install_python(PROGRAMS
         nodes/microbus_can_topic_sender/microbus_can_topic_sender.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
@@ -169,7 +178,7 @@ install(TARGETS vehicle_sender vehicle_receiver bus_socket
                 kvaser_prius_can_receiver kvaser_prius_can_sender
                 rs232_microbus_can_receiver
                 canusbz_prius_can_receiver
-                saver
+                saver ship_steering
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

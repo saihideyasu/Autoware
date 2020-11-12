@@ -26,8 +26,6 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nmea_msgs/Sentence.h>
 #include <tf/transform_broadcaster.h>
-#include <autoware_msgs/GnssStandardDeviation.h>
-#include <autoware_msgs/GnssSurfaceSpeed.h>
 
 #include <gnss/geo_pos_conv.hpp>
 
@@ -47,7 +45,7 @@ private:
   ros::NodeHandle private_nh_;
 
   // publisher
-  ros::Publisher pub1_, pub_surface_speed_;
+  ros::Publisher pub1_;
 
   // subscriber
   ros::Subscriber sub1_;
@@ -60,12 +58,10 @@ private:
   int32_t plane_number_;
   geo_pos_conv geo_;
   geo_pos_conv last_geo_;
-  ros::Time prev_stamp_;
   double roll_, pitch_, yaw_;
   double orientation_time_, position_time_;
   ros::Time current_time_, orientation_stamp_;
   tf::TransformBroadcaster br_;
-  bool orientation_ready_;  // true if position history is long enough to compute orientation
 
   // callbacks
   void callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg);
@@ -82,6 +78,5 @@ private:
 
 std::vector<std::string> split(const std::string &string);
 
-}  // namespace gnss_localizer
+}  // gnss_localizer
 #endif  // NMEA2TFPOSE_CORE_H
-

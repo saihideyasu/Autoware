@@ -29,6 +29,7 @@
 #include <autoware_msgs/WaypointParam.h>
 #include <autoware_msgs/GnssStandardDeviation.h>
 #include <autoware_msgs/NDTStat.h>
+#include <autoware_msgs/VehicleCmd.h>
 #include <autoware_system_msgs/Date.h>
 #include <autoware_msgs/StopperDistance.h>
 #include <QFileDialog>
@@ -63,6 +64,7 @@ private:
     ros::Publisher pub_error_lock_;//エラーがでている場合、canアプリにロック情報を送る
     ros::Publisher pub_use_safety_localizer_;//localizer関連のセーフティのチェック
     ros::Publisher pub_log_write_, pub_log_stop, pub_log_folder_;//ログ出力通知
+    ros::Publisher pub_vehicle_cmd_;
 
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
@@ -102,6 +104,7 @@ private:
     void callbackStrokeRoutine(const std_msgs::String &msg);
     void callbackMobileyeCan(const can_msgs::Frame &msg);
     void callbackGnssTime(const autoware_system_msgs::Date &msg);
+    void callbackVehicleCmd(const autoware_msgs::VehicleCmd &msg);
 
     autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
     autoware_can_msgs::MicroBusCan502 can502_;//マイコン応答ID502
@@ -125,6 +128,7 @@ private:
     sensor_msgs::Imu imu_;
     mobileye_560_660_msgs::AftermarketLane mobileye_lane_;
     std::string log_folder_;
+    autoware_msgs::VehicleCmd vehicle_cmd_;
 
     QPalette palette_drive_mode_ok_, palette_steer_mode_ok_;//autoモード表示テキストボックスのバックグラウンドカラーOK
     QPalette palette_drive_mode_error_, palette_steer_mode_error_;//autoモード表示テキストボックスのバックグラウンドカラーerror

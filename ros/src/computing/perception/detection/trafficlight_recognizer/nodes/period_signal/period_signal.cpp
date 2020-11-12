@@ -178,7 +178,7 @@ public:
 
         pub_signal_change_time_ = nh_.advertise<std_msgs::Float64>("/signal_change_time", 10);
         pub_signal_red_change_time_ = nh_.advertise<std_msgs::Float64>("/signal_red_change_time", 10);
-        pub_signal_stat_ = nh_.advertise<autoware_msgs::TrafficLight>("/light_color", 10, true);
+        pub_signal_stat_ = nh_.advertise<autoware_msgs::TrafficLight>("/period_light_color", 10, true);
         pub_signal_stat_string_ = nh_.advertise<std_msgs::String>("/sound_player", 10);
     }
 
@@ -224,7 +224,7 @@ public:
         //green
         if(time_range < time_step_.time_step_green_)
         {
-            if(lookahead_flag_ == false)
+            /*if(lookahead_flag_ == false)
             {
                 if(lane_signal_select_ == autoware_msgs::Lane::SIGNAL_SELECT_RED)
                 {
@@ -246,8 +246,12 @@ public:
             {
                 if(prev_traffic_ != TRAFFIC_LIGHT_RED) publishSignal(TRAFFIC_LIGHT_GREEN, std::string(TLR_GREEN_SIGNAL_STR));
                 lookahead_flag_ = true;
+            }*/
+            if(prev_traffic_ != TRAFFIC_LIGHT_GREEN)
+            {
+                publishSignal(TRAFFIC_LIGHT_GREEN, std::string(TLR_GREEN_SIGNAL_STR));
             }
-            
+
             std_msgs::Float64 change_time_msg;
             change_time_msg.data = time_step_.time_step_green_ - time_range;
             pub_signal_change_time_.publish(change_time_msg);
@@ -262,9 +266,9 @@ public:
             time_range -= time_step_.time_step_green_;
             if(time_range < time_step_.time_step_yellow_)
             {
-                if(prev_traffic_ != TRAFFIC_LIGHT_RED)
+                if(prev_traffic_ != TRAFFIC_LIGHT_GREEN)
                 {
-                    publishSignal(TRAFFIC_LIGHT_RED, std::string(TLR_RED_SIGNAL_STR));
+                    publishSignal(TRAFFIC_LIGHT_GREEN, std::string(TLR_GREEN_SIGNAL_STR));
                 }
 
                 std_msgs::Float64 change_time_msg;

@@ -123,11 +123,12 @@ int main(int argc, char** argv)
 	ros::NodeHandle private_nh("~");
 
 	WaypointMaker waypoint_maker(nh, private_nh);
-	ros::Rate rate(100);
+	/*ros::Rate rate(100);
 	while(ros::ok())
 	{
 		ros::spinOnce();
 		rate.sleep();
-	}
+	}*/
+	ros::spin();
 	return 0;
 }

@@ -1,10 +1,8 @@
 #include "TrafficLight.h"
 #include "ros/ros.h"
 #include <autoware_msgs/TrafficLight.h>
-#include <autoware_msgs/WaypointParam.h>
 #include <chrono>
 #include <thread>
-#include <std_msgs/String.h>
 
 static const bool ADVERTISE_LATCH = true;
 
@@ -19,8 +17,6 @@ private:
   void watchdog_timer();
   void camera_light_color_callback(
       const autoware_msgs::TrafficLight::ConstPtr &input_msg);
-  void period_light_color_callback(
-      const autoware_msgs::TrafficLight::ConstPtr &input_msg);
   void ams_light_color_callback(
       const autoware_msgs::TrafficLight::ConstPtr &input_msg);
 
@@ -32,18 +28,17 @@ private:
   autoware_msgs::TrafficLight state_msg_;
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
-  ros::Publisher traffic_light_pub_, tmp_pub_;
-  ros::Subscriber camera_sub_, period_sub_, waypoint_param_sub_;
+  ros::Publisher traffic_light_pub_;
+  ros::Subscriber camera_sub_;
   ros::Subscriber ams_sub_;
   ros::Time ams_msg_time_;
   bool is_ams_timeout_;
   ros::Duration ams_timeout_period_;
   std::thread watchdog_timer_thread_;
-  bool use_period_;
 };
 
 TLSwitch::TLSwitch(const ros::NodeHandle &nh, const ros::NodeHandle &private_nh)
-    : nh_(nh), private_nh_(private_nh), ams_timeout_period_(2.0), use_period_(false){
+    : nh_(nh), private_nh_(private_nh), ams_timeout_period_(2.0) {
   private_nh_.param<std::string>("light_color_topic", light_color_topic_name_,
                                  "/light_color");
   private_nh_.param<std::string>("camera_light_color_topic",
@@ -53,13 +48,8 @@ TLSwitch::TLSwitch(const ros::NodeHandle &nh, const ros::NodeHandle &private_nh)
       "ams_light_color_topic", ams_light_color_topic_name_, "/ams_light_color");
   traffic_light_pub_ = nh_.advertise<autoware_msgs::TrafficLight>(
       light_color_topic_name_, 1, ADVERTISE_LATCH);
-  tmp_pub_ = nh_.advertise<std_msgs::String>(
-      "tl_switch_str", 1);
-
   camera_sub_ = nh_.subscribe(camera_light_color_topic_name_, 1,
                               &TLSwitch::camera_light_color_callback, this);
-  period_sub_ = nh_.subscribe("period_light_color", 1,
-                              &TLSwitch::period_light_color_callback, this);
   ams_sub_ = nh_.subscribe(ams_light_color_topic_name_, 1,
                            &TLSwitch::ams_light_color_callback, this);
   reset_light_msg();
@@ -95,25 +85,8 @@ void TLSwitch::watchdog_timer() {
 
 void TLSwitch::camera_light_color_callback(
     const autoware_msgs::TrafficLight::ConstPtr &msg) {
-  if(use_period_ == false)
-  {
-    camera_msg_.traffic_light = msg->traffic_light;
-    switch_color();
-    std_msgs::String str;
-    str.data = "camera";
-    tmp_pub_.publish(str);
-  }
-}
-
-void TLSwitch::period_light_color_callback(
-    const autoware_msgs::TrafficLight::ConstPtr &msg) {
   camera_msg_.traffic_light = msg->traffic_light;
   switch_color();
-  if(msg->traffic_light == TRAFFIC_LIGHT_UNKNOWN) use_period_ = false;
-  else use_period_ = true;
-  std_msgs::String str;
-  str.data = "period";
-  tmp_pub_.publish(str);
 }
 
 void TLSwitch::ams_light_color_callback(

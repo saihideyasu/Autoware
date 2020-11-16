@@ -64,7 +64,6 @@ private:
     ros::Publisher pub_error_lock_;//エラーがでている場合、canアプリにロック情報を送る
     ros::Publisher pub_use_safety_localizer_;//localizer関連のセーフティのチェック
     ros::Publisher pub_log_write_, pub_log_stop, pub_log_folder_;//ログ出力通知
-    ros::Publisher pub_vehicle_cmd_;
 
     ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
     ros::Subscriber sub_can_status_;//canステータス情報
@@ -80,6 +79,7 @@ private:
     ros::Subscriber sub_stroke_routine_;
     ros::Subscriber sub_mobileye_frame_;//mobileyeからのcanの生データ
     ros::Subscriber sub_gnss_time_;//gnssの時間
+    ros::Subscriber sub_vehicle_cmd_;
 
     void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
     void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502

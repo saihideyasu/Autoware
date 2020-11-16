@@ -125,7 +125,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     sub_stroke_routine_ = nh.subscribe("/microbus/stroke_routine", 10 , &MainWindow::callbackStrokeRoutine, this);
     sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &MainWindow::callbackMobileyeCan, this);
     sub_gnss_time_ = nh.subscribe("/gnss_time", 10 , &MainWindow::callbackGnssTime, this);
- 
+    sub_vehicle_cmd_ = nh.subscribe("/vehicle_cmd", 10 , &MainWindow::callbackVehicleCmd, this);
+
     can_status_.angle_limit_over = can_status_.position_check_stop = true;
     error_text_lock_ = false;
     distance_angular_check_.baselink_distance = 10000;
@@ -850,8 +851,8 @@ std::cout << "aaa" << std::endl;
     {
         ui->tx2_log_folder->setText(log_folder_.c_str());
         std::stringstream str;
-        str << std::fixed << std::setprecision(keta) << vehicle_cmd_.ctrl_cmd.linear_velocity;
-        ui->lb2_cmd_vel->setText(str.str().c_str());
+        str << std::fixed << std::setprecision(keta) << vehicle_cmd_.ctrl_cmd.linear_velocity * 3.6;
+        ui->tx2_cmd_vel->setText(str.str().c_str());
     }
 }
 

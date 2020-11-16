@@ -58,4 +58,5 @@ int8 detection_use_point_cloud
 int8 detection_use_point_pillar
 int8 detection_use_mobileye
 float64 temporary_fixed_velocity
+int8 use_slow_accel_release
 LiesseXZB70MParam liesse

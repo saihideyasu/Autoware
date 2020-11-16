@@ -288,7 +288,7 @@ private:
 
 	ros::Publisher pub_microbus_can_sender_status_, pub_log_write_, pub_estimate_stopper_distance_;
 	ros::Publisher pub_localizer_match_stat_, pub_stroke_routine_, pub_vehicle_status_, pub_velocity_param_, pub_tmp_;
-	ros::Publisher pub_way_distance_ave_;
+	ros::Publisher pub_way_distance_ave_, pub_brake_i_;
 
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_microbus_drive_mode_, sub_microbus_steer_mode_, sub_twist_cmd_;
@@ -382,6 +382,7 @@ private:
 	autoware_system_msgs::Date gnss_time_;
 	std::string log_folder_;
 	double stop_distance_over_sum_, stop_distance_over_add_;
+	bool  use_slow_accel_release_;
 
 	const int nmea_list_count_ = 5;
 	std::vector<std::string> nmae_name_list_ = {"#BESTPOSA","#BESTGNSSPOSA","#TIMEA","#INSSTDEVA","#RAWIMUA"};
@@ -1734,6 +1735,8 @@ private:
 		if(msg->stopper_distance2 > 0) setting_.stopper_distance2 = msg->stopper_distance2;
 		if(msg->stopper_distance3 > 0) setting_.stopper_distance3 = msg->stopper_distance3;
 		
+		if(msg->use_slow_accel_release == 1) use_slow_accel_release_ = true;
+		else use_slow_accel_release_ = false;
 		waypoint_param_ = *msg;
 	}
 
@@ -2125,8 +2128,10 @@ private:
 		return ret;
 	}
 
+	double e_i_val_;
 	double _brake_stroke_pid_control(double current_velocity, double cmd_velocity, double acceleration)
 	{
+		e_i_val_ = 0;
 		double brake_stroke_step = setting_.brake_stroke_step_max;//2;
 		double vel_sa = current_velocity - cmd_velocity;
 		double brake_stroke_adjust_th = (current_velocity + cmd_velocity)/2 * (setting_.brake_stroke_adjust_th / 100.0);
@@ -2142,6 +2147,7 @@ private:
 
 		const double velocity_magn = 1.7;
 		double stopper_distance_th = (setting_.stopper_distance1 > cmd_velocity*velocity_magn) ? setting_.stopper_distance1 : cmd_velocity*velocity_magn;
+	
 		if(pid_params.get_stroke_prev() > 0 && (stopper_distance_.distance < 0 || stopper_distance_.distance > stopper_distance_th))
 		{
 			pid_params.clear_diff_velocity();
@@ -2149,7 +2155,9 @@ private:
 			pid_params.clear_diff_distance();
 			pid_params.set_accel_e_prev_velocity(0);
 			pid_params.set_accel_e_prev_acceleration(0);
+			
 			//if(current_velocity > cmd_velocity)
+			if(use_slow_accel_release_ == true)//ゆっくりアクセルを離すか？
 			{
 				double stroke_kagen = math_stroke_kagen_brake(cmd_velocity);
 				std::cout << "kagen : " << stroke_kagen << std::endl;
@@ -2160,7 +2168,7 @@ private:
 			}
 			//else return pid_params.get_stroke_prev();
 		}
-
+		
 		//std::cout << "cur" << current_velocity << "  cmd" << cmd_velocity << std::endl;
 		//アクセルからブレーキに変わった場合、Iの積算値をリセット
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
@@ -2203,6 +2211,7 @@ private:
 		        setting_.k_brake_i_velocity * e_i +
 		        setting_.k_brake_d_velocity * e_d;
 		pid_params.set_brake_e_prev_velocity(e);
+		e_i_val_ = e_i;
 
 	//	static double target_brake_stroke_prev=target_brake_stroke;
 /*
@@ -2710,17 +2719,9 @@ private:
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
 				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);//, &stroke_speed);
-				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
-					new_stroke > pid_params.get_stroke_prev())
-						new_stroke = pid_params.get_stroke_prev();*/
-				routine_.data = "brake";
-				pub_stroke_routine_.publish(routine_);
-				break;
-			case PID_params::STROKE_STATE_MODE_STOP_:
-				new_stroke = _stopping_control(current_velocity);
-				pid_params.set_stop_stroke_prev(new_stroke);
-				break;
-			case PID_params::STROKE_STATE_MODE_KEEP_:
+				std_msgs::Float64 brake_i;
+				brake_i.data = e_i_val_;
+				pub_brake_i_.publish(brake_i);
 				new_stroke = _keep_control();//pid_params.get_stroke_prev();
 				routine_.data = "keep";
 				pub_stroke_routine_.publish(routine_);
@@ -2892,6 +2893,7 @@ public:
 		, log_folder_("")
 		, stop_distance_over_sum_(0)
 		, stop_distance_over_add_(10.0/100.0)
+		, use_slow_accel_release_(true)
 	{
 		/*setting_.use_position_checker = true;
 		setting_.velocity_limit = 50;
@@ -2935,6 +2937,7 @@ public:
 		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
 		pub_velocity_param_ = nh_.advertise<autoware_can_msgs::MicroBusCanVelocityParam>("/microbus/velocity_param", 1);
 		pub_way_distance_ave_ = nh_.advertise<std_msgs::String>("/microbus/way_distance_ave", 1);
+		pub_brake_i_ = nh_.advertise<std_msgs::Float64>("/microbus/brake_i", 1);
 		pub_tmp_ = nh_.advertise<std_msgs::String>("/microbus/tmp", 1);
 
 		sub_microbus_drive_mode_ = nh_.subscribe("/microbus/drive_mode_send", 10, &kvaser_can_sender::callbackDModeSend, this);

@@ -56,6 +56,8 @@ double clothoid_radius_min;
 autoware_msgs::LaneArray cached_waypoint;
 autoware_msgs::LinearArray stop_line;
 
+double front_bumper_to_baselink; //baselinkから車全面までの距離
+
 #ifdef DEBUG
 visualization_msgs::Marker debug_marker;
 ros::Publisher marker_pub;
@@ -289,6 +291,27 @@ autoware_msgs::Lane apply_stopline_acceleration(const autoware_msgs::Lane& lane,
     l = apply_acceleration(l, acceleration, i, ahead_cnt + 1, 0);
 
   std::reverse(l.waypoints.begin(), l.waypoints.end());
+
+  for(const size_t i : indexes)
+  {
+		double stop_line_to_baselink = 0;
+		//int stop_line_to_baselink_index;
+		for(int cou=i; cou>=1; cou--)
+		{
+			double x1 = lane.waypoints[cou].pose.pose.position.x;
+			double y1 = lane.waypoints[cou].pose.pose.position.y;
+			double x2 = lane.waypoints[cou-1].pose.pose.position.x;
+			double y2 = lane.waypoints[cou-1].pose.pose.position.y;
+			double sx = x1-x2,  sy = y1-y2;
+			stop_line_to_baselink += sqrt(sx*sx + sy*sy);
+			if(stop_line_to_baselink >= front_bumper_to_baselink)
+			{
+				//stop_line_to_baselink_index = cou;//+1;
+        l.waypoints[cou].twist.twist.linear.x = 0;
+				break;
+			}
+		}
+  }
 
   return l;
 }
@@ -563,6 +586,8 @@ int main(int argc, char** argv)
   n.param<double>("/lane_rule/crossroad_weight", crossroad_weight, 0.9);
   n.param<double>("/lane_rule/clothoid_weight", clothoid_weight, 0.215);
   n.param<std::string>("/lane_rule/frame_id", frame_id, "map");
+
+  n.param<double>("/vehicle_info/front_bumper_to_baselink", front_bumper_to_baselink, 4.55);
 
   traffic_pub =
       n.advertise<autoware_msgs::LaneArray>("/traffic_waypoints_array", pub_waypoint_queue_size, pub_waypoint_latch);

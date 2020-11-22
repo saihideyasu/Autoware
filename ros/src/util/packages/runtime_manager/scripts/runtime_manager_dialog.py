@@ -81,6 +81,8 @@ from autoware_config_msgs.msg import ConfigTemporaryStopper
 from autoware_config_msgs.msg import ConfigCurrentVelocityConversion
 from autoware_config_msgs.msg import ConfigPeriodSignal
 from autoware_config_msgs.msg import ConfigCanOdometry
+from autoware_config_msgs.msg import ConfigEstimateToBaselink
+from autoware_config_msgs.msg import ConfigMicrobusPseudoCanPublisher
 from tablet_socket_msgs.msg import mode_cmd
 from tablet_socket_msgs.msg import gear_cmd
 from tablet_socket_msgs.msg import Waypoint

@@ -6,6 +6,7 @@
 #include <tf/transform_broadcaster.h>
 #include <autoware_msgs/StopperDistance.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
+#include <limits>
 
 class StopperDistance
 {
@@ -17,7 +18,7 @@ private:
 
 	ros::Publisher pub_stopline_distance_, pub_obstacle_offset_;
 
-	double const front_bumper_to_baselink = 6.25 - 1.7;
+	double front_bumper_to_baselink_ = 6.25 - 1.7; //baselinkから車全面までの距離
 
 	double temporary_fixed_velocity_;
 	void callbackTemporaryFixedVelocity(const std_msgs::Float64& msg)
@@ -76,7 +77,7 @@ private:
 			autoware_msgs::WaypointParam waypoint_param = msg.waypoints[i].waypoint_param;
 			if(waypoint_param.signal_stop_line > 0 && light_color_ == 0)
 			{
-				pubmsg.distance = dis - front_bumper_to_baselink;
+				pubmsg.distance = dis - front_bumper_to_baselink_;
 				pubmsg.send_process = autoware_msgs::StopperDistance::SIGNAL;
 				pubmsg.fixed_velocity = 0;
 				if(pubmsg.distance < 0) pubmsg.distance = 0;
@@ -84,7 +85,7 @@ private:
 			}
 			else if(waypoint_param.temporary_stop_line > 0 && temporary_flag_ == 1)
 			{
-				pubmsg.distance = dis - front_bumper_to_baselink;
+				pubmsg.distance = dis - front_bumper_to_baselink_;
 				pubmsg.send_process = autoware_msgs::StopperDistance::TEMPORARY_STOPPER;
 				pubmsg.fixed_velocity = temporary_fixed_velocity_;
 				if(pubmsg.distance < 0) pubmsg.distance = 0;
@@ -96,7 +97,7 @@ private:
 				double a = (km_h/2 > 3) ? km_h/2 : 3;
 				//double obstacle_offset = (a > 4) ? 4 : a;
 				double obstacle_offset = 4;
-				pubmsg.distance = dis - (front_bumper_to_baselink + obstacle_offset);
+				pubmsg.distance = dis - (front_bumper_to_baselink_ + obstacle_offset);
 				pubmsg.send_process = autoware_msgs::StopperDistance::OBSTACLE;
 				pubmsg.fixed_velocity = obstacle_velocity_;
 				if(pubmsg.distance < 0) pubmsg.distance = 0;
@@ -124,6 +125,8 @@ public:
 		, obstacle_waypoint_(-1)
 	{
 		nh_ = nh;  private_nh_ = p_nh;
+
+		//nh_.param<double>("/vehicle_info/front_bumper_to_baselink", front_bumper_to_baselink_, 4.55);
 
 		pub_stopline_distance_ = nh_.advertise<autoware_msgs::StopperDistance>("/stopper_distance", 1);
 		pub_obstacle_offset_ = nh_.advertise<std_msgs::Float64>("/obstacle_offset", 1);

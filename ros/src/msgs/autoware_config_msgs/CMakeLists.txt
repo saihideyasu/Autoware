@@ -58,6 +58,8 @@ add_message_files(
   ConfigCurrentVelocityConversion.msg
   ConfigPeriodSignal.msg
   ConfigCanOdometry.msg
+  ConfigEstimateToBaselink.msg
+  ConfigMicrobusPseudoCanPublisher.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

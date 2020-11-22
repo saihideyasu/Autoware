@@ -45,6 +45,7 @@
 #include <autoware_msgs/ControlCommandStamped.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_msgs/VehicleStatus.h>
+#include <autoware_msgs/WaypointParam.h>//2020_11_19 ctrl_period and wheelbase input
 
 #include "mpc_follower/mpc_utils.h"
 #include "mpc_follower/mpc_trajectory.h"
@@ -80,6 +81,7 @@ private:
   ros::Subscriber sub_ref_path_;          //!< @brief topic subscriber for reference waypoints
   ros::Subscriber sub_pose_;              //!< @brief subscriber for current pose
   ros::Subscriber sub_vehicle_status_;    //!< @brief subscriber for currrent vehicle status
+  ros::Subscriber sub_waypoint_param_;    //2020_11_20_add whilebase and ctrl_period
   ros::Timer timer_control_;              //!< @brief timer for control command computation
 
   MPCTrajectory ref_traj_;                                   //!< @brief reference trajectory to be followed
@@ -162,6 +164,11 @@ private:
    * @brief set vehicle_status_.twist and vehicle_status_.tire_angle_rad with receved message
    */
   void callbackVehicleStatus(const autoware_msgs::VehicleStatus &msg);
+
+  /*
+   * @brief read waypoint param
+  */
+  void callbackWaypointParam(const autoware_msgs::WaypointParam &msg);
 
   /**
    * @brief publish control command calculated by MPC

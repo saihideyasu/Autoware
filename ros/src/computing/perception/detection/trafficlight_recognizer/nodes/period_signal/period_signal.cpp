@@ -178,7 +178,7 @@ public:
 
         pub_signal_change_time_ = nh_.advertise<std_msgs::Float64>("/signal_change_time", 10);
         pub_signal_red_change_time_ = nh_.advertise<std_msgs::Float64>("/signal_red_change_time", 10);
-        pub_signal_stat_ = nh_.advertise<autoware_msgs::TrafficLight>("/period_light_color", 10, true);
+        pub_signal_stat_ = nh_.advertise<autoware_msgs::TrafficLight>("/light_color", 10, true);
         pub_signal_stat_string_ = nh_.advertise<std_msgs::String>("/sound_player", 10);
     }
 

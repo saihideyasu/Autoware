@@ -227,8 +227,11 @@ subs :
       - name : current_velocity_conversion
         desc : current_velocity_conversion desc sample
         cmd  : roslaunch autoware_connector current_velocity_conversion.launch
-        param: current_velocity_conversion
-
+        param: estimate_to_baselink
+      - name : estimate_to_baselink
+        desc : estimate_to_baselink desc sample
+        cmd  : roslaunch autoware_connector estimate_to_baselink.launch
+        param: estimate_to_baselink
   - name : Detection
     desc : Detection desc sample
     subs :
@@ -1114,6 +1117,10 @@ subs :
     - name : microbus_interface stroke
       desc : microbus_interface stroke desc sample
       cmd  : roslaunch microbus_interface microbus_interface.launch
+    - name : microbus_pseudo_can_publisher
+      desc : microbus_pseudo_can_publisher desc sample
+      cmd  : roslaunch vehicle_socket microbus_pseudo_can_publisher.launch
+      param: microbus_pseudo_can_publisher
 
 buttons:
   car_dpm :
@@ -6578,6 +6585,20 @@ params :
         dash     : ''
         delim    : ':='
 
+  - name  : estimate_to_baselink
+    topic : /config/estimate_to_baselink
+    msg   : ConfigEstimateToBaselink
+    vars  :
+    - name : height
+      desc : height
+      label: height
+      min  : 0.0
+      max  : 1000.0
+      v    : 60.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+
   - name  : temporary_stopper
     topic : /config/temporary_stopper
     msg   : ConfigTemporaryStopper
@@ -6949,6 +6970,40 @@ params :
       min   : 0
       max   : 50
       v     : 50
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+
+  - name  : microbus_pseudo_can_publisher
+    topic : /config/microbus_pseudo_can_publisher
+    msg   : ConfigMicrobusPseudoCanPublisher
+    vars  :
+    - name  : use_velocity_flag
+      desc  : use_velocity_flag desc sample
+      label : use_velocity_flag
+      kind  : radio_box
+      choices:
+      - static
+      - waypoint
+      descs :
+      - static
+      - waypoint
+      v     : 0
+    - name  : velocity_mps
+      desc  : velocity_mps
+      label : velocity_mps
+      min   : 0.0
+      max   : 100.0
+      v     : 10.0
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : time_step_ms
+      desc  : time_step_ms
+      label : time_step_ms
+      min   : 0.0
+      max   : 10.0
+      v     : 0.0
       cmd_param :
         dash        : ''
         delim       : ':='

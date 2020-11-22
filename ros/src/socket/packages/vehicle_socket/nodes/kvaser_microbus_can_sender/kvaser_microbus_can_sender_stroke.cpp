@@ -1174,9 +1174,9 @@ private:
 		double jurk2 = (acc2 - acceleration2_twist_) / td;
 		std::cout << "acceleration," << acc << "," << acc2 << std::endl;
 		double wheel_base = 3.935;
-		double tire_angle;
-		if(twist_.ctrl_cmd.steering_angle > 0) tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_left;
-		else tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_right;
+		//double tire_angle;
+		//if(twist_.ctrl_cmd.steering_angle > 0) tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_left;
+		//else tire_angle = twist_.ctrl_cmd.steering_angle*wheelrad_to_steering_can_value_right;
 		std::stringstream str,name;
 //		str << std::setprecision(10) << waypoint_id_ << "," << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << "," << pose_msg->pose.orientation.z << ",";
 //		str << twist_msg->twist.angular.z << "," << twist_msg->twist.linear.x << ",";
@@ -1689,7 +1689,8 @@ private:
 		if(msg->steer_correction > -1000)
 		{
 			steer_correction_ = msg->steer_correction;
-			if(steer_correction_ > 500 || steer_correction_ < -500) steer_correction_ = 0;
+			//if(steer_correction_ > 500 || steer_correction_ < -500) steer_correction_ = 0; //足し算仕様
+			if(steer_correction_ < 0.3 || steer_correction_ > 3.0) steer_correction_ = 1;//掛け算仕様
 		}
 
 		if(msg->accel_stroke_offset >= 0 && msg->accel_stroke_offset <= 300)
@@ -1936,11 +1937,11 @@ private:
 			        / (handle_control_max_speed - handle_control_min_speed) + 1;
 			if(wheel_ang > 0)
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_left + steer_correction_;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_left * steer_correction_;
 			}
 			else
 			{
-				steer_val = wheel_ang * wheelrad_to_steering_can_value_right + steer_correction_;
+				steer_val = wheel_ang * wheelrad_to_steering_can_value_right * steer_correction_;
 			}
 			std::cout << "steer_correction : " << steer_correction_ << std::endl;
 		}
@@ -2174,7 +2175,7 @@ private:
 		double stroke = PEDAL_VOLTAGE_CENTER_ - can_receive_503_.pedal_voltage;
 		//std::cout << "stroke " << stroke << std::endl;
 		//std::cout << "if : " << stroke << " > " << setting_.accel_stroke_offset << std::endl;;
-		if (stroke > 10)
+		if (stroke > 20) //PEDAL_VOLTAGE_CENTER_(1024)が中央値ではないので、中央の値を補正するために辻褄合わせをする。
 		{
 			std::cout << "ACCEL_PEDAL_STROKE_OFFSET_" << std::endl;
 			//pid_params.set_brake_e_prev_velocity(0);
@@ -2256,7 +2257,12 @@ private:
 
 		//const double stop_stroke = 340.0;
 		//if(use_stopper_distance_ == true && temporary_fixed_velocity_ <= 0)
-		if(use_stopper_distance_ == true && (stopper_distance_.fixed_velocity <= 0 || stopper_distance_.send_process == 3))
+		std_msgs::String tmp;
+				tmp.data = "D1";
+				pub_tmp_.publish(tmp);
+		if(use_stopper_distance_ == true && (stopper_distance_.fixed_velocity <= 0 ||
+		                                     stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL ||
+											 stopper_distance_.send_process == autoware_msgs::StopperDistance::OBSTACLE))
 		{
 			std::cout << "stopper list : "<< setting_.stopper_distance1 << "," << setting_.stopper_distance2 << "," << setting_.stopper_distance3 << std::endl;
 			std::cout << "kkk stop_stroke_max : " << stop_stroke_max_ << std::endl;
@@ -2303,7 +2309,7 @@ private:
 			else if(stopper_distance_.distance >= 0 && stopper_distance_.distance <= setting_.stopper_distance3)
 			{std::cout << loop_counter_ << "stopD3" << std::endl;
 				//if(temporary_fixed_velocity_ == 0)
-				if(stopper_distance_.fixed_velocity == 0)
+				if(stopper_distance_.fixed_velocity == 0 || stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL)
 				{
 					std_msgs::String tmp;
 					tmp.data = "D3_1";
@@ -2313,7 +2319,11 @@ private:
 					target_brake_stroke = 0.0 + stop_stroke_max_ * (setting_.stopper_distance3 - stopper_distance_.distance)/2.0;
 					if(target_brake_stroke < pid_params.get_stop_stroke_prev())
 						target_brake_stroke = pid_params.get_stop_stroke_prev();
-					if(target_brake_stroke == stop_stroke_max_ && can_receive_502_.velocity_mps != 0) stop_distance_over_sum_ += stop_distance_over_add_;
+					if(target_brake_stroke == stop_stroke_max_ && can_receive_502_.velocity_mps != 0) 
+					{
+						stop_distance_over_sum_ += stop_distance_over_add_;
+						brake_stroke_step = 0.1;
+					}
 					target_brake_stroke += stop_distance_over_sum_;
 				}
 				else
@@ -2545,7 +2555,7 @@ private:
 		//if(ret > -setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 		send_step_ = brake_stroke_step;
 		pid_params.set_stop_stroke_prev(ret);
-		if(ret > 360) ret = 360;
+		if(ret > 340) ret = 340;
 		return -ret;
 	}
 
@@ -2651,6 +2661,12 @@ private:
 			if(acceleration <= 0 && stopper_distance_.distance >= 0)
 				std::cout << "teisi," << - cv_s*cv_s/(2.0*acceleration) << "," << stopper_distance_.distance <<  std::endl;
 
+/*std::stringstream str_tmp;
+str_tmp << "cmd_velocity," << cmd_velocity << ",current_velocity," << current_velocity << ",setting_.acceptable_velocity_variation," << setting_.acceptable_velocity_variation
+        << ",stopper_distance_.distance," << stopper_distance_.distance << ",in_brake_mode," << in_brake_mode_ << ",accel_avoidance_distance_min_," << accel_avoidance_distance_min_;
+std_msgs::String str_ret;
+str_ret.data = str_tmp.str();
+pub_tmp_.publish(str_ret);*/
 			std::cout << "auto_mode" << std::endl;
 			double new_stroke = 0;
 			std::cout << "cur_cmd : " << current_velocity << "," << cmd_velocity << "," << setting_.velocity_limit << std::endl;
@@ -2710,7 +2726,7 @@ private:
 			}
 
 			//td_msgs::String routine;
-			switch(pid_params.get_stroke_state_mode_())
+			/*switch(pid_params.get_stroke_state_mode_())
 			{
 			case PID_params::STROKE_STATE_MODE_ACCEL_:
 				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);//, &stroke_speed);
@@ -2719,6 +2735,8 @@ private:
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
 				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);//, &stroke_speed);
+				
+
 				std_msgs::Float64 brake_i;
 				brake_i.data = e_i_val_;
 				pub_brake_i_.publish(brake_i);
@@ -2726,8 +2744,36 @@ private:
 				routine_.data = "keep";
 				pub_stroke_routine_.publish(routine_);
 				break;
-			}
+			}*/
 
+			switch(pid_params.get_stroke_state_mode_())
+			{
+			case PID_params::STROKE_STATE_MODE_ACCEL_:
+				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity);//, &stroke_speed);
+				routine_.data = "accel";
+				pub_stroke_routine_.publish(routine_);
+				break;
+			case PID_params::STROKE_STATE_MODE_BRAKE_:
+				std_msgs::Float64 brake_i;
+				brake_i.data = e_i_val_;
+				pub_brake_i_.publish(brake_i);
+				new_stroke = _brake_stroke_pid_control(current_velocity, cmd_velocity, acceleration);//, &stroke_speed);
+				/*if(stopper_distance_ >= 0 && stopper_distance_ <= 1.5 &&
+					new_stroke > pid_params.get_stroke_prev())
+						new_stroke = pid_params.get_stroke_prev();*/
+				routine_.data = "brake";
+				pub_stroke_routine_.publish(routine_);
+				break;
+			case PID_params::STROKE_STATE_MODE_STOP_:
+				new_stroke = _stopping_control(current_velocity);
+				pid_params.set_stop_stroke_prev(new_stroke);
+				break;
+			case PID_params::STROKE_STATE_MODE_KEEP_:
+				new_stroke = _keep_control();//pid_params.get_stroke_prev();
+				routine_.data = "keep";
+				pub_stroke_routine_.publish(routine_);
+				break;
+			}
 			//ブレーキを離す場合、徐々に離す
 			/*if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
 			{
@@ -2876,10 +2922,10 @@ public:
 	    , jurk1_twist_(0)
 	    , jurk2_twist_(0)
 	    , angle_limit_over_(false)
-	    , steer_correction_(0)
+	    , steer_correction_(1.0)
 		, localizer_select_num_(1)
 		, accel_avoidance_distance_min_(30)
-		, stop_stroke_max_(325)
+		, stop_stroke_max_(340)
 		, in_accel_mode_(true)
 		, in_brake_mode_(true)
 		, use_stopper_distance_(true)
@@ -2934,7 +2980,7 @@ public:
 		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
 		pub_localizer_match_stat_ = nh_.advertise<autoware_msgs::LocalizerMatchStat>("/microbus/localizer_match_stat", 1);
 		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);
-		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
+		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/vehicle_status", 1);
 		pub_velocity_param_ = nh_.advertise<autoware_can_msgs::MicroBusCanVelocityParam>("/microbus/velocity_param", 1);
 		pub_way_distance_ave_ = nh_.advertise<std_msgs::String>("/microbus/way_distance_ave", 1);
 		pub_brake_i_ = nh_.advertise<std_msgs::Float64>("/microbus/brake_i", 1);
@@ -3091,7 +3137,7 @@ public:
 			status.gearshift = 0;
 			status.lamp = 0;
 			status.light = 0;
-			status.speed = current_velocity_.twist.linear.x;
+			status.speed = current_velocity_.twist.linear.x * 3.6;
 			if(can_receive_502_.angle_actual > 0) status.angle = can_receive_502_.angle_actual / wheelrad_to_steering_can_value_left;
 			else status.angle = can_receive_502_.angle_actual / wheelrad_to_steering_can_value_right;
 			pub_vehicle_status_.publish(status);

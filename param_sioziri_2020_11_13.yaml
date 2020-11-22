@@ -1,0 +1,1092 @@
+/:
+  camera_frame: camera
+  camera_id: /
+  camera_info_topic: /camera_info
+  file: /home/autoware/calib/liesse_20191017.yml
+  image_topic_src: /image_raw
+  projection_matrix_topic: /projection_matrix
+  publish_camera_info: true
+  publish_extrinsic_mat: true
+  register_lidar2camera_tf: false
+  solo_camera: false
+  target_frame: velodyne
+/camera0:
+  camera_frame: camera
+  camera_id: /camera0
+  camera_info_topic: /camera_info
+  file: ''
+  image_topic_src: /image_raw
+  projection_matrix_topic: /projection_matrix
+  publish_camera_info: true
+  publish_extrinsic_mat: true
+  register_lidar2camera_tf: true
+  target_frame: velodyne
+AVT Vimba Mako:
+  acquisition_mode: Continuous
+  acquisition_rate: 20
+  camera_info_url: ''
+  exposure: 10000
+  exposure_auto: Continuous
+  exposure_auto_max: 50000
+  gain: 15
+  gain_auto: Continuous
+  gain_auto_max: 32
+  guid: 50-
+  ip: ''
+  pixel_format: BayerRG8
+  show_debug_prints: 'true'
+  whitebalance_auto: Continuous
+Analog Devices ADIS16470:
+  frequency: '100'
+  port: /dev/ttyACM0
+FLIR ADK:
+  DEVICE: /dev/video0
+  FPS: 30
+  HEIGHT: 512
+  NS: flir_adk
+  WIDTH: 640
+Mobileye:
+  can_bit_rate: '50000'
+  can_circuit_i: '59879'
+  kvaser_channel: !!python/unicode '2'
+PointGrey Grasshoper 3 (USB1):
+  CalibrationFile: /home/autoware/calib/liesse_20191017.yml
+  format: raw
+  fps: 24
+  mode: 4
+  timeout: 1000
+PointGrey Grasshoper 3 single (USB1):
+  CalibrationFile: /home/autoware/calib/20190914_1116_bus.yaml
+  format: raw
+  fps: 24
+  mode: 4
+  timeout: 1000
+PointGrey LadyBug 5:
+  CalibrationFile: ''
+  SCALE: 0.2
+Serial GNSS:
+  baud: !!python/unicode '9600'
+  port: /dev/ttyUSB0
+Velodyne HDL-32E:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/32db.yaml
+Velodyne HDL-64E-S2:
+  calibration: ''
+Velodyne HDL-64E-S3:
+  calibration: ''
+Velodyne VLP-16:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VLP16db.yaml
+Velodyne VLP-16 Hi-Res:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VLP16_hires_db.yaml
+Velodyne VLP-16 liesse back left:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VLP16db.yaml
+Velodyne VLP-16 liesse back right:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VLP16db.yaml
+Velodyne VLP-16 liesse front left:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VLP16db.yaml
+Velodyne VLP-16 liesse front right:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VLP16db.yaml
+Velodyne VLP-16 prius left:
+  calibration: ''
+Velodyne VLP-16 prius right:
+  calibration: ''
+Velodyne VLP-32C:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VeloView-VLP-32C.yaml
+Velodyne VLP-32C prius top:
+  calibration: ''
+Velodyne VLS-128:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VeloView_VLS-128_FS1.yaml
+Velodyne VLS-128 single:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/VeloView_VLS-128_FS1.yaml
+Xsens MTi-300:
+  baud: !!python/unicode '115200'
+  frequency: !!python/unicode '100'
+  mode: !!python/unicode '2'
+  port: /dev/ttyUSB0
+  wait_sec: 3
+astar_avoid:
+  avoid_start_velocity: 3.0
+  avoid_waypoints_velocity: 10.0
+  costmap_topic: semantics/costmap_generator/occupancy_grid
+  enable_avoidance: false
+  replan_interval: 2.0
+booted_cmds:
+  names:
+  - setup_tf
+  - vehicle_model
+  - vehicle_info
+  - point_cloud
+  - vector_map
+  - tf
+  - novatel_oem7_tcp2
+  - nmea2tfpose_RTK_2
+  - gnss(RTK)_localizer
+  - can2odom
+  - localizer_switch
+  - rviz_qs
+  - lane_stop
+  - lane_select
+  - waypoint_param_sender
+  - astar_avoid
+  - temporary_stoper_liesse
+  - velocity_set
+  - mpc_follower
+  - lookahead_ratio_magn
+  - twist_filter
+  - position_checker
+  - microbus_interface stroke
+  - /
+  - lane_rule_waypoint
+  - PointGrey Grasshoper 3 (USB1)
+  - rqt_qs
+  - region_tlr
+  - feat_proj
+  - waypoint_loader_show_id
+  - microbus can stroke
+calibration_publisher:
+  camera_frame: camera
+  camera_id: ''
+  camera_info_topic: /camera_info
+  file: ''
+  image_topic_src: /image_raw
+  projection_matrix_topic: /projection_matrix
+  publish_camera_info: true
+  publish_extrinsic_mat: true
+  register_lidar2camera_tf: false
+  target_frame: velodyne
+can2odom:
+  kmph_th: 0.1
+can_listener:
+  channel: 0
+car_dpm:
+  Lambda: 10
+  group_threshold: 0.1
+  num_bins: 9
+  num_cells: 8
+  score_threshold: -0.5
+car_fusion:
+  car: true
+  dispersion: 1.0
+  max_height: 2.0
+  max_low_height: -1.0
+  min_low_height: -1.5
+  min_points: 2
+  pedestrian: false
+  sync: false
+car_kf:
+  camera_id: ''
+  carHEAD: true
+  default_lifespan: 8
+  error_estimate_covariance: 1000000.0
+  initial_lifespan: 4
+  measurement_noise_covariance: 25.0
+  noise_covariance: 1.0
+  orb_features: 2000
+  pedestrian: false
+  percentage_of_overlapping: 0.0
+  sync: false
+  use_orb: 0
+cloud_transformer:
+  input_point_topic: !!python/unicode '/points_raw'
+  output_point_topic: /points_transformed
+  target_frame: base_link
+costmap_generator:
+  expand_polygon_size: 1.0
+  grid_length_x: 50.0
+  grid_length_y: 30.0
+  grid_max_value: 1.0
+  grid_min_value: 0.0
+  grid_position_x: 20.0
+  grid_position_y: 0.0
+  grid_resolution: 0.2
+  lidar_frame: /velodyne
+  map_frame: /map
+  maximum_lidar_height_thres: 0.3
+  minimum_lidar_height_thres: -2.2
+  objects_input: !!python/unicode '/prediction/motion_predictor/objects'
+  points_input: !!python/unicode '/points_no_ground'
+  size_of_expansion_kernel: 9
+  use_objects_box: false
+  use_objects_convex_hull: true
+  use_points: true
+  use_wayarea: true
+current velocity conversion:
+  use_velocity: !!python/unicode '0'
+current_velocity_conversion:
+  constant_velocity: 8
+  enable: false
+  search_distance: 5.0
+  search_step: 1.0
+  search_step_count: 100
+  use_velocity: !!python/unicode '0'
+  velocity_max: 50
+  velocity_mode: 5
+detection_qs:
+  file: ''
+ekf_localizer:
+  enable_yaw_bias_estimation: true
+  extend_state_step: 50
+  input_pose_name: !!python/unicode '/ndt_pose'
+  input_pose_with_cov_name: !!python/unicode '/ndt_pose_with_covariance'
+  input_twist_name: !!python/unicode '/can_velocity'
+  pose_additional_delay: 0.0
+  pose_gate_dist: 10000.0
+  pose_measure_uncertainty_time: 0.01
+  pose_rate: 10.0
+  pose_stddev_x: 0.05
+  pose_stddev_y: 0.05
+  pose_stddev_yaw: 0.025
+  predict_frequency: 10
+  proc_stddev_vx_c: 2.0
+  proc_stddev_wz_c: 0.2
+  proc_stddev_yaw_bias_c: 0.001
+  proc_stddev_yaw_c: 0.005
+  show_debug_info: true
+  twist_additional_delay: 0.0
+  twist_gate_dist: 10000.0
+  twist_rate: 10.0
+  twist_stddev_vx: 0.2
+  twist_stddev_wz: 0.03
+  use_pose_with_covariance: false
+estimate_to_baselink:
+  height: 62.0
+feat_proj:
+  camera_id: !!python/unicode '/'
+  x: -37
+  y: 2
+feat_proj_loaderGet:
+  budget: 20
+  camera_id: !!python/unicode '/'
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  nice: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+  x: 0
+  y: 0
+fix2tfpose:
+  name_space: false
+  nmea_topic: /nmea_sentence
+  plane: '7'
+icp_matching:
+  error_threshold: 1.0
+  euclidean_fitness_epsilon: 0.1
+  init_pos_gnss: 1
+  max_correspondence_distance: 1.0
+  maximum_iterations: 100
+  pitch: 0.0
+  ransac_outlier_rejection_threshold: 1.0
+  roll: 0.0
+  sync: false
+  transformation_epsilon: 0.01
+  use_predict_pose: 1
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+  z: 0.0
+imm_ukf_pda_track:
+  detection_probability: 0.9
+  gate_probability: 0.99
+  gating_thres: 9.22
+  lane_direction_chi_thres: 2.71
+  life_time_thres: 8
+  merge_distance_threshold: 0.5
+  nearest_lane_distance_thres: 1.0
+  prevent_explosion_thres: 1000
+  static_num_history_thres: 3
+  static_velocity_thres: 0.5
+  tracker_input_topic: !!python/unicode '/detection/lidar_detector/objects'
+  tracker_output_topic: !!python/unicode '/detection/object_tracker/objects'
+  tracking_frame: velodyne
+  use_sukf: false
+  use_vectormap: false
+  vectormap_frame: map
+imu_tidy:
+  imu_topic: /gnss_imu
+  lowpass_filter_weight: 0.8
+lane_rule:
+  acceleration: 0.4
+  number_of_smoothing_count: 0
+  number_of_zeros_ahead: 0
+  number_of_zeros_behind: 0
+  stopline_search_radius: 1.0
+lane_rule_waypoint:
+  acceleration: 0.4
+  budget: 20
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  nice: 0
+  number_of_smoothing_count: 0
+  number_of_zeros_ahead: 0
+  number_of_zeros_behind: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+  stopline_search_radius: 1.0
+lane_select:
+  distance_threshold_neighbor_lanes: 5.0
+  lane_change_interval: 10.0
+  lane_change_target_minimum: 10.0
+  lane_change_target_ratio: 5.0
+  vector_length_hermite_curve: 10.0
+lane_stop:
+  traffic_light: 1
+laserscan2costmap:
+  map_size_x: 500
+  map_size_y: 500
+  resolution: 0.1
+  scan_size_x: 1000
+  scan_size_y: 1000
+  scan_topic: /scan
+  sensor_frame: /velodyne
+lidar_cnn_baidu_detect:
+  gpu_device_id: 0
+  network_definition_file: ''
+  points_src: /points_raw
+  pretrained_model_file: ''
+  score_threshold: 0.7
+  use_gpu: true
+lidar_kf_contour_track:
+  enableLogging: false
+  enableSimulationMode: true
+  enableStepByStepMode: false
+  max_association_distance: 3
+  max_association_size_diff: 2.5
+  max_object_size: 10
+  max_remeber_time: 3.0
+  min_object_size: 0.1
+  polygon_quarters: 8
+  polygon_resolution: 0.5
+  tracking_type: 1
+  trust_counter: 5
+  vector_map_filter_distance: 2.0
+lidar_naive_l_shape_detect:
+  budget: 20
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  nice: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+lidar_point_pillars:
+  baselink_support: true
+  input_topic: !!python/unicode '/points_raw'
+  nms_overlap_threshold: 0.46
+  pfe_onnx_file: /home/autoware/load_data/kitti_pretrained_point_pillars-master/pfe.onnx
+  reproduce_result_mode: false
+  rpn_onnx_file: /home/autoware/load_data/kitti_pretrained_point_pillars-master/rpn.onnx
+  score_threshold: 0.74
+localization_qs:
+  file: ''
+localizer_switch:
+  alignment_mechanism1: 0
+  alignment_mechanism2: 1
+  base_link_pose_topic1: !!python/unicode '/ndt_pose'
+  base_link_pose_topic2: !!python/unicode '/RTK_gnss_pose'
+  estimate_twist_topic1: !!python/unicode '/ndt_estimate_twist'
+  estimate_twist_topic2: !!python/unicode '/gnss_estimate_twist'
+  fusion_select: 1
+  gnss_deviation_topic1: !!python/unicode '/gnss_standard_deviation'
+  gnss_deviation_topic2: !!python/unicode '/gnss_standard_deviation'
+  localizer_check: 1
+  localizer_distance_th: 0.5
+  localizer_pose_topic1: !!python/unicode '/ndt_localizer_pose'
+  localizer_pose_topic2: !!python/unicode '/gnss_localizer_pose'
+  ndt_status_topic1: !!python/unicode '/ndt_stat'
+  ndt_status_topic2: !!python/unicode '/ndt_stat'
+  yaw_correction1: 1.2
+  yaw_correction2: -1.0
+lookahead_ratio_magn:
+  max_magn: 1.0
+  min_magn: 1.0
+map_normalizer:
+  limit_gnss_deviation_alt: 0.05
+  limit_gnss_deviation_lat: 0.05
+  limit_gnss_deviation_lon: 0.05
+  limit_ndt_exe_time: 50.0
+  limit_ndt_score: 10.0
+  load_csv_filename: /home/autoware/load_data/okabe2/pcd/saved_waypoints.csv
+  load_map_filename: /home/autoware/load_data/okabe2/pcd/0.20_okabe_liosam.pcd
+  save_all_csv_filename: /tmp/normalize_all_path.csv
+  save_map_filename: /tmp/normalize_map.pcd
+  save_use_csv_filename: /tmp/normalize_use_path.csv
+map_qs:
+  file: ''
+microbus can:
+  accel_max_i: 3000
+  accel_stroke_adjust_th: 5
+  accel_stroke_offset: 0
+  accel_stroke_step_max: 2
+  accel_stroke_step_min: 0.5
+  acceptable_velocity_variation: 0
+  brake_max_i: 500
+  brake_stroke_adjust_th: 5
+  brake_stroke_offset: 0
+  brake_stroke_step_max: 2
+  brake_stroke_step_min: 1.0
+  brake_stroke_stopping_med: -400
+  check_angular_th: 30
+  check_distance_th: 2
+  gnss_alt_limit: 0.1
+  gnss_lat_limit: 0.1
+  gnss_lon_limit: 0.1
+  k_accel_d_acceleration: 0
+  k_accel_d_distance: 0
+  k_accel_d_velocity: 0
+  k_accel_i_acceleration: 0
+  k_accel_i_distance: 0
+  k_accel_i_velocity: 0
+  k_accel_p_acceleration: 0
+  k_accel_p_distance: 0
+  k_accel_p_velocity: 0
+  k_brake_d_acceleration: 0
+  k_brake_d_distance: 0
+  k_brake_d_velocity: 0
+  k_brake_i_acceleration: 0
+  k_brake_i_distance: 0
+  k_brake_i_velocity: 0
+  k_brake_p_acceleration: 0
+  k_brake_p_distance: 0
+  k_brake_p_velocity: 0
+  k_steer_d_distance: 0
+  k_steer_i_distance: 0
+  k_steer_p_distance: 50
+  kvaser_channel: '0'
+  lane_th_left: -2
+  lane_th_right: 2.0
+  localizer_check: 2
+  ndt_gnss_angle_limit: 10.0
+  ndt_gnss_max_distance_limit: 2.0
+  ndt_gnss_min_distance_limit: 0.3
+  pedal_stroke_center: 0
+  pedal_stroke_max: 850
+  pedal_stroke_min: -500
+  speed_limit: 50
+  steer_max_i: 0.5
+  steer_speed_limit1: 100
+  steer_speed_limit2: 60
+  stopper_distance1: 20.0
+  stopper_distance2: 8.0
+  stopper_distance3: 2.0
+  use_acceleration_data: 2
+  use_lane_left: true
+  use_lane_right: true
+  use_position_checker: 1
+  use_velocity_data: 1
+  velocity_limit: 50
+  velocity_stop_th: 4
+microbus can stroke:
+  accel_max_i: 3000.0
+  accel_stroke_adjust_th: 15.0
+  accel_stroke_offset: 10
+  accel_stroke_offsets: 0
+  accel_stroke_step: 2.0
+  accel_stroke_step_max: 1.5
+  accel_stroke_step_min: 0.5
+  acceptable_velocity_variation: 0
+  acceptable_velocity_variation_acceleration: 5.0
+  acceptable_velocity_variation_acceleration_th: 5.0
+  acceptable_velocity_variation_deceleration: 0.0
+  acceptable_velocity_variation_deceleration_th: 20.0
+  acceptable_velocity_variation_th: 10.0
+  brake_max_i: 520.0
+  brake_stroke_adjust_th: 15.0
+  brake_stroke_offset: -10
+  brake_stroke_step: 2.0
+  brake_stroke_step_max: 2.0
+  brake_stroke_step_min: 1.0
+  brake_stroke_stopping_med: -300
+  check_angular_th: 20.0
+  check_distance_th: 1.1
+  difference_to_waypoint_angular: 30.0
+  difference_to_waypoint_distance: 2.0
+  gnss_alt_limit: 0.15
+  gnss_lat_limit: 0.12
+  gnss_lon_limit: 0.12
+  k_accel_d_acceleration: 0.0
+  k_accel_d_distance: 0.0
+  k_accel_d_until: 0.1
+  k_accel_d_velocity: 0.1
+  k_accel_dd_until: 0.0
+  k_accel_i_acceleration: 0.0
+  k_accel_i_distance: 0.0
+  k_accel_i_until: 0.22
+  k_accel_i_velocity: 0.22
+  k_accel_ii_until: 0.0
+  k_accel_p_acceleration: 0.12
+  k_accel_p_distance: 0.0
+  k_accel_p_until: 0.12
+  k_accel_p_velocity: 0.12
+  k_brake_d_acceleration: 0.0
+  k_brake_d_distance: 0.0
+  k_brake_d_until: 0.3
+  k_brake_d_velocity: 0.3
+  k_brake_dd_until: 0.0
+  k_brake_i_acceleration: 0.0
+  k_brake_i_distance: 0.0
+  k_brake_i_until: 0.63
+  k_brake_i_velocity: 0.63
+  k_brake_ii_until: 0.0
+  k_brake_p_acceleration: 0.12
+  k_brake_p_distance: 0.5
+  k_brake_p_until: 0.32
+  k_brake_p_velocity: 0.32
+  k_steer_d_distance: 0.0
+  k_steer_i_distance: 0.0
+  k_steer_p_distance: 130.0
+  kvaser_channel: !!python/unicode '2'
+  lane_th_left: -5.0
+  lane_th_right: 5.0
+  localizer_check: 0
+  ndt_gnss_angle_limit: 10.0
+  ndt_gnss_max_distance_limit: 0.5
+  ndt_gnss_min_distance_limit: 0.3
+  pedal_stroke_center: 0
+  pedal_stroke_max: 840
+  pedal_stroke_min: -500
+  speed_limit: 55.0
+  steer_max_i: 100.0
+  steer_speed_limit1: 100.0
+  steer_speed_limit2: 60.0
+  stopper_distance1: 30.0
+  stopper_distance2: 8.0
+  stopper_distance3: 2.0
+  use_acceleration_data: 1
+  use_lane_left: false
+  use_lane_right: false
+  use_position_checker: 1
+  use_velocity_data: 1
+  velocity_limit: 55.0
+  velocity_stop_th: 0.0
+microbus_interface stroke:
+  budget: 20
+  check_angular_th: 30.0
+  check_distance_th: 2.0
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  nice: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+microbus_pseudo_can_publisher:
+  time_step_ms: 0.05
+  use_velocity_flag: 1
+  velocity_mps: 5.0
+mission_planning_qs:
+  file: ''
+motion_planning_qs:
+  file: ''
+mpc_follower:
+  admisible_position_error: 5.0
+  admisible_yaw_error_deg: 90.0
+  ctrl_period: 0.03
+  curvature_smoothing_num: 35
+  enable_path_smoothing: true
+  mpc_prediction_horizon: 70
+  mpc_prediction_sampling_time: 0.1
+  mpc_weight_heading_error: 0.0
+  mpc_weight_heading_error_squared_vel_coeff: 0.3
+  mpc_weight_lat_error: 0.1
+  mpc_weight_lat_jerk: 0.0
+  mpc_weight_steering_input: 1.0
+  mpc_weight_steering_input_squared_vel_coeff: 0.25
+  mpc_weight_terminal_heading_error: 0.1
+  mpc_weight_terminal_lat_error: 10.0
+  mpc_zero_ff_steer_deg: 2.0
+  path_filter_moving_ave_num: 35
+  path_smoothing_times: 1
+  publish_debug_values: false
+  qp_solver_type: !!python/unicode 'unconstraint_fast'
+  show_debug_info: false
+  steer_lim_deg: 35.0
+  steering_lpf_cutoff_hz: 3.0
+  vehicle_model_steer_tau: 0.3
+  vehicle_model_type: !!python/unicode 'kinematics'
+  vehicle_model_wheelbase: 3.935
+multi_lidar_calibrator:
+  ndt_epsilon: 0.01
+  ndt_iterations: 400
+  ndt_resolution: 1.0
+  ndt_step_size: 0.1
+  pitch: 0.0
+  points_child_src: !!python/unicode '/velodyne9/points_raw'
+  points_parent_src: !!python/unicode '/velodyne8/points_raw'
+  roll: 0.0
+  voxel_size: 0.1
+  x: -6.2
+  y: 0.0
+  yaw: 3.14157
+  z: 0.0
+naive_motion_predict:
+  filter_out_close_object_threshold: 1.5
+  input_topic: !!python/unicode '/detection/objects'
+  interval_sec: 0.1
+  num_prediction: 20
+  sensor_height: 2.0
+ndt_mapping:
+  imu_topic: /imu_raw
+  imu_upside_down: false
+  incremental_voxel_update: false
+  leaf_size: 1.0
+  max_iterations: 30
+  max_scan_range: 200.0
+  method_type: 0
+  min_add_scan_shift: 1.0
+  min_scan_range: 5.0
+  resolution: 1.0
+  step_size: 0.1
+  trans_epsilon: 0.01
+  use_imu: false
+  use_odom: false
+ndt_matching:
+  error_threshold: 1.0
+  get_height: true
+  imu_topic: !!python/unicode '/imu_raw'
+  imu_upside_down: false
+  init_pos_gnss: 0
+  max_iterations: 30
+  method_type: 0
+  output_log_data: false
+  pitch: 0.0
+  resolution: 1.0
+  roll: 0.0
+  step_size: 0.1
+  sync: false
+  trans_epsilon: 0.01
+  use_imu: false
+  use_odom: true
+  use_predict_pose: 1
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+  z: 0.0
+ndt_matching12:
+  error_threshold: 1.0
+  get_height: true
+  imu_topic: !!python/unicode '/imu_raw'
+  imu_upside_down: false
+  init_pos_gnss: 1
+  max_iterations: 30
+  method_type: 2
+  output_log_data: false
+  pitch: 0.0
+  resolution: 3.0
+  roll: 0.0
+  step_size: 0.1
+  sync: false
+  trans_epsilon: 0.01
+  use_imu: false
+  use_odom: true
+  use_predict_pose: 1
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+  z: 0.0
+ndt_matching_gnss_subscribe:
+  error_threshold: 1.0
+  get_height: true
+  imu_topic: !!python/unicode '/imu_raw'
+  imu_upside_down: false
+  init_pos_gnss: 0
+  max_iterations: 30
+  method_type: 2
+  output_log_data: false
+  pitch: 0.0
+  resolution: 3.0
+  roll: 0.0
+  step_size: 0.1
+  sync: false
+  trans_epsilon: 0.01
+  use_imu: false
+  use_odom: true
+  use_predict_pose: 1
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+  z: 0.0
+ndt_matching_monitor:
+  fatal_time_threshold: 2.0
+  iteration_threshold_stop: 32
+  iteration_threshold_warn: 10
+  min_stable_samples: 30
+  score_threshold_delta: 14.0
+nmea2tfpose:
+  name_space: false
+  nmea_topic: !!python/unicode '/nmea_sentence'
+  plane: !!python/unicode '9'
+nmea2tfpose_RTK:
+  nmea_topic: !!python/unicode '/novatel_oem7_2/nmea_sentence'
+  plane: !!python/unicode '9'
+nmea2tfpose_RTK_1:
+  name_space: true
+  nmea_topic: !!python/unicode '/novatel_oem7_1/nmea_sentence'
+  plane: !!python/unicode '9'
+nmea2tfpose_RTK_2:
+  name_space: false
+  nmea_topic: !!python/unicode '/novatel_oem7_2/nmea_sentence'
+  plane: !!python/unicode '9'
+novatel_oem7_1:
+  baud: !!python/unicode '115200'
+  port: /dev/ttyACM0
+novatel_oem7_tcp1:
+  ip: 192.168.1.150
+novatel_oem7_tcp2:
+  ip: 192.168.1.151
+op_bag_player:
+  rosbag_file: null
+op_trajectory_generator:
+  samplingOutMargin: 12.0
+  samplingTipMargin: 4.0
+pcd_binarizer:
+  path_pcd_binarizer: ''
+  point_type: !!python/unicode 'PointXYZ'
+pcd_filter:
+  leaf_size: 0.2
+  path_pcd_filter: /home/autoware/load_data/sioziri/53SQA635002.pcd,/home/autoware/load_data/sioziri/53SQA635003.pcd,/home/autoware/load_data/sioziri/53SQA635004.pcd,/home/autoware/load_data/sioziri/53SQA635005.pcd,/home/autoware/load_data/sioziri/53SQA635006.pcd,/home/autoware/load_data/sioziri/53SQA636003.pcd,/home/autoware/load_data/sioziri/53SQA636004.pcd,/home/autoware/load_data/sioziri/53SQA636005.pcd,/home/autoware/load_data/sioziri/53SQA636006.pcd,/home/autoware/load_data/sioziri/53SQA636008.pcd,/home/autoware/load_data/sioziri/53SQA636009.pcd,/home/autoware/load_data/sioziri/53SQA636010.pcd,/home/autoware/load_data/sioziri/53SQA636011.pcd,/home/autoware/load_data/sioziri/53SQA636012.pcd,/home/autoware/load_data/sioziri/53SQA637004.pcd,/home/autoware/load_data/sioziri/53SQA637005.pcd,/home/autoware/load_data/sioziri/53SQA637006.pcd,/home/autoware/load_data/sioziri/53SQA637008.pcd,/home/autoware/load_data/sioziri/53SQA637009.pcd,/home/autoware/load_data/sioziri/53SQA637010.pcd,/home/autoware/load_data/sioziri/53SQA637011.pcd,/home/autoware/load_data/sioziri/53SQA637012.pcd,/home/autoware/load_data/sioziri/53SQA638004.pcd,/home/autoware/load_data/sioziri/53SQA638005.pcd,/home/autoware/load_data/sioziri/53SQA638006.pcd,/home/autoware/load_data/sioziri/53SQA638008.pcd,/home/autoware/load_data/sioziri/53SQA638009.pcd,/home/autoware/load_data/sioziri/53SQA639000.pcd,/home/autoware/load_data/sioziri/53SQA639001.pcd,/home/autoware/load_data/sioziri/53SQA639002.pcd,/home/autoware/load_data/sioziri/53SQA639004.pcd,/home/autoware/load_data/sioziri/53SQA639005.pcd,/home/autoware/load_data/sioziri/53SQA639006.pcd,/home/autoware/load_data/sioziri/53SQA639007.pcd,/home/autoware/load_data/sioziri/53SQA639008.pcd,/home/autoware/load_data/sioziri/53SQA639009.pcd,/home/autoware/load_data/sioziri/53SQA640000.pcd,/home/autoware/load_data/sioziri/53SQA640001.pcd,/home/autoware/load_data/sioziri/53SQA640002.pcd,/home/autoware/load_data/sioziri/53SQA640003.pcd,/home/autoware/load_data/sioziri/53SQA640004.pcd,/home/autoware/load_data/sioziri/53SQA640005.pcd,/home/autoware/load_data/sioziri/53SQA640006.pcd,/home/autoware/load_data/sioziri/53SQA640007.pcd,/home/autoware/load_data/sioziri/53SQA640008.pcd,/home/autoware/load_data/sioziri/53SQA640009.pcd,/home/autoware/load_data/sioziri/53SQA641002.pcd,/home/autoware/load_data/sioziri/53SQA641003.pcd,/home/autoware/load_data/sioziri/53SQA641004.pcd,/home/autoware/load_data/sioziri/53SQA641005.pcd,/home/autoware/load_data/sioziri/53SQA641006.pcd,/home/autoware/load_data/sioziri/53SQA641007.pcd,/home/autoware/load_data/sioziri/53SQA641008.pcd,/home/autoware/load_data/sioziri/53SQA641009.pcd,/home/autoware/load_data/sioziri/53SQA642003.pcd,/home/autoware/load_data/sioziri/53SQA642004.pcd,/home/autoware/load_data/sioziri/53SQA642005.pcd,/home/autoware/load_data/sioziri/53SQA642006.pcd,/home/autoware/load_data/sioziri/53SQA642007.pcd,/home/autoware/load_data/sioziri/53SQA642008.pcd,/home/autoware/load_data/sioziri/53SQA642009.pcd,/home/autoware/load_data/sioziri/53SQA642010.pcd,/home/autoware/load_data/sioziri/53SQA643003.pcd,/home/autoware/load_data/sioziri/53SQA643004.pcd,/home/autoware/load_data/sioziri/53SQA643007.pcd,/home/autoware/load_data/sioziri/53SQA643008.pcd,/home/autoware/load_data/sioziri/53SQA643009.pcd,/home/autoware/load_data/sioziri/53SQA644003.pcd,/home/autoware/load_data/sioziri/53SQA644004.pcd,/home/autoware/load_data/sioziri/53SQA644005.pcd,/home/autoware/load_data/sioziri/53SQA644006.pcd,/home/autoware/load_data/sioziri/53SQA644007.pcd,/home/autoware/load_data/sioziri/53SQA644008.pcd,/home/autoware/load_data/sioziri/53SQA644009.pcd,/home/autoware/load_data/sioziri/53SQA645003.pcd,/home/autoware/load_data/sioziri/53SQA645004.pcd,/home/autoware/load_data/sioziri/53SQA645005.pcd,/home/autoware/load_data/sioziri/53SQA645006.pcd,/home/autoware/load_data/sioziri/53SQA645007.pcd,/home/autoware/load_data/sioziri/53SQA645008.pcd,/home/autoware/load_data/sioziri/53SQA645009.pcd,/home/autoware/load_data/sioziri/53SQA645015.pcd,/home/autoware/load_data/sioziri/53SQA645016.pcd,/home/autoware/load_data/sioziri/53SQA645017.pcd,/home/autoware/load_data/sioziri/53SQA646003.pcd,/home/autoware/load_data/sioziri/53SQA646004.pcd,/home/autoware/load_data/sioziri/53SQA646008.pcd,/home/autoware/load_data/sioziri/53SQA646009.pcd,/home/autoware/load_data/sioziri/53SQA646010.pcd,/home/autoware/load_data/sioziri/53SQA646014.pcd,/home/autoware/load_data/sioziri/53SQA646015.pcd,/home/autoware/load_data/sioziri/53SQA646016.pcd,/home/autoware/load_data/sioziri/53SQA646017.pcd,/home/autoware/load_data/sioziri/53SQA647002.pcd,/home/autoware/load_data/sioziri/53SQA647003.pcd,/home/autoware/load_data/sioziri/53SQA647004.pcd,/home/autoware/load_data/sioziri/53SQA647008.pcd,/home/autoware/load_data/sioziri/53SQA647009.pcd,/home/autoware/load_data/sioziri/53SQA647010.pcd,/home/autoware/load_data/sioziri/53SQA647013.pcd,/home/autoware/load_data/sioziri/53SQA647014.pcd,/home/autoware/load_data/sioziri/53SQA647015.pcd,/home/autoware/load_data/sioziri/53SQA647016.pcd,/home/autoware/load_data/sioziri/53SQA647017.pcd,/home/autoware/load_data/sioziri/53SQA648000.pcd,/home/autoware/load_data/sioziri/53SQA648001.pcd,/home/autoware/load_data/sioziri/53SQA648002.pcd,/home/autoware/load_data/sioziri/53SQA648003.pcd,/home/autoware/load_data/sioziri/53SQA648004.pcd,/home/autoware/load_data/sioziri/53SQA648005.pcd,/home/autoware/load_data/sioziri/53SQA648006.pcd,/home/autoware/load_data/sioziri/53SQA648007.pcd,/home/autoware/load_data/sioziri/53SQA648008.pcd,/home/autoware/load_data/sioziri/53SQA648009.pcd,/home/autoware/load_data/sioziri/53SQA648010.pcd,/home/autoware/load_data/sioziri/53SQA648011.pcd,/home/autoware/load_data/sioziri/53SQA648012.pcd,/home/autoware/load_data/sioziri/53SQA648013.pcd,/home/autoware/load_data/sioziri/53SQA648014.pcd,/home/autoware/load_data/sioziri/53SQA648015.pcd,/home/autoware/load_data/sioziri/53SQA648016.pcd,/home/autoware/load_data/sioziri/53SQA648017.pcd,/home/autoware/load_data/sioziri/53SQA648018.pcd,/home/autoware/load_data/sioziri/53SQA648019.pcd,/home/autoware/load_data/sioziri/53SQA648020.pcd,/home/autoware/load_data/sioziri/53SQA648021.pcd,/home/autoware/load_data/sioziri/53SQA649001.pcd,/home/autoware/load_data/sioziri/53SQA649002.pcd,/home/autoware/load_data/sioziri/53SQA649003.pcd,/home/autoware/load_data/sioziri/53SQA649004.pcd,/home/autoware/load_data/sioziri/53SQA649005.pcd,/home/autoware/load_data/sioziri/53SQA649006.pcd,/home/autoware/load_data/sioziri/53SQA649007.pcd,/home/autoware/load_data/sioziri/53SQA649008.pcd,/home/autoware/load_data/sioziri/53SQA649009.pcd,/home/autoware/load_data/sioziri/53SQA649010.pcd,/home/autoware/load_data/sioziri/53SQA649011.pcd,/home/autoware/load_data/sioziri/53SQA649012.pcd,/home/autoware/load_data/sioziri/53SQA649013.pcd,/home/autoware/load_data/sioziri/53SQA649014.pcd,/home/autoware/load_data/sioziri/53SQA649015.pcd,/home/autoware/load_data/sioziri/53SQA649016.pcd,/home/autoware/load_data/sioziri/53SQA649017.pcd,/home/autoware/load_data/sioziri/53SQA649018.pcd,/home/autoware/load_data/sioziri/53SQA649019.pcd,/home/autoware/load_data/sioziri/53SQA649020.pcd,/home/autoware/load_data/sioziri/53SQA649021.pcd,/home/autoware/load_data/sioziri/53SQA650003.pcd,/home/autoware/load_data/sioziri/53SQA650004.pcd,/home/autoware/load_data/sioziri/53SQA650005.pcd,/home/autoware/load_data/sioziri/53SQA650006.pcd,/home/autoware/load_data/sioziri/53SQA650007.pcd,/home/autoware/load_data/sioziri/53SQA650010.pcd,/home/autoware/load_data/sioziri/53SQA650011.pcd,/home/autoware/load_data/sioziri/53SQA650012.pcd,/home/autoware/load_data/sioziri/53SQA650016.pcd,/home/autoware/load_data/sioziri/53SQA650017.pcd,/home/autoware/load_data/sioziri/53SQA651005.pcd,/home/autoware/load_data/sioziri/53SQA651006.pcd,/home/autoware/load_data/sioziri/53SQA651007.pcd,/home/autoware/load_data/sioziri/53SQA651009.pcd,/home/autoware/load_data/sioziri/53SQA651010.pcd,/home/autoware/load_data/sioziri/53SQA651011.pcd,/home/autoware/load_data/sioziri/53SQA651012.pcd,/home/autoware/load_data/sioziri/53SQA651016.pcd,/home/autoware/load_data/sioziri/53SQA651017.pcd,/home/autoware/load_data/sioziri/53SQA652005.pcd,/home/autoware/load_data/sioziri/53SQA652006.pcd,/home/autoware/load_data/sioziri/53SQA652007.pcd,/home/autoware/load_data/sioziri/53SQA652009.pcd,/home/autoware/load_data/sioziri/53SQA652010.pcd,/home/autoware/load_data/sioziri/53SQA652011.pcd,/home/autoware/load_data/sioziri/53SQA652012.pcd,/home/autoware/load_data/sioziri/53SQA652016.pcd,/home/autoware/load_data/sioziri/53SQA652017.pcd,/home/autoware/load_data/sioziri/53SQA653003.pcd,/home/autoware/load_data/sioziri/53SQA653004.pcd,/home/autoware/load_data/sioziri/53SQA653005.pcd,/home/autoware/load_data/sioziri/53SQA653006.pcd,/home/autoware/load_data/sioziri/53SQA653007.pcd,/home/autoware/load_data/sioziri/53SQA653008.pcd,/home/autoware/load_data/sioziri/53SQA653009.pcd,/home/autoware/load_data/sioziri/53SQA653011.pcd,/home/autoware/load_data/sioziri/53SQA653012.pcd,/home/autoware/load_data/sioziri/53SQA653016.pcd,/home/autoware/load_data/sioziri/53SQA653017.pcd,/home/autoware/load_data/sioziri/53SQA654003.pcd,/home/autoware/load_data/sioziri/53SQA654004.pcd,/home/autoware/load_data/sioziri/53SQA654005.pcd,/home/autoware/load_data/sioziri/53SQA654006.pcd,/home/autoware/load_data/sioziri/53SQA654007.pcd,/home/autoware/load_data/sioziri/53SQA654008.pcd,/home/autoware/load_data/sioziri/53SQA654009.pcd,/home/autoware/load_data/sioziri/53SQA654011.pcd,/home/autoware/load_data/sioziri/53SQA654012.pcd,/home/autoware/load_data/sioziri/53SQA654015.pcd,/home/autoware/load_data/sioziri/53SQA654016.pcd,/home/autoware/load_data/sioziri/53SQA654017.pcd,/home/autoware/load_data/sioziri/53SQA654018.pcd,/home/autoware/load_data/sioziri/53SQA654019.pcd,/home/autoware/load_data/sioziri/53SQA654020.pcd,/home/autoware/load_data/sioziri/53SQA654021.pcd,/home/autoware/load_data/sioziri/53SQA654022.pcd,/home/autoware/load_data/sioziri/53SQA654023.pcd,/home/autoware/load_data/sioziri/53SQA655002.pcd,/home/autoware/load_data/sioziri/53SQA655003.pcd,/home/autoware/load_data/sioziri/53SQA655004.pcd,/home/autoware/load_data/sioziri/53SQA655005.pcd,/home/autoware/load_data/sioziri/53SQA655006.pcd,/home/autoware/load_data/sioziri/53SQA655007.pcd,/home/autoware/load_data/sioziri/53SQA655008.pcd,/home/autoware/load_data/sioziri/53SQA655009.pcd,/home/autoware/load_data/sioziri/53SQA655011.pcd,/home/autoware/load_data/sioziri/53SQA655012.pcd,/home/autoware/load_data/sioziri/53SQA655013.pcd,/home/autoware/load_data/sioziri/53SQA655014.pcd,/home/autoware/load_data/sioziri/53SQA655015.pcd,/home/autoware/load_data/sioziri/53SQA655016.pcd,/home/autoware/load_data/sioziri/53SQA655017.pcd,/home/autoware/load_data/sioziri/53SQA655018.pcd,/home/autoware/load_data/sioziri/53SQA655019.pcd,/home/autoware/load_data/sioziri/53SQA655020.pcd,/home/autoware/load_data/sioziri/53SQA655021.pcd,/home/autoware/load_data/sioziri/53SQA655022.pcd,/home/autoware/load_data/sioziri/53SQA655023.pcd,/home/autoware/load_data/sioziri/53SQA656002.pcd,/home/autoware/load_data/sioziri/53SQA656003.pcd,/home/autoware/load_data/sioziri/53SQA656004.pcd,/home/autoware/load_data/sioziri/53SQA656005.pcd,/home/autoware/load_data/sioziri/53SQA656006.pcd,/home/autoware/load_data/sioziri/53SQA656007.pcd,/home/autoware/load_data/sioziri/53SQA656008.pcd,/home/autoware/load_data/sioziri/53SQA656009.pcd,/home/autoware/load_data/sioziri/53SQA656010.pcd,/home/autoware/load_data/sioziri/53SQA656011.pcd,/home/autoware/load_data/sioziri/53SQA656012.pcd,/home/autoware/load_data/sioziri/53SQA656013.pcd,/home/autoware/load_data/sioziri/53SQA656014.pcd,/home/autoware/load_data/sioziri/53SQA656015.pcd,/home/autoware/load_data/sioziri/53SQA656016.pcd,/home/autoware/load_data/sioziri/53SQA656017.pcd,/home/autoware/load_data/sioziri/53SQA657002.pcd,/home/autoware/load_data/sioziri/53SQA657003.pcd,/home/autoware/load_data/sioziri/53SQA657004.pcd,/home/autoware/load_data/sioziri/53SQA657005.pcd,/home/autoware/load_data/sioziri/53SQA657006.pcd,/home/autoware/load_data/sioziri/53SQA657007.pcd,/home/autoware/load_data/sioziri/53SQA657008.pcd,/home/autoware/load_data/sioziri/53SQA657009.pcd,/home/autoware/load_data/sioziri/53SQA657010.pcd,/home/autoware/load_data/sioziri/53SQA657011.pcd,/home/autoware/load_data/sioziri/53SQA657012.pcd,/home/autoware/load_data/sioziri/53SQA657013.pcd,/home/autoware/load_data/sioziri/53SQA657016.pcd,/home/autoware/load_data/sioziri/53SQA657017.pcd,/home/autoware/load_data/sioziri/53SQA658003.pcd,/home/autoware/load_data/sioziri/53SQA658004.pcd,/home/autoware/load_data/sioziri/53SQA658005.pcd,/home/autoware/load_data/sioziri/53SQA658006.pcd,/home/autoware/load_data/sioziri/53SQA658007.pcd,/home/autoware/load_data/sioziri/53SQA658008.pcd,/home/autoware/load_data/sioziri/53SQA658009.pcd,/home/autoware/load_data/sioziri/53SQA658010.pcd,/home/autoware/load_data/sioziri/53SQA658011.pcd,/home/autoware/load_data/sioziri/53SQA658012.pcd,/home/autoware/load_data/sioziri/53SQA658016.pcd,/home/autoware/load_data/sioziri/53SQA658017.pcd,/home/autoware/load_data/sioziri/53SQA658018.pcd,/home/autoware/load_data/sioziri/53SQA659002.pcd,/home/autoware/load_data/sioziri/53SQA659003.pcd,/home/autoware/load_data/sioziri/53SQA659004.pcd,/home/autoware/load_data/sioziri/53SQA659005.pcd,/home/autoware/load_data/sioziri/53SQA659006.pcd,/home/autoware/load_data/sioziri/53SQA659007.pcd,/home/autoware/load_data/sioziri/53SQA659008.pcd,/home/autoware/load_data/sioziri/53SQA659009.pcd,/home/autoware/load_data/sioziri/53SQA659011.pcd,/home/autoware/load_data/sioziri/53SQA659012.pcd,/home/autoware/load_data/sioziri/53SQA659016.pcd,/home/autoware/load_data/sioziri/53SQA659017.pcd,/home/autoware/load_data/sioziri/53SQA659018.pcd,/home/autoware/load_data/sioziri/53SQA660003.pcd,/home/autoware/load_data/sioziri/53SQA660004.pcd,/home/autoware/load_data/sioziri/53SQA660005.pcd,/home/autoware/load_data/sioziri/53SQA660006.pcd,/home/autoware/load_data/sioziri/53SQA660007.pcd,/home/autoware/load_data/sioziri/53SQA660008.pcd,/home/autoware/load_data/sioziri/53SQA660009.pcd,/home/autoware/load_data/sioziri/53SQA660011.pcd,/home/autoware/load_data/sioziri/53SQA660012.pcd,/home/autoware/load_data/sioziri/53SQA660017.pcd,/home/autoware/load_data/sioziri/53SQA661011.pcd,/home/autoware/load_data/sioziri/53SQA661012.pcd,/home/autoware/load_data/sioziri/53SQA662011.pcd,/home/autoware/load_data/sioziri/53SQA662012.pcd,/home/autoware/load_data/sioziri/53SQV638997.pcd,/home/autoware/load_data/sioziri/53SQV638998.pcd,/home/autoware/load_data/sioziri/53SQV638999.pcd,/home/autoware/load_data/sioziri/53SQV639997.pcd,/home/autoware/load_data/sioziri/53SQV639998.pcd,/home/autoware/load_data/sioziri/53SQV639999.pcd,/home/autoware/load_data/sioziri/Laser-00488_000133.pcd,/home/autoware/load_data/sioziri/Laser-00488_000134.pcd,/home/autoware/load_data/sioziri/Laser-00489_000133.pcd,/home/autoware/load_data/sioziri/Laser-00489_000134.pcd,/home/autoware/load_data/sioziri/Laser-00490_000127.pcd,/home/autoware/load_data/sioziri/Laser-00490_000128.pcd,/home/autoware/load_data/sioziri/Laser-00490_000129.pcd,/home/autoware/load_data/sioziri/Laser-00490_000130.pcd,/home/autoware/load_data/sioziri/Laser-00490_000131.pcd,/home/autoware/load_data/sioziri/Laser-00490_000133.pcd,/home/autoware/load_data/sioziri/Laser-00490_000134.pcd,/home/autoware/load_data/sioziri/Laser-00491_000124.pcd,/home/autoware/load_data/sioziri/Laser-00491_000125.pcd,/home/autoware/load_data/sioziri/Laser-00491_000126.pcd,/home/autoware/load_data/sioziri/Laser-00491_000127.pcd,/home/autoware/load_data/sioziri/Laser-00491_000128.pcd,/home/autoware/load_data/sioziri/Laser-00491_000129.pcd,/home/autoware/load_data/sioziri/Laser-00491_000130.pcd,/home/autoware/load_data/sioziri/Laser-00491_000131.pcd,/home/autoware/load_data/sioziri/Laser-00491_000132.pcd,/home/autoware/load_data/sioziri/Laser-00491_000133.pcd,/home/autoware/load_data/sioziri/Laser-00491_000134.pcd,/home/autoware/load_data/sioziri/Laser-00491_000138.pcd,/home/autoware/load_data/sioziri/Laser-00491_000139.pcd,/home/autoware/load_data/sioziri/Laser-00492_000124.pcd,/home/autoware/load_data/sioziri/Laser-00492_000125.pcd,/home/autoware/load_data/sioziri/Laser-00492_000126.pcd,/home/autoware/load_data/sioziri/Laser-00492_000127.pcd,/home/autoware/load_data/sioziri/Laser-00492_000128.pcd,/home/autoware/load_data/sioziri/Laser-00492_000129.pcd,/home/autoware/load_data/sioziri/Laser-00492_000130.pcd,/home/autoware/load_data/sioziri/Laser-00492_000131.pcd,/home/autoware/load_data/sioziri/Laser-00492_000132.pcd,/home/autoware/load_data/sioziri/Laser-00492_000133.pcd,/home/autoware/load_data/sioziri/Laser-00492_000134.pcd,/home/autoware/load_data/sioziri/Laser-00492_000138.pcd,/home/autoware/load_data/sioziri/Laser-00492_000139.pcd,/home/autoware/load_data/sioziri/Laser-00493_000124.pcd,/home/autoware/load_data/sioziri/Laser-00493_000125.pcd,/home/autoware/load_data/sioziri/Laser-00493_000126.pcd,/home/autoware/load_data/sioziri/Laser-00493_000127.pcd,/home/autoware/load_data/sioziri/Laser-00493_000128.pcd,/home/autoware/load_data/sioziri/Laser-00493_000129.pcd,/home/autoware/load_data/sioziri/Laser-00493_000130.pcd,/home/autoware/load_data/sioziri/Laser-00493_000131.pcd,/home/autoware/load_data/sioziri/Laser-00493_000132.pcd,/home/autoware/load_data/sioziri/Laser-00493_000133.pcd,/home/autoware/load_data/sioziri/Laser-00493_000134.pcd,/home/autoware/load_data/sioziri/Laser-00493_000138.pcd,/home/autoware/load_data/sioziri/Laser-00493_000139.pcd,/home/autoware/load_data/sioziri/Laser-00494_000123.pcd,/home/autoware/load_data/sioziri/Laser-00494_000124.pcd,/home/autoware/load_data/sioziri/Laser-00494_000125.pcd,/home/autoware/load_data/sioziri/Laser-00494_000126.pcd,/home/autoware/load_data/sioziri/Laser-00494_000127.pcd,/home/autoware/load_data/sioziri/Laser-00494_000128.pcd,/home/autoware/load_data/sioziri/Laser-00494_000129.pcd,/home/autoware/load_data/sioziri/Laser-00494_000130.pcd,/home/autoware/load_data/sioziri/Laser-00494_000131.pcd,/home/autoware/load_data/sioziri/Laser-00494_000132.pcd,/home/autoware/load_data/sioziri/Laser-00494_000133.pcd,/home/autoware/load_data/sioziri/Laser-00494_000134.pcd,/home/autoware/load_data/sioziri/Laser-00494_000135.pcd,/home/autoware/load_data/sioziri/Laser-00494_000136.pcd,/home/autoware/load_data/sioziri/Laser-00494_000138.pcd,/home/autoware/load_data/sioziri/Laser-00494_000139.pcd,/home/autoware/load_data/sioziri/Laser-00495_000124.pcd,/home/autoware/load_data/sioziri/Laser-00495_000125.pcd,/home/autoware/load_data/sioziri/Laser-00495_000126.pcd,/home/autoware/load_data/sioziri/Laser-00495_000127.pcd,/home/autoware/load_data/sioziri/Laser-00495_000128.pcd,/home/autoware/load_data/sioziri/Laser-00495_000129.pcd,/home/autoware/load_data/sioziri/Laser-00495_000130.pcd,/home/autoware/load_data/sioziri/Laser-00495_000131.pcd,/home/autoware/load_data/sioziri/Laser-00495_000133.pcd,/home/autoware/load_data/sioziri/Laser-00495_000134.pcd,/home/autoware/load_data/sioziri/Laser-00495_000135.pcd,/home/autoware/load_data/sioziri/Laser-00495_000136.pcd,/home/autoware/load_data/sioziri/Laser-00495_000137.pcd,/home/autoware/load_data/sioziri/Laser-00495_000138.pcd,/home/autoware/load_data/sioziri/Laser-00495_000139.pcd,/home/autoware/load_data/sioziri/Laser-00495_000140.pcd,/home/autoware/load_data/sioziri/Laser-00495_000141.pcd,/home/autoware/load_data/sioziri/Laser-00495_000142.pcd,/home/autoware/load_data/sioziri/Laser-00495_000143.pcd,/home/autoware/load_data/sioziri/Laser-00495_000144.pcd,/home/autoware/load_data/sioziri/Laser-00496_000124.pcd,/home/autoware/load_data/sioziri/Laser-00496_000125.pcd,/home/autoware/load_data/sioziri/Laser-00496_000126.pcd,/home/autoware/load_data/sioziri/Laser-00496_000127.pcd,/home/autoware/load_data/sioziri/Laser-00496_000128.pcd,/home/autoware/load_data/sioziri/Laser-00496_000129.pcd,/home/autoware/load_data/sioziri/Laser-00496_000130.pcd,/home/autoware/load_data/sioziri/Laser-00496_000131.pcd,/home/autoware/load_data/sioziri/Laser-00496_000133.pcd,/home/autoware/load_data/sioziri/Laser-00496_000134.pcd,/home/autoware/load_data/sioziri/Laser-00496_000137.pcd,/home/autoware/load_data/sioziri/Laser-00496_000138.pcd,/home/autoware/load_data/sioziri/Laser-00496_000139.pcd,/home/autoware/load_data/sioziri/Laser-00496_000140.pcd,/home/autoware/load_data/sioziri/Laser-00496_000141.pcd,/home/autoware/load_data/sioziri/Laser-00496_000142.pcd,/home/autoware/load_data/sioziri/Laser-00496_000143.pcd,/home/autoware/load_data/sioziri/Laser-00496_000144.pcd,/home/autoware/load_data/sioziri/Laser-00497_000125.pcd,/home/autoware/load_data/sioziri/Laser-00497_000126.pcd,/home/autoware/load_data/sioziri/Laser-00497_000127.pcd,/home/autoware/load_data/sioziri/Laser-00497_000128.pcd,/home/autoware/load_data/sioziri/Laser-00497_000129.pcd,/home/autoware/load_data/sioziri/Laser-00497_000130.pcd,/home/autoware/load_data/sioziri/Laser-00497_000131.pcd,/home/autoware/load_data/sioziri/Laser-00497_000132.pcd,/home/autoware/load_data/sioziri/Laser-00497_000133.pcd,/home/autoware/load_data/sioziri/Laser-00497_000134.pcd,/home/autoware/load_data/sioziri/Laser-00497_000138.pcd,/home/autoware/load_data/sioziri/Laser-00497_000139.pcd,/home/autoware/load_data/sioziri/Laser-00498_000126.pcd,/home/autoware/load_data/sioziri/Laser-00498_000127.pcd,/home/autoware/load_data/sioziri/Laser-00498_000128.pcd,/home/autoware/load_data/sioziri/Laser-00498_000129.pcd,/home/autoware/load_data/sioziri/Laser-00498_000130.pcd,/home/autoware/load_data/sioziri/Laser-00498_000131.pcd,/home/autoware/load_data/sioziri/Laser-00498_000132.pcd,/home/autoware/load_data/sioziri/Laser-00498_000133.pcd,/home/autoware/load_data/sioziri/Laser-00498_000134.pcd,/home/autoware/load_data/sioziri/Laser-00498_000138.pcd,/home/autoware/load_data/sioziri/Laser-00498_000139.pcd,/home/autoware/load_data/sioziri/Laser-00499_000127.pcd,/home/autoware/load_data/sioziri/Laser-00499_000128.pcd,/home/autoware/load_data/sioziri/Laser-00499_000129.pcd,/home/autoware/load_data/sioziri/Laser-00499_000131.pcd,/home/autoware/load_data/sioziri/Laser-00499_000132.pcd,/home/autoware/load_data/sioziri/Laser-00499_000133.pcd,/home/autoware/load_data/sioziri/Laser-00499_000138.pcd,/home/autoware/load_data/sioziri/Laser-00499_000139.pcd,/home/autoware/load_data/sioziri/Laser-00500_000127.pcd,/home/autoware/load_data/sioziri/Laser-00500_000128.pcd,/home/autoware/load_data/sioziri/Laser-00500_000129.pcd,/home/autoware/load_data/sioziri/Laser-00500_000132.pcd,/home/autoware/load_data/sioziri/Laser-00500_000133.pcd,/home/autoware/load_data/sioziri/Laser-00500_000134.pcd,/home/autoware/load_data/sioziri/Laser-00500_000138.pcd,/home/autoware/load_data/sioziri/Laser-00500_000139.pcd,/home/autoware/load_data/sioziri/Laser-00501_000123.pcd,/home/autoware/load_data/sioziri/Laser-00501_000124.pcd,/home/autoware/load_data/sioziri/Laser-00501_000125.pcd,/home/autoware/load_data/sioziri/Laser-00501_000126.pcd,/home/autoware/load_data/sioziri/Laser-00501_000127.pcd,/home/autoware/load_data/sioziri/Laser-00501_000128.pcd,/home/autoware/load_data/sioziri/Laser-00501_000129.pcd,/home/autoware/load_data/sioziri/Laser-00501_000130.pcd,/home/autoware/load_data/sioziri/Laser-00501_000131.pcd,/home/autoware/load_data/sioziri/Laser-00501_000132.pcd,/home/autoware/load_data/sioziri/Laser-00501_000133.pcd,/home/autoware/load_data/sioziri/Laser-00501_000134.pcd,/home/autoware/load_data/sioziri/Laser-00501_000135.pcd,/home/autoware/load_data/sioziri/Laser-00501_000136.pcd,/home/autoware/load_data/sioziri/Laser-00501_000137.pcd,/home/autoware/load_data/sioziri/Laser-00501_000138.pcd,/home/autoware/load_data/sioziri/Laser-00501_000139.pcd,/home/autoware/load_data/sioziri/Laser-00501_000140.pcd,/home/autoware/load_data/sioziri/Laser-00501_000141.pcd,/home/autoware/load_data/sioziri/Laser-00501_000142.pcd,/home/autoware/load_data/sioziri/Laser-00501_000143.pcd,/home/autoware/load_data/sioziri/Laser-00502_000122.pcd,/home/autoware/load_data/sioziri/Laser-00502_000123.pcd,/home/autoware/load_data/sioziri/Laser-00502_000124.pcd,/home/autoware/load_data/sioziri/Laser-00502_000125.pcd,/home/autoware/load_data/sioziri/Laser-00502_000126.pcd,/home/autoware/load_data/sioziri/Laser-00502_000127.pcd,/home/autoware/load_data/sioziri/Laser-00502_000128.pcd,/home/autoware/load_data/sioziri/Laser-00502_000129.pcd,/home/autoware/load_data/sioziri/Laser-00502_000130.pcd,/home/autoware/load_data/sioziri/Laser-00502_000131.pcd,/home/autoware/load_data/sioziri/Laser-00502_000132.pcd,/home/autoware/load_data/sioziri/Laser-00502_000133.pcd,/home/autoware/load_data/sioziri/Laser-00502_000134.pcd,/home/autoware/load_data/sioziri/Laser-00502_000135.pcd,/home/autoware/load_data/sioziri/Laser-00502_000136.pcd,/home/autoware/load_data/sioziri/Laser-00502_000137.pcd,/home/autoware/load_data/sioziri/Laser-00502_000138.pcd,/home/autoware/load_data/sioziri/Laser-00502_000139.pcd,/home/autoware/load_data/sioziri/Laser-00502_000140.pcd,/home/autoware/load_data/sioziri/Laser-00502_000141.pcd,/home/autoware/load_data/sioziri/Laser-00502_000142.pcd,/home/autoware/load_data/sioziri/Laser-00502_000143.pcd,/home/autoware/load_data/sioziri/Laser-00503_000123.pcd,/home/autoware/load_data/sioziri/Laser-00503_000124.pcd,/home/autoware/load_data/sioziri/Laser-00503_000125.pcd,/home/autoware/load_data/sioziri/Laser-00503_000126.pcd,/home/autoware/load_data/sioziri/Laser-00503_000127.pcd,/home/autoware/load_data/sioziri/Laser-00503_000128.pcd,/home/autoware/load_data/sioziri/Laser-00503_000130.pcd,/home/autoware/load_data/sioziri/Laser-00503_000131.pcd,/home/autoware/load_data/sioziri/Laser-00503_000132.pcd,/home/autoware/load_data/sioziri/Laser-00503_000134.pcd,/home/autoware/load_data/sioziri/Laser-00503_000135.pcd,/home/autoware/load_data/sioziri/Laser-00503_000136.pcd,/home/autoware/load_data/sioziri/Laser-00503_000137.pcd,/home/autoware/load_data/sioziri/Laser-00503_000138.pcd,/home/autoware/load_data/sioziri/Laser-00503_000139.pcd,/home/autoware/load_data/sioziri/Laser-00504_000124.pcd,/home/autoware/load_data/sioziri/Laser-00504_000125.pcd,/home/autoware/load_data/sioziri/Laser-00504_000126.pcd,/home/autoware/load_data/sioziri/Laser-00504_000130.pcd,/home/autoware/load_data/sioziri/Laser-00504_000131.pcd,/home/autoware/load_data/sioziri/Laser-00504_000132.pcd,/home/autoware/load_data/sioziri/Laser-00504_000136.pcd,/home/autoware/load_data/sioziri/Laser-00504_000137.pcd,/home/autoware/load_data/sioziri/Laser-00504_000138.pcd,/home/autoware/load_data/sioziri/Laser-00504_000139.pcd,/home/autoware/load_data/sioziri/Laser-00505_000125.pcd,/home/autoware/load_data/sioziri/Laser-00505_000126.pcd,/home/autoware/load_data/sioziri/Laser-00505_000130.pcd,/home/autoware/load_data/sioziri/Laser-00505_000131.pcd,/home/autoware/load_data/sioziri/Laser-00505_000137.pcd,/home/autoware/load_data/sioziri/Laser-00505_000138.pcd,/home/autoware/load_data/sioziri/Laser-00505_000139.pcd,/home/autoware/load_data/sioziri/Laser-00506_000125.pcd,/home/autoware/load_data/sioziri/Laser-00506_000126.pcd,/home/autoware/load_data/sioziri/Laser-00506_000127.pcd,/home/autoware/load_data/sioziri/Laser-00506_000128.pcd,/home/autoware/load_data/sioziri/Laser-00506_000129.pcd,/home/autoware/load_data/sioziri/Laser-00506_000130.pcd,/home/autoware/load_data/sioziri/Laser-00506_000131.pcd,/home/autoware/load_data/sioziri/Laser-00506_000138.pcd,/home/autoware/load_data/sioziri/Laser-00507_000125.pcd,/home/autoware/load_data/sioziri/Laser-00507_000126.pcd,/home/autoware/load_data/sioziri/Laser-00507_000127.pcd,/home/autoware/load_data/sioziri/Laser-00507_000128.pcd,/home/autoware/load_data/sioziri/Laser-00507_000129.pcd,/home/autoware/load_data/sioziri/Laser-00507_000130.pcd,/home/autoware/load_data/sioziri/Laser-00507_000131.pcd,/home/autoware/load_data/sioziri/Laser-00508_000125.pcd,/home/autoware/load_data/sioziri/Laser-00508_000126.pcd,/home/autoware/load_data/sioziri/Laser-00508_000127.pcd,/home/autoware/load_data/sioziri/Laser-00508_000128.pcd,/home/autoware/load_data/sioziri/Laser-00508_000129.pcd,/home/autoware/load_data/sioziri/Laser-00508_000130.pcd,/home/autoware/load_data/sioziri/Laser-00508_000131.pcd,/home/autoware/load_data/sioziri/Laser-00508_000132.pcd,/home/autoware/load_data/sioziri/Laser-00509_000125.pcd,/home/autoware/load_data/sioziri/Laser-00509_000126.pcd,/home/autoware/load_data/sioziri/Laser-00509_000127.pcd,/home/autoware/load_data/sioziri/Laser-00509_000128.pcd,/home/autoware/load_data/sioziri/Laser-00509_000129.pcd,/home/autoware/load_data/sioziri/Laser-00509_000130.pcd,/home/autoware/load_data/sioziri/Laser-00509_000131.pcd,/home/autoware/load_data/sioziri/Laser-00510_000123.pcd,/home/autoware/load_data/sioziri/Laser-00510_000124.pcd,/home/autoware/load_data/sioziri/Laser-00510_000125.pcd,/home/autoware/load_data/sioziri/Laser-00510_000126.pcd,/home/autoware/load_data/sioziri/Laser-00510_000127.pcd,/home/autoware/load_data/sioziri/Laser-00510_000128.pcd,/home/autoware/load_data/sioziri/Laser-00510_000129.pcd,/home/autoware/load_data/sioziri/Laser-00510_000130.pcd,/home/autoware/load_data/sioziri/Laser-00510_000131.pcd,/home/autoware/load_data/sioziri/Laser-00511_000121.pcd,/home/autoware/load_data/sioziri/Laser-00511_000122.pcd,/home/autoware/load_data/sioziri/Laser-00511_000123.pcd,/home/autoware/load_data/sioziri/Laser-00511_000124.pcd,/home/autoware/load_data/sioziri/Laser-00511_000125.pcd,/home/autoware/load_data/sioziri/Laser-00511_000126.pcd,/home/autoware/load_data/sioziri/Laser-00511_000127.pcd,/home/autoware/load_data/sioziri/Laser-00511_000128.pcd,/home/autoware/load_data/sioziri/Laser-00511_000129.pcd,/home/autoware/load_data/sioziri/Laser-00511_000130.pcd,/home/autoware/load_data/sioziri/Laser-00511_000131.pcd,/home/autoware/load_data/sioziri/Laser-00512_000120.pcd,/home/autoware/load_data/sioziri/Laser-00512_000121.pcd,/home/autoware/load_data/sioziri/Laser-00512_000122.pcd,/home/autoware/load_data/sioziri/Laser-00512_000123.pcd,/home/autoware/load_data/sioziri/Laser-00512_000127.pcd,/home/autoware/load_data/sioziri/Laser-00512_000128.pcd,/home/autoware/load_data/sioziri/Laser-00512_000130.pcd,/home/autoware/load_data/sioziri/Laser-00512_000131.pcd,/home/autoware/load_data/sioziri/Laser-00513_000120.pcd,/home/autoware/load_data/sioziri/Laser-00513_000121.pcd,/home/autoware/load_data/sioziri/Laser-00513_000127.pcd,/home/autoware/load_data/sioziri/Laser-00513_000128.pcd,/home/autoware/load_data/sioziri/Laser-00513_000130.pcd,/home/autoware/load_data/sioziri/Laser-00513_000131.pcd,/home/autoware/load_data/sioziri/Laser-00513_000132.pcd,/home/autoware/load_data/sioziri/Laser-00513_000133.pcd,/home/autoware/load_data/sioziri/Laser-00513_000134.pcd,/home/autoware/load_data/sioziri/Laser-00514_000127.pcd,/home/autoware/load_data/sioziri/Laser-00514_000128.pcd,/home/autoware/load_data/sioziri/Laser-00514_000130.pcd,/home/autoware/load_data/sioziri/Laser-00514_000131.pcd,/home/autoware/load_data/sioziri/Laser-00514_000132.pcd,/home/autoware/load_data/sioziri/Laser-00514_000134.pcd,/home/autoware/load_data/sioziri/Laser-00515_000125.pcd,/home/autoware/load_data/sioziri/Laser-00515_000126.pcd,/home/autoware/load_data/sioziri/Laser-00515_000127.pcd,/home/autoware/load_data/sioziri/Laser-00515_000128.pcd,/home/autoware/load_data/sioziri/Laser-00516_000125.pcd,/home/autoware/load_data/sioziri/Laser-00516_000126.pcd,/home/autoware/load_data/sioziri/Laser-00516_000127.pcd
+  point_type: !!python/unicode 'PointXYZI'
+pedestrian_dpm:
+  Lambda: 10
+  group_threshold: 0.3
+  num_bins: 9
+  num_cells: 8
+  score_threshold: 0.6
+pedestrian_fusion:
+  dispersion: 1.0
+  max_height: 2.0
+  max_low_height: -1.0
+  min_low_height: -1.5
+  min_points: 2
+pedestrian_kf:
+  default_lifespan: 8
+  error_estimate_covariance: 1000000.0
+  initial_lifespan: 4
+  measurement_noise_covariance: 25.0
+  noise_covariance: 1.0
+  orb_features: 2000
+  percentage_of_overlapping: 0.0
+  use_orb: 0
+period_signal:
+  first_hour: 0
+  first_min: 0
+  first_sec: 0
+  search_distance: 100
+  step_green: 0
+  step_red: 0
+  step_yellow: 0
+  takeover_acc: 0.45
+  use_time_flag: 0
+play_rosbag_play:
+  file: /home/autoware/load_data/sioziri/autoware-20201112171811.bag
+  rate: ''
+  repeat: true
+  start: 0
+point_cloud:
+  path_area_list: None
+  path_area_list_cmd_param: null
+  path_pcd: /home/autoware/load_data/okabe2/pcd/daigaku_rotari2_rot.pcd
+  scene_num: noupdate
+points_concat_filter:
+  input_topics: '[/velodyne1/points_raw,/velodyne2/points_raw,/velodyne3/points_raw,/velodyne4/points_raw,/velodyne5/points_raw,/velodyne6/points_raw,/velodyne7/points_raw,/velodyne8/points_raw]'
+  output_frame_id: velodyne
+  output_topic: /points_raw
+points_concat_filter1:
+  input_topics: '[/velodyne2/points_raw,/velodyne8/points_raw]'
+  output_frame_id: velodyne
+  output_topic: /points_raw
+points_concat_filter2:
+  input_topics: '[/points_concat1,/velodyne9/points_raw]'
+  output_frame_id: velodyne
+  output_topic: /points_raw
+points_image:
+  camera_id: ''
+  sync: false
+pure_pursuit:
+  displacement_threshold: 0.0
+  is_linear_interpolation: true
+  lookahead_distance: 4.0
+  lookahead_ratio: 1.55
+  minimum_lookahead_distance: 5.0
+  param_flag: 0
+  publishes_for_steering_robot: true
+  relative_angle_threshold: 0
+  velocity: 5.0
+ray_ground_filter:
+  clipping_height: 1.5
+  concentric_divider_distance: 0.01
+  general_max_slope: 5
+  input_point_topic: !!python/unicode '/points_raw'
+  local_max_slope: 8
+  min_height_threshold: 0.33
+  min_point_distance: 4.0
+  radial_divider_angle: 0.08
+  reclass_distance_threshold: 0.2
+  sensor_height: 2.3
+ray_ground_filter_box:
+  clipping_height: 1.5
+  concentric_divider_distance: 0.01
+  general_max_slope: 5
+  input_point_topic: !!python/unicode '/points_raw'
+  local_max_slope: 8
+  min_height_threshold: 0.33
+  min_point_distance: 4.0
+  radial_divider_angle: 0.08
+  reclass_distance_threshold: 0.2
+  sensor_height: 2.3
+region_tlr:
+  camera_id: !!python/unicode '/'
+  data: false
+region_tlr_mxnet:
+  budget: 20
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  nice: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+ring_filter:
+  measurement_range: 200
+  points_topic: /points_raw
+  ring_div: 3
+  sync: false
+  voxel_leaf_size: 2.0
+ring_ground_filter:
+  max_slope: 10.0
+  point_topic: /points_raw
+  sensor_height: 1.85
+  sensor_model: '32'
+  vertical_thres: 0.08
+sensing_qs:
+  file: ''
+setup_tf:
+  frame_id: /base_link
+  localizer_cmd_param: /velodyne
+  localizer_rosparam: velodyne
+  period_in_ms: 10
+  pitch: 0.0
+  roll: 0.0
+  x: 3.35
+  y: 0.0
+  yaw: 0.0
+  z: 2.7
+temporary_stoper:
+  budget: 20
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  nice: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+temporary_stoper_liesse:
+  acceleration: 0.45
+  fixed_velocity: 0.0
+  number_of_zeros_ahead: 1.0
+  number_of_zeros_behind: 0.0
+  search_distance: 7.0
+  stop_speed_threshold: 0.025
+tf:
+  file: /home/autoware/tf_map_to_world.launch
+twist_filter:
+  lateral_accel_limit: 0.8
+  lowpass_gain_angular_z: 0.0
+  lowpass_gain_linear_x: 0.0
+vector_map:
+  path_vec: /home/autoware/load_data/okabe/ADASmap3/ADASmap/area.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/crosswalk.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/curb.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/dtlane.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/idx.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/lane.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/line.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/node.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/point.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/pole.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/poledata.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/roadedge.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/signaldata.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/stopline.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/vector.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/whiteline.csv
+vehicle_info:
+  info_path: /home/autoware/Autoware_1.11.0_sai_edit/ros/src/.config/vehicle_info/liesse_XZB70M.yaml
+vehicle_model:
+  model_path: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/liesse_model/share/liesse_model/urdf/liesse_model.urdf
+vel_pose_connect:
+  sim_mode: false
+  topic_pose_stamped: !!python/unicode '/ndt_pose'
+  topic_twist_stamped: /estimate_twist
+velocity_set:
+  deceleration_obstacle: 0.7
+  deceleration_range: 0
+  deceleration_stopline: 0.8
+  detection_height_bottom: -1.5
+  detection_height_top: 0.1
+  detection_range: 0.8
+  enable_multiple_crosswalk_detection: false
+  points_topic: points_no_ground
+  stop_distance_obstacle: 7.0
+  stop_distance_stopline: 5.0
+  temporal_waypoints_size: 100.0
+  threshold_points: 8
+  use_crosswalk_detection: false
+  use_mobileye: true
+  use_point_cloud: false
+  use_point_pillar: false
+  velocity_change_limit: 5.0
+virtual_scan_image:
+  camera_id: ''
+  sync: false
+vision_darknet_yolo2:
+  camera_id: !!python/unicode ''
+  gpu_device_id: 0
+  image_src: !!python/unicode '/image_raw'
+  names_file: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/vision_darknet_detect/share/vision_darknet_detect/darknet/cfg/coco.names
+  network_definition_file: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/vision_darknet_detect/share/vision_darknet_detect/darknet/cfg/yolov2.cfg
+  nms_threshold: 0.45
+  pretrained_model_file: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/vision_darknet_detect/share/vision_darknet_detect/darknet/data/yolov2.weights
+  score_threshold: 0.5
+vision_darknet_yolo3:
+  camera_id: !!python/unicode ''
+  gpu_device_id: 0
+  image_src: !!python/unicode '/image_raw'
+  names_file: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/vision_darknet_detect/share/vision_darknet_detect/darknet/cfg/coco.names
+  network_definition_file: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/vision_darknet_detect/share/vision_darknet_detect/darknet/cfg/yolov3.cfg
+  nms_threshold: 0.45
+  pretrained_model_file: /home/autoware/Autoware_1.11.0_sai_edit/ros/install/vision_darknet_detect/share/vision_darknet_detect/darknet/data/yolov3.weights
+  score_threshold: 0.5
+voxel_grid_filter:
+  measurement_range: 50
+  points_topic: !!python/unicode '/points_raw'
+  sync: false
+  voxel_leaf_size: 4.0
+waypoint_loader:
+  accel_limit: 0.5
+  braking_distance: 5
+  decel_limit: 0.3
+  end_point_offset: 1
+  load_csv: true
+  multi_lane_csv: /tmp/driving_lane.csv
+  overwrite_vmax_mode: false
+  radius_min: 6.0
+  radius_thresh: 20.0
+  realtime_tuning_mode: false
+  replan_curve_mode: false
+  replan_endpoint_mode: true
+  replanning_mode: false
+  resample_interval: 1.0
+  resample_mode: true
+  velocity_max: 20.0
+  velocity_min: 4.0
+  velocity_offset: 4
+waypoint_loader_show_id:
+  accel_limit: 0.5
+  braking_distance: 5
+  budget: 20
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  decel_limit: 0.3
+  end_point_offset: 1
+  load_csv: true
+  multi_lane_csv: /home/autoware/load_data/okabe2/liesse_csv/0704_csv/2020_07_05_powerpack_go_edited_06.csv
+  nice: 0
+  overwrite_vmax_mode: true
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  radius_min: 6.0
+  radius_thresh: 50.0
+  real_time: false
+  realtime_tuning_mode: true
+  replan_curve_mode: true
+  replan_endpoint_mode: true
+  replanning_mode: false
+  resample_interval: 1.0
+  resample_mode: true
+  velocity_max: 50.0
+  velocity_min: 4.0
+  velocity_offset: 4
+waypoint_saver:
+  input_type: 0
+  interval: 1.0
+  lane_topic: !!python/unicode '/lane_waypoints_array'
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: true
+waypoint_saver mb_stroke plus:
+  input_type: 0
+  interval: 1.0
+  lane_topic: /lane_waypoints_array
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: false
+waypoint_saver stroke plus:
+  input_type: 0
+  interval: 1.0
+  lane_topic: !!python/unicode '/lane_waypoints_array'
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: true
+waypoint_saver2:
+  input_type: 0
+  interval: 1.0
+  lane_topic: !!python/unicode '/lane_waypoints_array'
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: true
+waypoint_saver_RTKplus:
+  input_type: 0
+  interval: 1.0
+  lane_topic: !!python/unicode '/lane_waypoints_array'
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: true
+waypoint_saver_signal_plus:
+  input_type: 0
+  interval: 1.0
+  lane_topic: /lane_waypoints_array
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: false
+waypoint_velocity_visualizer:
+  plot_metric_interval: 1.0
+  use_bar_plot: false
+  use_line_plot: true
+  use_text_plot: true
+wf_simulator:
+  accel_rate: 1.0
+  angle_error: 0.0
+  initialize_source: Rviz
+  position_error: 0.0

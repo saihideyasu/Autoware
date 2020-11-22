@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="vehicle_socket" type="microbus_pseudo_can_publisher" name="microbus_pseudo_can_publisher" output="log">
+	</node>
+</launch>

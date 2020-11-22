@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
         autoware_msgs
         autoware_can_msgs
         autoware_config_msgs
+        autoware_can_msgs
         nav_msgs
         std_msgs
         )
@@ -19,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
         INCLUDE_DIRS include
 )
+
+include_directories("/usr/include/eigen3")
 
 SET(CMAKE_CXX_FLAGS "-O2 -g -Wall -fpermissive ${CMAKE_CXX_FLAGS}")
 
@@ -70,6 +73,10 @@ add_executable(localizer_switch nodes/localizer_switch/localizer_switch.cpp)
 target_link_libraries(localizer_switch ${catkin_LIBRARIES})
 add_dependencies(localizer_switch ${catkin_EXPORTED_TARGETS})
 
+add_executable(estimate_to_baselink nodes/estimate_to_baselink/estimate_to_baselink.cpp)
+target_link_libraries(estimate_to_baselink ${catkin_LIBRARIES})
+add_dependencies(estimate_to_baselink ${catkin_EXPORTED_TARGETS})
+
 install(TARGETS can_status_translator
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -86,6 +93,11 @@ install(TARGETS localizer_switch
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(TARGETS current_velocity_conversion
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(TARGETS estimate_to_baselink
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -132,7 +132,7 @@ MPCFollower::MPCFollower()
   sub_ref_path_ = nh_.subscribe(in_waypoints, 1, &MPCFollower::callbackRefPath, this);
   sub_pose_ = nh_.subscribe(in_selfpose, 1, &MPCFollower::callbackPose, this);
   sub_vehicle_status_ = nh_.subscribe(in_vehicle_status, 1, &MPCFollower::callbackVehicleStatus, this);
-
+  sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &MPCFollower::callbackWaypointParam, this);
   /* for debug */
   pub_debug_filtered_traj_ = pnh_.advertise<visualization_msgs::Marker>("debug/filtered_traj", 1);
   pub_debug_predicted_traj_ = pnh_.advertise<visualization_msgs::Marker>("debug/predicted_traj", 1);
@@ -203,6 +203,13 @@ void MPCFollower::timerCallback(const ros::TimerEvent &te)
   }
 
   publishControlCommands(vel_cmd, acc_cmd, steer_cmd, steer_vel_cmd);
+};
+
+void MPCFollower::callbackWaypointParam(const autoware_msgs::WaypointParam &msg)
+{
+  if(msg.mpc_ctrl_period > 0) ctrl_period_ = msg.mpc_ctrl_period;
+  if(msg.mpc_wheelbase > 0) wheelbase_ = msg.mpc_wheelbase;
+  std::cout << "whieelbase," << msg.mpc_wheelbase << std::endl;
 };
 
 bool MPCFollower::calculateMPC(double &vel_cmd, double &acc_cmd, double &steer_cmd, double &steer_vel_cmd)

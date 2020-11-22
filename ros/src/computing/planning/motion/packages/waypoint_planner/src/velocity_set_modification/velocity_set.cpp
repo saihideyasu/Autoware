@@ -897,6 +897,7 @@ int main(int argc, char** argv)
   ros::Subscriber detectionresult_sub = nh.subscribe("/state/stopline_wpidx", 1, &VelocitySetInfo::detectionCallback, &vs_info);
   ros::Subscriber mobileye_obstacle_sub = nh.subscribe("/mobileye_obstacle", 1, &VelocitySetInfo::mobileyeObstacleCallback, &vs_info);
   ros::Subscriber sub_waypoint_param = nh.subscribe("/waypoint_param", 1, &VelocitySetInfo::waypointParamCallback, &vs_info);
+  //ros::Subscriber sub_can_velocity = nh.subscribe("/can_velocity", 1, &VelocitySetInfo::canVelocityCallback, &vs_info);
   ros::Subscriber sub_current_velocity = nh.subscribe("/current_velocity", 1, &VelocitySetInfo::currentVelocityCallback, &vs_info);
   //ros::Subscriber sub_gnss_speed = nh.subscribe("/gnss_surface_speed", 1, &VelocitySetInfo::gnssSpeedCallback, &vs_info);
 

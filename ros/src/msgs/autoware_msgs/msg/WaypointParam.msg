@@ -59,4 +59,6 @@ int8 detection_use_point_pillar
 int8 detection_use_mobileye
 float64 temporary_fixed_velocity
 int8 use_slow_accel_release
+float64 mpc_ctrl_period
+float64 mpc_wheelbase
 LiesseXZB70MParam liesse

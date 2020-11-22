@@ -39,11 +39,11 @@ private:
   bool is_ams_timeout_;
   ros::Duration ams_timeout_period_;
   std::thread watchdog_timer_thread_;
-  bool use_period_;
+  //bool use_period_;
 };
 
 TLSwitch::TLSwitch(const ros::NodeHandle &nh, const ros::NodeHandle &private_nh)
-    : nh_(nh), private_nh_(private_nh), ams_timeout_period_(2.0), use_period_(false){
+    : nh_(nh), private_nh_(private_nh), ams_timeout_period_(2.0){//, use_period_(false){
   private_nh_.param<std::string>("light_color_topic", light_color_topic_name_,
                                  "/light_color");
   private_nh_.param<std::string>("camera_light_color_topic",
@@ -58,8 +58,8 @@ TLSwitch::TLSwitch(const ros::NodeHandle &nh, const ros::NodeHandle &private_nh)
 
   camera_sub_ = nh_.subscribe(camera_light_color_topic_name_, 1,
                               &TLSwitch::camera_light_color_callback, this);
-  period_sub_ = nh_.subscribe("period_light_color", 1,
-                              &TLSwitch::period_light_color_callback, this);
+  //period_sub_ = nh_.subscribe("period_light_color", 1,
+  //                            &TLSwitch::period_light_color_callback, this);
   ams_sub_ = nh_.subscribe(ams_light_color_topic_name_, 1,
                            &TLSwitch::ams_light_color_callback, this);
   reset_light_msg();
@@ -95,7 +95,7 @@ void TLSwitch::watchdog_timer() {
 
 void TLSwitch::camera_light_color_callback(
     const autoware_msgs::TrafficLight::ConstPtr &msg) {
-  if(use_period_ == false)
+  //if(use_period_ == false)
   {
     camera_msg_.traffic_light = msg->traffic_light;
     switch_color();
@@ -105,7 +105,7 @@ void TLSwitch::camera_light_color_callback(
   }
 }
 
-void TLSwitch::period_light_color_callback(
+/*void TLSwitch::period_light_color_callback(
     const autoware_msgs::TrafficLight::ConstPtr &msg) {
   camera_msg_.traffic_light = msg->traffic_light;
   switch_color();
@@ -114,7 +114,7 @@ void TLSwitch::period_light_color_callback(
   std_msgs::String str;
   str.data = "period";
   tmp_pub_.publish(str);
-}
+}*/
 
 void TLSwitch::ams_light_color_callback(
     const autoware_msgs::TrafficLight::ConstPtr &msg) {

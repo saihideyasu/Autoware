@@ -218,7 +218,7 @@ public:
         base_link_pose_msg.pose.orientation.z = baselink_.pose.orientation.z;
         base_link_pose_msg.pose.orientation.w = baselink_.pose.orientation.w;
 
-        tf::StampedTransform tf_stamped;
+        /*tf::StampedTransform tf_stamped;
         ros::Time time = ros::Time::now();
 		bool flag;std::cout << "aaa" << std::endl;
         flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
@@ -229,6 +229,34 @@ public:
         //if(flag == false) std::cout << "bbb\n";
 		std::cout << "ccc" << std::endl;
         trans_broad.sendTransform(tf::StampedTransform(tf_stamped, twist_.header.stamp, "/map", "/base_link"));
+		std::cout << "ddd" << std::endl;*/
+
+		tf::StampedTransform tf_stamped;
+		ros::Time time = ros::Time::now();
+		bool flag;std::cout << "aaa" << std::endl;
+		flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
+		if(flag == true) std::cout << "bbb\n" << std::flush;
+		else 
+		{
+			return;
+			std::cout << "ccc\n" << std::flush;
+		}
+		std::cout << twist_.header.frame_id << std::endl;
+		try
+		{
+			tf_listener->lookupTransform("map", twist_.header.frame_id, twist_.header.stamp, tf_stamped);
+		}
+		catch(const tf::TransformException& e)
+		{
+			std::cerr << "lookup error : " << e.what() << std::endl;
+			return;
+		}
+		//if(flag == false) std::cout << "bbb\n";
+		std::cout << "ccc" << std::endl;
+		tf::Quaternion qua = tf_stamped.getRotation();
+		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
+		tf_stamped.setRotation(qua * hosei);
+		trans_broad.sendTransform(tf::StampedTransform(tf_stamped, twist_.header.stamp, "/map", "/base_link"));
 		std::cout << "ddd" << std::endl;
 
         geometry_msgs::TwistStamped twist_pose_msg;

@@ -139,6 +139,7 @@ private:
     QPalette palette_gnss_deviation_ok_, palette_gnss_deviation_error_;
     QPalette palette_score_ok_, palette_score_error_;
     QPalette palette_current_localizer_, palette_lb_normal_, palette_lb_localize_;
+    QPalette palette_stop_line_non_, palette_stop_line_middle_, palette_stop_line_stop_;
 
     std::string gnss_time_str();
 

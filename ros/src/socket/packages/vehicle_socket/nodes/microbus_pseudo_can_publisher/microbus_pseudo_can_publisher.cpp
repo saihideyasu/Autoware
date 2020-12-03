@@ -90,7 +90,7 @@ public:
 		pub_can501_ = nh_.advertise<autoware_can_msgs::MicroBusCan501>("/microbus/can_receive501", 1);
 		pub_can502_ = nh_.advertise<autoware_can_msgs::MicroBusCan502>("/microbus/can_receive502", 1);
 		pub_can503_ = nh_.advertise<autoware_can_msgs::MicroBusCan503>("/microbus/can_receive503", 1);
-		pub_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/vehicle_status", 1);
+		pub_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
 
 		sub_config_ = nh_.subscribe("/config/microbus_pseudo_can_publisher", 1, &MicrobusPseudoCanPublisher::callbackConfig, this);
 		sub_vehicle_cmd_ = nh_.subscribe("/vehicle_cmd", 1, &MicrobusPseudoCanPublisher::callbackVehicleCmd, this);

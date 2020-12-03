@@ -126,12 +126,13 @@ MPCFollower::MPCFollower()
   pnh_.param("out_vehicle_cmd_name", out_vehicle_cmd, std::string("/ctrl_cmd"));
   pnh_.param("in_waypoints_name", in_waypoints, std::string("/base_waypoints"));
   pnh_.param("in_selfpose_name", in_selfpose, std::string("/current_pose"));
-  pnh_.param("in_vehicle_status_name", in_vehicle_status, std::string("/vehicle_status"));
+  //pnh_.param("in_vehicle_status_name", in_vehicle_status, std::string("/vehicle_status"));
   pub_twist_cmd_ = nh_.advertise<geometry_msgs::TwistStamped>(out_twist, 1);
   pub_steer_vel_ctrl_cmd_ = nh_.advertise<autoware_msgs::ControlCommandStamped>(out_vehicle_cmd, 1);
   sub_ref_path_ = nh_.subscribe(in_waypoints, 1, &MPCFollower::callbackRefPath, this);
   sub_pose_ = nh_.subscribe(in_selfpose, 1, &MPCFollower::callbackPose, this);
-  sub_vehicle_status_ = nh_.subscribe(in_vehicle_status, 1, &MPCFollower::callbackVehicleStatus, this);
+  sub_vehicle_status_ = nh_.subscribe("/vehicle_status", 1, &MPCFollower::callbackVehicleStatus, this);
+  sub_vehicle_status_microbus_ = nh_.subscribe("/microbus/vehicle_status", 1, &MPCFollower::callbackVehicleStatus, this);
   sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &MPCFollower::callbackWaypointParam, this);
   /* for debug */
   pub_debug_filtered_traj_ = pnh_.advertise<visualization_msgs::Marker>("debug/filtered_traj", 1);

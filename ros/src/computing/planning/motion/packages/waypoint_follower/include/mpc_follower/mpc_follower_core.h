@@ -81,6 +81,7 @@ private:
   ros::Subscriber sub_ref_path_;          //!< @brief topic subscriber for reference waypoints
   ros::Subscriber sub_pose_;              //!< @brief subscriber for current pose
   ros::Subscriber sub_vehicle_status_;    //!< @brief subscriber for currrent vehicle status
+  ros::Subscriber sub_vehicle_status_microbus_;    //!< @brief subscriber for currrent vehicle status(microbus)
   ros::Subscriber sub_waypoint_param_;    //2020_11_20_add whilebase and ctrl_period
   ros::Timer timer_control_;              //!< @brief timer for control command computation
 

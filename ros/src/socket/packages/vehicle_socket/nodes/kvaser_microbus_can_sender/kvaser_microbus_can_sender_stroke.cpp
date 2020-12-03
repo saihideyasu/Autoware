@@ -1109,6 +1109,8 @@ private:
 			//drive_control_mode_ = MODE_VELOCITY;
 			shift_auto_ = true;
 			input_drive_mode_ = false;
+			pid_params.set_stroke_prev(0);//ガチャコン対策
+			pid_params.set_stop_stroke_prev(0);//ガチャコン対策
 			std::string safety_error_message = "";
 			publishStatus(safety_error_message);
 		}
@@ -1183,8 +1185,8 @@ private:
 //		str << acc << "," << jurk << "," << acc2 << "," << jurk2 << "," << td << ",";
 //		str << x << "," << v0 << "," << v << "," << v_sa;
 		str << std::setprecision(10) ;
-		str << waypoint_id_;
-		name << "waypoint_id";
+		str << "|" << waypoint_id_;
+		name << "|waypoint_id";
 		str << "|" <<  gnss_time_.year << "/" << +gnss_time_.month << "/" << +gnss_time_.hour << "/" << +gnss_time_.min << "/" << gnss_time_.sec;
 		//str << "|" << time_str;//timeString(time_str);
 		name << "|" << "gnss_time";
@@ -1686,11 +1688,15 @@ private:
 			shift_position_ = msg->liesse.shift;
 		}
 
-		if(msg->steer_correction > -1000)
+		/*if(msg->steer_correction > -1000)
 		{
 			steer_correction_ = msg->steer_correction;
 			//if(steer_correction_ > 500 || steer_correction_ < -500) steer_correction_ = 0; //足し算仕様
 			if(steer_correction_ < 0.3 || steer_correction_ > 3.0) steer_correction_ = 1;//掛け算仕様
+		}*/
+		if(msg->steer_correction > 0)
+		{
+			steer_correction_ = msg->steer_correction;
 		}
 
 		if(msg->accel_stroke_offset >= 0 && msg->accel_stroke_offset <= 300)
@@ -2260,6 +2266,8 @@ private:
 		std_msgs::String tmp;
 				tmp.data = "D1";
 				pub_tmp_.publish(tmp);
+
+		double stop_max = 340;
 		if(use_stopper_distance_ == true && (stopper_distance_.fixed_velocity <= 0 ||
 		                                     stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL ||
 											 stopper_distance_.send_process == autoware_msgs::StopperDistance::OBSTACLE))
@@ -2296,6 +2304,8 @@ private:
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
 				}*/
 				//if(temporary_fixed_velocity_ > 0)
+
+				const double stop_cap = 250;
 				if(stopper_distance_.fixed_velocity > 0)
 				{
 					target_brake_stroke = pid_params.get_stop_stroke_prev();
@@ -2305,6 +2315,11 @@ private:
 						if(target_brake_stroke < 0) target_brake_stroke = 0;
 					}
 				}
+				/*else //ブレーキを踏んだ後、離す量に対するキャップ処理
+				{
+					if(target_brake_stroke < stop_cap && pid_params.get_stop_stroke_prev() > target_brake_stroke + 10)
+						target_brake_stroke = stop_cap;
+				}*/
 			}
 			else if(stopper_distance_.distance >= 0 && stopper_distance_.distance <= setting_.stopper_distance3)
 			{std::cout << loop_counter_ << "stopD3" << std::endl;
@@ -2555,7 +2570,7 @@ private:
 		//if(ret > -setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 		send_step_ = brake_stroke_step;
 		pid_params.set_stop_stroke_prev(ret);
-		if(ret > 340) ret = 340;
+		if(ret > stop_max) ret = stop_max;
 		return -ret;
 	}
 
@@ -2980,7 +2995,7 @@ public:
 		pub_estimate_stopper_distance_ = nh_.advertise<std_msgs::Float64>("/microbus/estimate_stopper_distance", 1);
 		pub_localizer_match_stat_ = nh_.advertise<autoware_msgs::LocalizerMatchStat>("/microbus/localizer_match_stat", 1);
 		pub_stroke_routine_ = nh_.advertise<std_msgs::String>("/microbus/stroke_routine", 1);
-		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/vehicle_status", 1);
+		pub_vehicle_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
 		pub_velocity_param_ = nh_.advertise<autoware_can_msgs::MicroBusCanVelocityParam>("/microbus/velocity_param", 1);
 		pub_way_distance_ave_ = nh_.advertise<std_msgs::String>("/microbus/way_distance_ave", 1);
 		pub_brake_i_ = nh_.advertise<std_msgs::Float64>("/microbus/brake_i", 1);

@@ -126,10 +126,10 @@ public:
 		return sqrt(x*x + y*y);
 	}
 
-	tf::Matrix3x3 math_angular(geometry_msgs::Pose pose)
+	tf::Matrix3x3 math_angular(geometry_msgs::Pose pose, geometry_msgs::Pose cur_pose)
 	{
-		tf::Quaternion current_q(current_pose_.pose.orientation.x, current_pose_.pose.orientation.y, current_pose_.pose.orientation.z,
-			current_pose_.pose.orientation.w);
+		tf::Quaternion current_q(cur_pose.orientation.x, cur_pose.orientation.y, cur_pose.orientation.z,
+			cur_pose.orientation.w);
 
 		tf::Quaternion way_q(pose.orientation.x, pose.orientation.y, pose.orientation.z,
 			pose.orientation.w);
@@ -158,11 +158,9 @@ public:
 				return;
 			}
 		
-			tf::Vector3 front_baselink_point = frontbaselink_to_map.getOrigin();
-			tf::Quaternion front_baselink_quat = frontbaselink_to_map.getRotation();
+			front_baselink_point = frontbaselink_to_map.getOrigin();
+			front_baselink_quat = frontbaselink_to_map.getRotation();
 		}
-		//std::cout << "front : " << front_baselink_point.getX() << "," << front_baselink_point.getY() << "," << front_baselink_point.getZ() << std::endl; 
-		///////////////////////////////
 
 		if(waypose_.size() < 2)
 		{
@@ -176,48 +174,34 @@ public:
 			return;
 		}
 
-		/*double x1 = waypose_[1].position.x, x2 = waypose_[2].position.x;
-		double y1 = waypose_[1].position.y, y2 = waypose_[2].position.y;
-		double a = y2 - y1;
-		double b = x1 - x2;
-		double c = - x1 * y2 + y1 * x2;
-
-		double x0 = current_pose_.pose.position.x, y0 = current_pose_.pose.position.y;
-		double db = sqrt(a * a + b * b);
-		if(db == 0)
-		{
-			return;
-		}
-		double d = (a * x0 + b * y0 + c) / db;*/
-		//std::cout << "distance : " << d << std::endl;
 		double d = math_distance(waypose_[1],  waypose_[2], current_pose_.pose);
 
-		/*tf::Quaternion current_q(current_pose_.pose.orientation.x, current_pose_.pose.orientation.y, current_pose_.pose.orientation.z,
-			current_pose_.pose.orientation.w);
-		tf::Matrix3x3 current_m(current_q);
-		double current_yaw, current_roll, current_pitch;
-		current_m.getRPY(current_roll, current_pitch, current_yaw);
+		geometry_msgs::Pose front_pose;
+		front_pose.position.x = front_baselink_point.getX();
+		front_pose.position.y = front_baselink_point.getY();
+		front_pose.position.z = front_baselink_point.getZ();
+		front_pose.orientation.x = front_baselink_quat.getX();
+		front_pose.orientation.y = front_baselink_quat.getY();
+		front_pose.orientation.z = front_baselink_quat.getZ();
+		front_pose.orientation.w = front_baselink_quat.getW();
+		double fd = math_distance(waypose_[1],  waypose_[2], front_pose);
 
-		tf::Quaternion way_q(waypose_[1].orientation.x, waypose_[1].orientation.y, waypose_[1].orientation.z,
-			waypose_[1].orientation.w);
-		tf::Matrix3x3 way_m(way_q);
-		double way_yaw, way_roll, way_pitch;
-		way_m.getRPY(way_roll, way_pitch, way_yaw);
-
-		tf::Quaternion sa_q = way_q * current_q.inverse();
-		tf::Matrix3x3 sa_m(sa_q);*/
-		
-		//std::cout << "yaw : " << current_yaw * 180 / M_PI << "," << way_yaw * 180 / M_PI<< "," << sa_yaw * 180 / M_PI<< std::endl;
-
-		/*autoware_msgs::DifferenceToWaypointDistance dist;
+		autoware_msgs::DifferenceToWaypointDistance dist;
 		dist.header.stamp = ros::Time::now();
-		dist.distance = d;
-		dist.angular = sa_yaw;
-		pub_difference_to_waypoint_distance_.publish(dist);*/
+		tf::Matrix3x3 sa_m = math_angular(waypose_[1], current_pose_.pose);
+		double sa_yaw, sa_roll, sa_pitch;
+		sa_m.getRPY(sa_roll, sa_pitch, sa_yaw);
+		dist.baselink_distance = d;
+		dist.baselink_angular = sa_yaw;
+		dist.front_baselink_distance = fd;
+		tf::Matrix3x3 fsa_m = math_angular(waypose_[1], front_pose);
+		double fsa_yaw, fsa_roll, fsa_pitch;
+		fsa_m.getRPY(fsa_roll, fsa_pitch, fsa_yaw);
+		dist.front_baselink_angular = fsa_yaw;
+		pub_difference_to_waypoint_distance_.publish(dist);
+		return;
 
-		//////////////////////////////////////
-//std::cout << sub_current_pose_->getTopic() << std::endl;
-		if(sub_current_pose_->getTopic() == "/current_pose")
+		/*if(sub_current_pose_->getTopic() == "/current_pose")
 		{
 			const double search_dist = 10;
 			const double min_fd_init = 10000000000;
@@ -239,11 +223,6 @@ public:
 				std::cout << "cou : " << cou << "  min_fd : " << min_fd << "  fd," << fd << "  min_fd," << min_fd << std::endl;
 				if(cou != 1)
 				{
-					/*double x1 = waypose_[cou].position.x, x2 = waypose_[cou-1].position.x;
-					double y1 = waypose_[cou].position.y, y2 = waypose_[cou-1].position.y;
-					double x = x1 - x2;
-					double y = y1 - y2;
-					search_dist_sum += sqrt(x*x + y*y);*/
 					search_dist_sum += euclid(waypose_[cou].position.x, waypose_[cou].position.y, waypose_[cou-1].position.x, waypose_[cou-1].position.y);
 					if(search_dist_sum >= search_dist) break;
 				}
@@ -309,11 +288,11 @@ public:
 		else
 		{
 			magn = config_.max_magn;
-		}
+		}*/
 
-		std_msgs::Float64 magn_msg;
+		/*std_msgs::Float64 magn_msg;
 		magn_msg.data = magn;
-		pub_lookahead_ratio_magn_.publish(magn_msg);
+		pub_lookahead_ratio_magn_.publish(magn_msg);*/
 	}
 };
 

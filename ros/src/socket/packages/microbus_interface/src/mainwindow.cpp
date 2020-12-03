@@ -34,6 +34,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_score_error_ = palette_score_ok_;
     palette_current_localizer_ = palette_localizer_select_ok_;
     palette_lb_localize_ = palette_lb_normal_;
+    palette_stop_line_non_ = ui->tx2_stopD->palette();
     palette_drive_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_steer_mode_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_drive_clutch_cut_.setColor(QPalette::Base, QColor("#00FF00"));
@@ -45,6 +46,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
     palette_score_error_.setColor(QPalette::Base, QColor("#FF0000"));
     palette_current_localizer_.setColor(QPalette::Base, QColor("#00FF00"));
     palette_lb_localize_.setColor(QPalette::Base, QColor("#00FF00"));
+    palette_stop_line_middle_.setColor(QPalette::Base, QColor("#FF0000"));
+    palette_stop_line_stop_.setColor(QPalette::Base, QColor("#0000A0"));
     ui->lb2_ndt->setPalette(palette_lb_localize_);
     ui->lb2_ekf->setPalette(palette_lb_localize_);
     ui->lb2_gnss->setPalette(palette_lb_localize_);
@@ -854,6 +857,18 @@ std::cout << "aaa" << std::endl;
         str << std::fixed << std::setprecision(keta) << vehicle_cmd_.ctrl_cmd.linear_velocity * 3.6;
         ui->tx2_cmd_vel->setText(str.str().c_str());
     }
+
+    {
+        if(stopper_distance_.fixed_velocity == 0 &&
+           stopper_distance_.distance > -1)
+        {
+            if(stopper_distance_.distance <= 0.5 && can_velocity_param_.velocity < 0.04)
+                ui->tx2_stopD->setPalette(palette_stop_line_stop_);
+            else ui->tx2_stopD->setPalette(palette_stop_line_middle_);
+        }
+        else ui->tx2_stopD->setPalette(palette_stop_line_non_);
+    }
+
 }
 
 void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg)

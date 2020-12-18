@@ -1,17 +1,15 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
-#include <std_msgs/Float64.h>
 #include <nav_msgs/Odometry.h>
 #include <autoware_config_msgs/ConfigMicrobusPseudoCanPublisher.h>
 #include <autoware_can_msgs/MicroBusCan501.h>
 #include <autoware_can_msgs/MicroBusCan502.h>
 #include <autoware_can_msgs/MicroBusCan503.h>
-#include <autoware_can_msgs/MicroBusPseudoParams.h>
 #include <autoware_msgs/VehicleStatus.h>
 #include <autoware_msgs/VehicleCmd.h>
 #include <autoware_msgs/Lane.h>
+#include <autoware_msgs/StopperDistance.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-//#include "microbus_params.h"
 
 class MicrobusPseudoCanPublisher
 {
@@ -28,9 +26,8 @@ private:
 
 	ros::NodeHandle nh_, p_nh_;
 	ros::Subscriber sub_config_, sub_vehicle_cmd_, sub_local_waypoints_, sub_estimate_, sub_odom_;
-	ros::Subscriber sub_drive_clutch_, sub_steer_clutch_, sub_pseudo_params_;
-
-	ros::Publisher pub_can501_, pub_can502_, pub_can503_, pub_status_, pub_way_velocity_;
+	ros::Subscriber sub_drive_clutch_, sub_steer_clutch_, sub_stopper_distance_;
+	ros::Publisher pub_can501_, pub_can502_, pub_can503_, pub_status_;
 
 	autoware_config_msgs::ConfigMicrobusPseudoCanPublisher config_;
 	autoware_msgs::VehicleCmd vehicle_cmd_;
@@ -38,9 +35,9 @@ private:
 	nav_msgs::Odometry odom_;
 	ros::Rate *rate_;//処理ステップ数
 	ros::Time prev_time_;
-	double way_velocity_;
+	double way_velocity_;//canの速度となる変数
 	bool steer_clutch_, drive_clutch_;
-	autoware_can_msgs::MicroBusPseudoParams pseudo_params_;//疑似senderノードから送られてくるactual情報
+	autoware_msgs::StopperDistance stopper_distance_;
 
 	void callbackConfig(const autoware_config_msgs::ConfigMicrobusPseudoCanPublisher &msg)
 	{
@@ -78,9 +75,9 @@ private:
 		drive_clutch_ = msg.data;
 	}
 
-	void callbackPseudoParams(const autoware_can_msgs::MicroBusPseudoParams &msg)
+	void callbackStopperDistance(const autoware_msgs::StopperDistance &msg)
 	{
-		pseudo_params_ = msg;
+		stopper_distance_ = msg;
 	}
 public:
 	MicrobusPseudoCanPublisher(ros::NodeHandle nh, ros::NodeHandle p_nh)
@@ -94,7 +91,6 @@ public:
 		pub_can502_ = nh_.advertise<autoware_can_msgs::MicroBusCan502>("/microbus/can_receive502", 1);
 		pub_can503_ = nh_.advertise<autoware_can_msgs::MicroBusCan503>("/microbus/can_receive503", 1);
 		pub_status_ = nh_.advertise<autoware_msgs::VehicleStatus>("/microbus/vehicle_status", 1);
-		pub_way_velocity_ = nh_.advertise<std_msgs::Float64>("/microbus/pseudo_way_velocity", 1);
 
 		sub_config_ = nh_.subscribe("/config/microbus_pseudo_can_publisher", 1, &MicrobusPseudoCanPublisher::callbackConfig, this);
 		sub_vehicle_cmd_ = nh_.subscribe("/vehicle_cmd", 1, &MicrobusPseudoCanPublisher::callbackVehicleCmd, this);
@@ -103,8 +99,7 @@ public:
 		sub_odom_ = nh_.subscribe("/vehicle/odom", 1, &MicrobusPseudoCanPublisher::callbackOdom, this);
 		sub_drive_clutch_ = nh_.subscribe("/microbus/drive_clutch", 10, &MicrobusPseudoCanPublisher::callbackDriveClutch, this);
 		sub_steer_clutch_ = nh_.subscribe("/microbus/steer_clutch", 10, &MicrobusPseudoCanPublisher::callbackSteerClutch, this);
-		sub_pseudo_params_ = nh_.subscribe("/microbus/pseudo_params", 10, &MicrobusPseudoCanPublisher::callbackPseudoParams, this);
-
+		sub_stopper_distance_ = nh_.subscribe("/stopper_distance", 10, &MicrobusPseudoCanPublisher::callbackStopperDistance, this);
 		rate_ = new ros::Rate(100);
 	}
 
@@ -117,7 +112,6 @@ public:
 	void run()
 	{
 		ros::Time nowtime = ros::Time::now();
-		double time_diff = (nowtime.toSec() + nowtime.toNSec() * 1E-9) - (prev_time_.toSec() + prev_time_.toNSec() * 1E-9);
 
 		/*if(waypoints_.waypoints.size() < 1) way_velocity_ = 0;
 		else
@@ -137,13 +131,9 @@ public:
 
 		if(waypoints_.waypoints.size() < 1 || drive_clutch_ == false) way_velocity_ = 0;
 		else if(odom_.twist.twist.linear.x < waypoints_.waypoints[0].twist.twist.linear.x)
-			way_velocity_ += 0.01;
+			way_velocity_ += 0.1;
 		else if(odom_.twist.twist.linear.x > waypoints_.waypoints[0].twist.twist.linear.x)
-			way_velocity_ -= 0.05;
-		way_velocity_ = std::max(0.0, way_velocity_);
-		std_msgs::Float64 way_vel;
-		way_vel.data = way_velocity_;
-		pub_way_velocity_.publish(way_vel);
+			way_velocity_ -= 0.5;
 
 		autoware_can_msgs::MicroBusCan501 can501;
 		can501.header.stamp = nowtime;
@@ -155,14 +145,15 @@ public:
 		can501.steering_angle = 0;
 		can501.pedal = 0;
 		can501.emergency_stop = 0;
-		//can501.blinker = false;
+		can501.blinker_left = false;
+		can501.blinker_right = false;
 		can501.shift = autoware_can_msgs::MicroBusCan501::SHIFT_D;
 		can501.read_counter = run_counter_;
 		pub_can501_.publish(can501);
 
 		autoware_can_msgs::MicroBusCan502 can502;
 		can502.header.stamp = nowtime;
-		can502.cycle_time = time_diff;
+		can502.cycle_time = (nowtime.toSec() + nowtime.toNSec() * 1E-9) - (prev_time_.toSec() + prev_time_.toNSec() * 1E-9);
 		can502.angle_deg = 0;
 		if(can502.angle_deg >= 0) can502.angle_actual = can502.angle_deg / angle_magn_left;
 		else can502.angle_actual = can502.angle_deg / angle_magn_right;
@@ -178,7 +169,10 @@ public:
 			case autoware_config_msgs::ConfigMicrobusPseudoCanPublisher::UVF_WAYPOINT:
 				//std::cout << "way," << way_velocity_ << std::endl;
 				can502.velocity_mps = way_velocity_;
-				if(can502.velocity_mps < 0.01) can502.velocity_mps = 0;
+				if(stopper_distance_.distance >= 0 && stopper_distance_.distance < 0.5 && stopper_distance_.fixed_velocity == 0)
+					can502.velocity_mps = 0;
+				else if(can502.velocity_mps < 0.01)
+					can502.velocity_mps = 0;
 				break;
 			//default:
 				//std::cout << "def" << std::endl;
@@ -199,7 +193,6 @@ public:
 		can503.header.stamp = nowtime;
 		can503.clutch = drive_clutch_;
 		//can503.auto_mode = true;
-		can503.pedal_displacement = (drive_clutch_ == true) ? pseudo_params_.stroke_actual : 0;
 		can503.read_counter = run_counter_;
 		pub_can503_.publish(can503);
 
@@ -210,7 +203,7 @@ public:
 		status.gearshift = 0;
 		status.lamp = 0;
 		status.light = 0;
-		status.speed = can502.velocity_mps;
+		status.speed = can502.velocity_mps * 3.6;
 		if(can502.angle_actual > 0) status.angle = can502.angle_actual / wheelrad_to_steering_can_value_left;
 		else status.angle = can502.angle_actual / wheelrad_to_steering_can_value_right;
 		pub_status_.publish(status);

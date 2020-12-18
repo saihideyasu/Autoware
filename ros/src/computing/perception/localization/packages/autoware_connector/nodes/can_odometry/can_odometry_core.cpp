@@ -126,7 +126,7 @@ void CanOdometryNode::callbackFromVehicleStatus(const autoware_msgs::VehicleStat
 
 void CanOdometryNode::callbackFromVehicleStatus_microbus(const autoware_can_msgs::MicroBusCan502ConstPtr &msg)
 {
-	double vx = kmph2mps(msg->velocity_mps);
+	double vx = msg->velocity_mps;//kmph2mps(msg->velocity_mps);
   if(vx < config_.kmph_th / 3.6) vx = 0;
   double vth = v_info_.convertSteeringAngleToAngularVelocity_microbus(vx, msg->angle_actual);
 	odom_.updateOdometry(vx, vth, msg->header.stamp);

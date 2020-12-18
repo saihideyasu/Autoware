@@ -19,6 +19,7 @@ add_message_files(
     CANInfo.msg
     CANData.msg
     CANPacket.msg
+    MicroBusPseudoParams.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

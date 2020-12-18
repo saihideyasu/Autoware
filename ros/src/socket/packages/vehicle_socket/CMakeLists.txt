@@ -173,7 +173,16 @@ add_executable(microbus_pseudo_can_publisher
 target_link_libraries(microbus_pseudo_can_publisher
   ${catkin_LIBRARIES}
   )
-add_dependencies(ship_steering
+add_dependencies(microbus_pseudo_can_publisher
+  ${catkin_EXPORTED_TARGETS}
+  )
+
+add_executable(microbus_pseudo_can_sender
+	nodes/microbus_pseudo_can_sender/microbus_pseudo_can_sender.cpp)
+target_link_libraries(microbus_pseudo_can_sender
+  ${catkin_LIBRARIES}
+  )
+add_dependencies(microbus_pseudo_can_sender
   ${catkin_EXPORTED_TARGETS}
   )
 
@@ -187,7 +196,7 @@ install(TARGETS vehicle_sender vehicle_receiver bus_socket
                 kvaser_prius_can_receiver kvaser_prius_can_sender
                 rs232_microbus_can_receiver
                 canusbz_prius_can_receiver
-                saver ship_steering microbus_pseudo_can_publisher
+                saver ship_steering microbus_pseudo_can_publisher microbus_pseudo_can_sender
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -41,11 +41,18 @@
   <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.301 -0.905 -1.5875 -0.035 -1.500 velodyne camera 10"/ -->
 
 //base_link_to_gnss antena
-  <param name="/gx" value="0.6382821547"/>
-  <param name="/gy" value="-0.4094757795"/>
-  <param name="/gz" value="2.7357697239"/>
-  <param name="/gyaw" value="-0.0016904079"/>
-  <param name="/gpitch" value="-0.0006652615"/>
-  <param name="/groll" value="-0.0010026966"/>
+  <param name="/gx" value="1.695"/>
+  <param name="/gy" value="0.1"/>
+  <param name="/gz" value="2.64"/>
+  <param name="/gyaw" value="0.0"/>
+  <param name="/groll" value="0.0"/>
+  <param name="/gpitch" value="0.0"/>
+
+  <!-- param name="/gx" value="0.6382821547"/ -->
+  <!-- param name="/gy" value="-0.4094757795"/ -->
+  <!-- param name="/gz" value="2.7357697239"/ -->
+  <!-- param name="/gyaw" value="-0.0016904079"/ -->
+  <!-- param name="/gpitch" value="-0.0006652615"/ -->
+  <!-- param name="/groll" value="-0.0010026966"/ -->
 
 </launch>

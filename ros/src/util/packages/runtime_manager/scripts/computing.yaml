@@ -2171,7 +2171,7 @@ params :
       desc  : temporal_waypoints_size desc sample
       label : Temporal Waypoints Size
       min   : 0
-      max   : 150
+      max   : 300
       v     : 100.0
     - name      : use_point_cloud
       desc      : use_point_cloud
